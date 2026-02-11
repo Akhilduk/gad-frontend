@@ -34,6 +34,15 @@ const ALL_REQUIRED_SECTIONS = [
   'disciplinary',
 ];
 
+const GUIDANCE_STORAGE_KEY = 'er_profile_quick_guide_dismissed';
+
+const FLOW_STEPS = [
+  'Verify Spark Profile details',
+  'Open a pending section and click Edit',
+  'Save each form/card to update completion',
+  'Review Profile Preview and submit with OTP e-sign',
+];
+
 function ProfileContent() {
   const [openIndices, setOpenIndices] = useState(new Set([]));
   const [profileData, setProfileData] = useState(null);
@@ -46,6 +55,8 @@ function ProfileContent() {
   const [isAllCollapsed, setIsAllCollapsed] = useState(true);
   const [layoutTransition, setLayoutTransition] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showQuickGuide, setShowQuickGuide] = useState(true);
+  const [showGuideDetails, setShowGuideDetails] = useState(false);
   const sectionRefs = useRef([]);
   const contentContainerRef = useRef(null);
   const { sectionProgress, markInitialLoadComplete, initialLoadComplete } = useProfileCompletion();
@@ -222,6 +233,11 @@ function ProfileContent() {
   }, [isInitializing, markInitialLoadComplete]);
 
   useEffect(() => {
+    const dismissedGuide = localStorage.getItem(GUIDANCE_STORAGE_KEY);
+    if (dismissedGuide === 'true') {
+      setShowQuickGuide(false);
+    }
+
     const fetchProfileData = async () => {
       try {
         const cachedData = sessionStorage.getItem('profileData');
@@ -297,6 +313,34 @@ function ProfileContent() {
     fetchProfileData();
   }, []);
 
+  const getNextPendingSection = () => {
+    const orderedSections = [
+      { title: 'Officer Details', key: 'personal' },
+      { title: 'Educational Qualifications', key: 'education' },
+      { title: 'Service Details', key: 'service' },
+      { title: 'Deputation Details', key: 'central_deputation' },
+      { title: 'Training Details', key: 'training' },
+      { title: 'Awards and Publications', key: 'awards' },
+      { title: 'Disability Details', key: 'disability' },
+      { title: 'Disciplinary Details', key: 'disciplinary' },
+    ];
+
+    return orderedSections.find(({ key }) => {
+      const progress = sectionProgress[key] || { completed: 0, total: 0 };
+      if (progress.total === 0) {
+        return false;
+      }
+      return progress.completed < progress.total;
+    });
+  };
+
+  const pendingSection = getNextPendingSection();
+
+  const handleDismissGuide = () => {
+    setShowQuickGuide(false);
+    localStorage.setItem(GUIDANCE_STORAGE_KEY, 'true');
+  };
+
   if (loading) {
     return (
       <div className="p-4 text-center">
@@ -360,6 +404,51 @@ function ProfileContent() {
         ref={contentContainerRef}
         className={`profile-layout-container relative isolate z-0 ${layoutTransition ? 'transition-all duration-300 ease-in-out' : ''} ${modalOpen ? 'overflow-hidden' : ''}`}
       >
+        {showQuickGuide && (
+          <div className="mb-3 rounded-xl border border-indigo-200 bg-indigo-50/80 px-4 py-3 text-sm text-indigo-900 dark:border-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-100">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold">Quick guidance:</span>
+              <span className="text-indigo-800 dark:text-indigo-200">Follow the same existing process, step-by-step, without missing save actions.</span>
+              <button
+                type="button"
+                onClick={() => setShowGuideDetails((prev) => !prev)}
+                className="ml-auto rounded-md border border-indigo-300 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-600 dark:text-indigo-200 dark:hover:bg-indigo-900"
+              >
+                {showGuideDetails ? 'Hide steps' : 'Show steps'}
+              </button>
+              <button
+                type="button"
+                onClick={handleDismissGuide}
+                className="rounded-md border border-transparent px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100 dark:text-indigo-200 dark:hover:bg-indigo-900"
+              >
+                Dismiss
+              </button>
+            </div>
+
+            {showGuideDetails && (
+              <div className="mt-3 space-y-3 border-t border-indigo-200 pt-3 dark:border-indigo-800">
+                <ol className="grid gap-2 text-xs sm:grid-cols-2 lg:grid-cols-4">
+                  {FLOW_STEPS.map((step) => (
+                    <li key={step} className="rounded-lg bg-white/80 px-2 py-2 dark:bg-indigo-900/30">
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+
+                {pendingSection && (
+                  <button
+                    type="button"
+                    onClick={() => handleSectionSelect(pendingSection.title)}
+                    className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700"
+                  >
+                    Go to next pending section: {pendingSection.title}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* When all collapsed - Horizontal compact ProfileSection at top */}
           {isAllCollapsed ? (
           <div className="space-y-3 py-2">
