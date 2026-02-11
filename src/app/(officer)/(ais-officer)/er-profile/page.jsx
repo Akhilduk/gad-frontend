@@ -504,24 +504,29 @@ function ProfileContent() {
 
       {showHelpPanel && (
         <div className="fixed inset-0 z-[95] bg-black/35">
-          <div className="absolute right-0 top-0 h-full w-full max-w-xl overflow-y-auto bg-white shadow-2xl dark:bg-gray-900">
-            <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-900">
+          <div
+            className="absolute right-0 top-16 bottom-16 w-full max-w-2xl overflow-y-auto rounded-l-2xl border-l border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Profile completion help"
+          >
+            <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-900">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Profile completion help</h3>
-                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">Quick reference for Spark preview, section edit flow, card saves, and OTP submission.</p>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Profile completion help</h3>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">Quick reference for Spark preview, section edit flow, card saves, and OTP submission.</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowHelpPanel(false)}
-                  className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                  className="rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                 >
                   Close
                 </button>
               </div>
             </div>
 
-            <div className="space-y-4 p-4">
+            <div className="space-y-5 p-5">
               <div className="grid gap-2 sm:grid-cols-2">
                 <button
                   type="button"
@@ -529,10 +534,10 @@ function ProfileContent() {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                     setShowHelpPanel(false);
                   }}
-                  className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-left text-xs text-indigo-900 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200"
+                  className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-left text-sm text-indigo-900 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200"
                 >
                   <p className="font-semibold">Where is Spark Preview?</p>
-                  <p className="mt-1">Top-left profile card → click Spark Profile.</p>
+                  <p className="mt-1 leading-6">Top-left profile card → click Spark Profile.</p>
                 </button>
 
                 <button
@@ -543,41 +548,41 @@ function ProfileContent() {
                     }
                     setShowHelpPanel(false);
                   }}
-                  className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-left text-xs text-indigo-900 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200"
+                  className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-left text-sm text-indigo-900 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200"
                   disabled={!pendingSection}
                 >
                   <p className="font-semibold">Where to edit next?</p>
-                  <p className="mt-1">{pendingSection ? `Open ${pendingSection.title}` : 'All trackable sections completed'}</p>
+                  <p className="mt-1 leading-6">{pendingSection ? `Open ${pendingSection.title}` : 'All trackable sections completed'}</p>
                 </button>
               </div>
 
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
-                <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">4-step completion flow</h4>
-                <ol className="space-y-2">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+                <h4 className="mb-3 text-base font-semibold text-gray-900 dark:text-gray-100">4-step completion flow</h4>
+                <ol className="space-y-3">
                   {FLOW_STEPS.map((step, index) => (
-                    <li key={step.title} className="rounded-lg bg-white p-2 text-xs text-gray-700 dark:bg-gray-900 dark:text-gray-200">
+                    <li key={step.title} className="rounded-lg bg-white p-3 text-sm text-gray-700 dark:bg-gray-900 dark:text-gray-200">
                       <p className="font-semibold text-indigo-700 dark:text-indigo-300">Step {index + 1}: {step.title}</p>
-                      <p className="mt-1">{step.description}</p>
+                      <p className="mt-1 leading-6">{step.description}</p>
                     </li>
                   ))}
                 </ol>
               </div>
 
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
                 <p className="font-semibold">Important save rule</p>
-                <p className="mt-1">Section becomes complete only after Save succeeds. In card sections (Education/Service/etc.), each card must be saved separately.</p>
+                <p className="mt-1 leading-6">Section becomes complete only after Save succeeds. In card sections (Education/Service/etc.), each card must be saved separately.</p>
               </div>
 
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
                 <p className="font-semibold text-gray-900 dark:text-gray-100">Where is OTP action?</p>
-                <p className="mt-1">After completion reaches 100%, open Profile Preview from left card and use Submit for approval (AS-2) with OTP e-sign.</p>
+                <p className="mt-1 leading-6">After completion reaches 100%, open Profile Preview from left card and use Submit for approval (AS-2) with OTP e-sign.</p>
               </div>
 
               <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={handleDismissHelpBadge}
-                  className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
                 >
                   Do not show NEW badge again
                 </button>
