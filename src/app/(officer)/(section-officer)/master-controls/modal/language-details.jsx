@@ -1,0 +1,188 @@
+'use client'
+
+import PropTypes from 'prop-types' // Import for prop validation
+
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
+import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useState, useEffect } from "react";
+export function ModalLanguageDetails({ 
+  open = false,
+  setOpen,
+  save,
+  language, }) {
+  if (typeof open !== 'boolean') {
+    console.error('The `open` prop for `ModalPersonalDetails` must be a boolean.')
+    return null // Prevent rendering if `open` is invalid
+  }
+
+  const [formData, setFormData] = useState({language: ''});
+  const [error, setError] = useState({ language: "" }); //track validation error
+
+  useEffect(() => {
+    if (open) { // Reset formData when modal opens
+      if (language) {
+        setFormData({
+          language_id: language.language_id,
+          language: language.language.toUpperCase()
+        });
+      } else {
+        setFormData({ language: '' }); // Reset for a new entry
+      }
+      setError("");// reset error when modal opens
+    }
+  }, [language, open]); // Added `open` dependency
+  
+
+
+    const handleChange = (e) => {
+    let { value } = e.target;
+    value = value.trimStart(); // remove leading spaces only (keeps middle spaces)
+
+      if (value === "" || /^[a-zA-Z][\sa-zA-Z]*$/.test(value)) {
+      setFormData({...formData, language:value})
+      setError("");// clear error if valid
+    }
+    else {
+      setError("Language field may only contain alphabetic characters. It must start with a letter.");
+    } 
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setFormData({language: ''});
+    setError(""); //reset error on close
+  };
+
+  // Handle form submission //NEW----------------NEW--------------------NEW
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const success = await save(formData); // Will be true or false
+
+    if (success) {
+      setOpen(false); // ✅ Close only on success
+    }
+  };
+
+
+  return (
+    <Dialog open={open} onClose={handleClose} className="relative z-10">
+      <DialogBackdrop
+        transition
+        className="fixed inset-0 bg-gray-500/75 transition-opacity data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in"
+      />
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <DialogPanel
+            transition
+            className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all data-[closed]:translate-y-4 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in sm:my-8 sm:w-full sm:max-w-4xl sm:p-6 data-[closed]:sm:translate-y-0 data-[closed]:sm:scale-95"
+          >
+            <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                <span className="sr-only">Close</span>
+                <XMarkIcon aria-hidden="true" className="size-6" />
+              </button>
+            </div>
+            <div className="w-full">
+              <form onSubmit={handleSubmit}>
+                <div className="space-y-12">
+                  <div className="border-b border-gray-900/10 pb-12">
+                    <div className="grid grid-cols-12 gap-x-6 gap-y-8">
+                      {[
+                        {
+                          label: "Language",
+                          id: "langauage-name",
+                          type: "text",
+                          placeholder: "Enter Language",
+                        },
+                        
+                      ].map((field) => (
+                        <div
+                          className="lg:col-span-6 sm:col-span-12"
+                          key={field.id}
+                        >
+                          <label htmlFor={field.id} className="block text-sm font-medium text-gray-900">
+                            {field.label}
+                          </label>
+                          <div className="mt-2">
+                            {field.type === "select" ? (
+                              <select
+                                id={field.id}
+                                name={field.id}
+                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
+                              >
+                                {field.options.map((option) => (
+                                  <option key={option} value={option}>
+                                    {option}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <div>
+                              <input
+                                id={field.id}
+                                name={'language'}
+                                value={formData.language}
+                                onChange={handleChange}
+                                type={field.type}
+                                placeholder={field.placeholder || ""}
+                                required
+                                // className="block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
+                                className={`block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ${
+                                  error ? "ring-red-500" : "ring-gray-300"
+                                } placeholder:text-gray-400 focus:ring-2 focus:ring-inset ${
+                                  error
+                                    ? "focus:ring-red-500"
+                                    : "focus:ring-indigo-600"
+                                } sm:text-sm`}
+                              />
+                              {error && (
+                                <p className="mt-1 text-sm text-red-600">
+                                  {error}
+                                </p>
+                            )}
+                          </div>
+                            )}
+                        </div>
+                        </div>
+                      ))}
+                    </div>
+
+
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-end gap-x-6">
+                    <button type="button"
+                    onClick={handleClose} className="text-sm font-semibold text-gray-900">
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    >
+                      {language ? "Update Language" : "Add Language"}
+                    </button>
+                  </div>
+                </div>
+              </form>  
+              
+            </div>
+            
+          </DialogPanel>
+        </div>
+      </div>
+    </Dialog>
+  )
+}
+
+// Prop validation to ensure `open` is a boolean and `setOpen` is a function
+ModalLanguageDetails.propTypes = {
+  open: PropTypes.bool.isRequired,
+  setOpen: PropTypes.func.isRequired,
+  save: PropTypes.func.isRequired,
+  language: PropTypes.object,
+}
