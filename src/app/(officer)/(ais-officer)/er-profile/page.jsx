@@ -34,6 +34,15 @@ const ALL_REQUIRED_SECTIONS = [
   'disciplinary',
 ];
 
+const HELP_PANEL_STORAGE_KEY = 'er_profile_help_panel_dismissed';
+
+const FLOW_STEPS = [
+  { title: 'Check Spark data', description: 'Click Spark Profile on the left profile card to review imported data and pending fields.' },
+  { title: 'Open section and edit', description: 'Use the left section list, click a section, then click Edit inside the opened area.' },
+  { title: 'Save every form/card', description: 'For Education/Service type sections, edit and save each card item separately.' },
+  { title: 'Preview and submit', description: 'After completion, open Profile Preview and submit for approval with OTP e-sign.' },
+];
+
 function ProfileContent() {
   const [openIndices, setOpenIndices] = useState(new Set([]));
   const [profileData, setProfileData] = useState(null);
@@ -46,6 +55,8 @@ function ProfileContent() {
   const [isAllCollapsed, setIsAllCollapsed] = useState(true);
   const [layoutTransition, setLayoutTransition] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showHelpPanel, setShowHelpPanel] = useState(false);
+  const [showHelpBadge, setShowHelpBadge] = useState(false);
   const sectionRefs = useRef([]);
   const contentContainerRef = useRef(null);
   const { sectionProgress, markInitialLoadComplete, initialLoadComplete } = useProfileCompletion();
@@ -222,6 +233,11 @@ function ProfileContent() {
   }, [isInitializing, markInitialLoadComplete]);
 
   useEffect(() => {
+    const hideHelpBadge = localStorage.getItem(HELP_PANEL_STORAGE_KEY);
+    if (hideHelpBadge !== 'true') {
+      setShowHelpBadge(true);
+    }
+
     const fetchProfileData = async () => {
       try {
         const cachedData = sessionStorage.getItem('profileData');
@@ -297,6 +313,38 @@ function ProfileContent() {
     fetchProfileData();
   }, []);
 
+  const getNextPendingSection = () => {
+    const orderedSections = [
+      { title: 'Officer Details', key: 'personal' },
+      { title: 'Educational Qualifications', key: 'education' },
+      { title: 'Service Details', key: 'service' },
+      { title: 'Deputation Details', key: 'central_deputation' },
+      { title: 'Training Details', key: 'training' },
+      { title: 'Awards and Publications', key: 'awards' },
+      { title: 'Disability Details', key: 'disability' },
+      { title: 'Disciplinary Details', key: 'disciplinary' },
+    ];
+
+    return orderedSections.find(({ key }) => {
+      const progress = sectionProgress[key] || { completed: 0, total: 0 };
+      if (progress.total === 0) {
+        return false;
+      }
+      return progress.completed < progress.total;
+    });
+  };
+
+  const pendingSection = getNextPendingSection();
+
+  const handleOpenHelp = () => {
+    setShowHelpPanel(true);
+  };
+
+  const handleDismissHelpBadge = () => {
+    setShowHelpBadge(false);
+    localStorage.setItem(HELP_PANEL_STORAGE_KEY, 'true');
+  };
+
   if (loading) {
     return (
       <div className="p-4 text-center">
@@ -311,6 +359,27 @@ function ProfileContent() {
   return (
     <>
       <Breadcrumb />
+
+      {/* ER Profile page-level help actions (placed near breadcrumb) */}
+      <div className="mb-2 mt-2 flex flex-wrap items-center justify-end gap-2 px-2 sm:px-0">
+        {showHelpBadge && (
+          <button
+            type="button"
+            onClick={handleDismissHelpBadge}
+            className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-200 dark:hover:bg-indigo-900"
+          >
+            Hide NEW badge
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={handleOpenHelp}
+          className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-white px-3 py-2 text-xs font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50 dark:border-indigo-700 dark:bg-gray-800 dark:text-indigo-200 dark:hover:bg-indigo-950/40"
+        >
+          Help: How to complete profile
+          {showHelpBadge && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] text-white">New</span>}
+        </button>
+      </div>
 
       {/* Info Message */}
       {infoMessage && (
@@ -438,6 +507,99 @@ function ProfileContent() {
           <div className="fixed inset-0 bg-black bg-opacity-10 z-40 pointer-events-none"></div>
         )}
       </div>
+
+
+      {showHelpPanel && (
+        <div className="fixed inset-0 z-[95] bg-black/35">
+          <div
+            className="absolute right-0 top-16 bottom-16 w-full max-w-2xl overflow-y-auto rounded-l-2xl border-l border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Profile completion help"
+          >
+            <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-900">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Profile completion help</h3>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">Quick reference for Spark preview, section edit flow, card saves, and OTP submission.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowHelpPanel(false)}
+                  className="rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-5 p-5">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    setShowHelpPanel(false);
+                  }}
+                  className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-left text-sm text-indigo-900 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200"
+                >
+                  <p className="font-semibold">Where is Spark Preview?</p>
+                  <p className="mt-1 leading-6">Top-left profile card → click Spark Profile.</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (pendingSection) {
+                      handleSectionSelect(pendingSection.title);
+                    }
+                    setShowHelpPanel(false);
+                  }}
+                  className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-left text-sm text-indigo-900 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200"
+                  disabled={!pendingSection}
+                >
+                  <p className="font-semibold">Where to edit next?</p>
+                  <p className="mt-1 leading-6">{pendingSection ? `Open ${pendingSection.title}` : 'All trackable sections completed'}</p>
+                </button>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+                <h4 className="mb-3 text-base font-semibold text-gray-900 dark:text-gray-100">4-step completion flow</h4>
+                <ol className="space-y-3">
+                  {FLOW_STEPS.map((step, index) => (
+                    <li key={step.title} className="rounded-lg bg-white p-3 text-sm text-gray-700 dark:bg-gray-900 dark:text-gray-200">
+                      <p className="font-semibold text-indigo-700 dark:text-indigo-300">Step {index + 1}: {step.title}</p>
+                      <p className="mt-1 leading-6">{step.description}</p>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
+                <p className="font-semibold">Important save rule</p>
+                <p className="mt-1 leading-6">Section becomes complete only after Save succeeds. In card sections (Education/Service/etc.), each card must be saved separately.</p>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                <p className="font-semibold text-gray-900 dark:text-gray-100">Where is OTP action?</p>
+                <p className="mt-1 leading-6">After completion reaches 100%, open Profile Preview from left card and use Submit for approval (AS-2) with OTP e-sign.</p>
+              </div>
+
+              {showHelpBadge && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleDismissHelpBadge}
+                    className="rounded-md border border-indigo-300 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-200 dark:hover:bg-indigo-900"
+                  >
+                    Do not show NEW badge again
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Initial Loading Modal */}
       {showInitLoader && (
