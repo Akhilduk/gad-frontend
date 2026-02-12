@@ -41,8 +41,22 @@ const HELP_PANEL_STORAGE_KEY = 'er_profile_help_panel_dismissed';
 const FLOW_STEPS = [
   { title: 'Check Spark data', description: 'Click Spark Profile on the left profile card to review imported data and pending fields.' },
   { title: 'Open section and edit', description: 'Use the left section list, click a section, then click Edit inside the opened area.' },
+  { title: 'Officer Details flow', description: 'Inside Officer Details, first complete Personal Information and use Edit button there, then continue to Dependent Details tree and add/update family members.' },
   { title: 'Save every form/card', description: 'For Education/Service type sections, edit and save each card item separately.' },
   { title: 'Preview and submit', description: 'After completion, open Profile Preview and submit for approval with OTP e-sign.' },
+];
+
+const GUIDED_MODE_STORAGE_KEY = 'er_profile_guided_mode';
+
+const GUIDED_SECTION_ORDER = [
+  'Officer Details',
+  'Educational Qualifications',
+  'Service Details',
+  'Deputation Details',
+  'Training Details',
+  'Awards and Publications',
+  'Disability Details',
+  'Disciplinary Details',
 ];
 
 function ProfileContent() {
@@ -59,6 +73,7 @@ function ProfileContent() {
   const [modalOpen, setModalOpen] = useState(false);
   const [showHelpPanel, setShowHelpPanel] = useState(false);
   const [showHelpBadge, setShowHelpBadge] = useState(false);
+  const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
   const sectionRefs = useRef([]);
   const contentContainerRef = useRef(null);
   const { sectionProgress, markInitialLoadComplete, initialLoadComplete } = useProfileCompletion();
@@ -240,6 +255,11 @@ function ProfileContent() {
       setShowHelpBadge(true);
     }
 
+    const storedGuidedMode = localStorage.getItem(GUIDED_MODE_STORAGE_KEY);
+    if (storedGuidedMode === 'true') {
+      setGuidedModeEnabled(true);
+    }
+
     const fetchProfileData = async () => {
       try {
         const cachedData = sessionStorage.getItem('profileData');
@@ -315,6 +335,17 @@ function ProfileContent() {
     fetchProfileData();
   }, []);
 
+  const getCurrentGuidedIndex = () => {
+    const index = GUIDED_SECTION_ORDER.indexOf(activeSection);
+    return index === -1 ? 0 : index;
+  };
+
+  const currentGuidedIndex = getCurrentGuidedIndex();
+  const currentStep = currentGuidedIndex + 1;
+  const totalGuidedSteps = GUIDED_SECTION_ORDER.length;
+  const previousGuidedSection = currentGuidedIndex > 0 ? GUIDED_SECTION_ORDER[currentGuidedIndex - 1] : null;
+  const nextGuidedSection = currentGuidedIndex < totalGuidedSteps - 1 ? GUIDED_SECTION_ORDER[currentGuidedIndex + 1] : null;
+
   const getNextPendingSection = () => {
     const orderedSections = [
       { title: 'Officer Details', key: 'personal' },
@@ -344,6 +375,22 @@ function ProfileContent() {
     setShowHelpPanel(true);
   };
 
+  const toggleGuidedMode = () => {
+    setGuidedModeEnabled((prev) => {
+      const nextValue = !prev;
+      localStorage.setItem(GUIDED_MODE_STORAGE_KEY, String(nextValue));
+      if (nextValue) {
+        handleSectionSelect(activeSection || 'Officer Details');
+      }
+      return nextValue;
+    });
+  };
+
+  const handleGoToGuidedSection = (sectionTitle) => {
+    if (!sectionTitle) return;
+    handleSectionSelect(sectionTitle);
+  };
+
   if (loading) {
     return (
       <div className="p-4 text-center">
@@ -368,9 +415,57 @@ function ProfileContent() {
               Help: How to complete profile
               {showHelpBadge && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] text-white">New</span>}
             </button>
+
+            <button
+              type="button"
+              onClick={toggleGuidedMode}
+              className={`ml-2 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold shadow-sm transition-colors ${guidedModeEnabled
+                ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200'
+                : 'border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:bg-gray-800 dark:text-indigo-200 dark:hover:bg-indigo-950/40'
+                }`}
+            >
+              {guidedModeEnabled ? 'Guided Mode: On' : 'Start Guided Mode'}
+            </button>
           </>
         )}
       />
+
+      {guidedModeEnabled && (
+        <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-700 dark:bg-emerald-950/30">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Guided completion</p>
+              <p className="text-sm text-emerald-900 dark:text-emerald-100">
+                Step {currentStep} of {totalGuidedSteps}: <span className="font-semibold">{activeSection}</span>
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleGoToGuidedSection(previousGuidedSection)}
+                disabled={!previousGuidedSection}
+                className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-600 dark:bg-gray-900 dark:text-emerald-200"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() => handleGoToGuidedSection(pendingSection?.title || nextGuidedSection)}
+                className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-600 dark:bg-gray-900 dark:text-emerald-200"
+              >
+                Open Next Pending
+              </button>
+              <button
+                type="button"
+                onClick={toggleGuidedMode}
+                className="rounded-md border border-transparent bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+              >
+                Exit Guided Mode
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Info Message */}
       {infoMessage && (
@@ -450,6 +545,7 @@ function ProfileContent() {
                     profileData={profileData}
                     sectionRefs={sectionRefs}
                     activeSection={activeSection}
+                    guidedModeEnabled={guidedModeEnabled}
                   />
                 ) : (
                   <div className="p-4 text-center text-gray-500">
@@ -484,6 +580,7 @@ function ProfileContent() {
                   profileData={profileData}
                   sectionRefs={sectionRefs}
                   activeSection={activeSection}
+                  guidedModeEnabled={guidedModeEnabled}
                 />
               ) : (
                 <div className="p-4 text-center text-gray-500">
@@ -579,6 +676,47 @@ function ProfileContent() {
 
 
             </div>
+          </div>
+        </div>
+      )}
+
+      {guidedModeEnabled && (
+        <div className="fixed bottom-4 right-4 z-[90] w-[min(26rem,calc(100vw-2rem))] rounded-xl border border-emerald-200 bg-white/95 p-4 shadow-xl backdrop-blur dark:border-emerald-700 dark:bg-gray-900/95">
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Guidance Coach</p>
+          <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
+            You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.
+          </p>
+          {activeSection === 'Officer Details' && (
+            <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
+              Officer Details order: complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+            {pendingSection ? `Next pending: ${pendingSection.title}` : 'All tracked sections are complete. Please go to Profile Preview and submit.'}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => handleGoToGuidedSection(previousGuidedSection)}
+              disabled={!previousGuidedSection}
+              className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => handleGoToGuidedSection(pendingSection?.title || nextGuidedSection)}
+              className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
+            >
+              Open Next
+            </button>
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="rounded-md border border-indigo-300 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-800 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200"
+            >
+              Top / Spark Card
+            </button>
           </div>
         </div>
       )}

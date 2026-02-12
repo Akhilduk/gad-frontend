@@ -36,7 +36,7 @@ const SECTION_INDEX_MAP = {
   7: 'Disciplinary Details',
 };
 
-export function ProfileAccordion({ openIndices, toggleAccordion, profileData, sectionRefs, activeSection }) {
+export function ProfileAccordion({ openIndices, toggleAccordion, profileData, sectionRefs, activeSection, guidedModeEnabled = false }) {
   const items = [
     {
       icon: UserIcon,
@@ -139,6 +139,16 @@ export function ProfileAccordion({ openIndices, toggleAccordion, profileData, se
                   className="overflow-hidden relative z-0"
                 >
                   <div className="px-2 py-2 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                    {guidedModeEnabled && (
+                      <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-100">
+                        <p className="font-semibold">Guided hint</p>
+                        {item.title === 'Officer Details' ? (
+                          <p className="mt-1">Start with Personal Information and use the Edit button inside that card, then continue to Dependent Details tree to add/update dependents and save them.</p>
+                        ) : (
+                          <p className="mt-1">Open the edit controls inside this section, save changes, then continue to the next pending section. In card-based sections, each card must be saved separately.</p>
+                        )}
+                      </div>
+                    )}
                     {item.content}
                   </div>
                 </motion.div>
