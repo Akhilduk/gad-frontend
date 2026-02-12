@@ -58,6 +58,9 @@ function ProfileContent() {
   const [layoutTransition, setLayoutTransition] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [showHelpPanel, setShowHelpPanel] = useState(false);
+  // Backward-compatible state guard for stale Turbopack/HMR bundles that may
+  // still invoke setShowHelpBadge during refresh. Keep hidden in UI.
+  const [, setShowHelpBadge] = useState(false);
   const sectionRefs = useRef([]);
   const contentContainerRef = useRef(null);
   const { sectionProgress, markInitialLoadComplete, initialLoadComplete } = useProfileCompletion();
@@ -338,6 +341,7 @@ function ProfileContent() {
   const pendingSection = getNextPendingSection();
 
   const handleOpenHelp = () => {
+    setShowHelpBadge(false);
     setShowHelpPanel(true);
   };
 
