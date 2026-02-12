@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useCallback, forwardRef, useImperativeHandle } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { toast } from "react-toastify";
 import {
   ChevronDownIcon,
   UserIcon,
@@ -23,6 +22,7 @@ import { AwardsAndPublications } from '../er-profile/view/awards-and-publication
 import { DisabilityDetails } from '../er-profile/view/officer-disability-details'
 import { CareerTrainingDetails } from '../er-profile/view/career-training-details'
 import { SuspensionDetails} from '../er-profile/view/suspension details'
+import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 
 // Create a mapping for section titles
 const SECTION_INDEX_MAP = {
@@ -36,7 +36,56 @@ const SECTION_INDEX_MAP = {
   7: 'Disciplinary Details',
 };
 
+const SECTION_PROGRESS_KEY_BY_TITLE = {
+  'Officer Details': 'personal',
+  'Educational Qualifications': 'education',
+  'Service Details': 'service',
+  'Deputation Details': 'central_deputation',
+  'Training Details': 'training',
+  'Awards and Publications': 'awards',
+  'Disability Details': 'disability',
+  'Disciplinary Details': 'disciplinary',
+};
+
+const CARD_BASED_SECTION_KEYS = new Set([
+  'education',
+  'service',
+  'central_deputation',
+  'training',
+  'awards',
+]);
+
 export function ProfileAccordion({ openIndices, toggleAccordion, profileData, sectionRefs, activeSection, guidedModeEnabled = false }) {
+  const { sectionProgress } = useProfileCompletion();
+
+  const getGuidedHint = (sectionTitle) => {
+    const key = SECTION_PROGRESS_KEY_BY_TITLE[sectionTitle];
+    const progress = key ? (sectionProgress[key] || { completed: 0, total: 0 }) : { completed: 0, total: 0 };
+    const isZeroInfo = progress.completed === 0 && progress.total === 0;
+
+    if (isZeroInfo) {
+      return 'No information added yet. You can add new details by clicking Add button and enrich the profile.';
+    }
+
+    if (sectionTitle === 'Officer Details') {
+      return 'Start with Personal Information and use the Edit button inside that card, then continue to Dependent Details tree to add/update dependents and save them.';
+    }
+
+    if (sectionTitle === 'Disciplinary Details') {
+      return 'Disciplinary Details are updated by AS-II officer. No edit action is required for AIS officer in this section.';
+    }
+
+    if (CARD_BASED_SECTION_KEYS.has(key)) {
+      return 'This is a card-based section. Open each card, update details, and save every card separately so completion status updates correctly.';
+    }
+
+    if (progress.total > 0 && progress.completed === progress.total) {
+      return 'This section is complete. Review information and update only if needed.';
+    }
+
+    return 'Open the edit controls inside this section, save your changes, then continue to the next pending section.';
+  };
+
   const items = [
     {
       icon: UserIcon,
@@ -142,11 +191,7 @@ export function ProfileAccordion({ openIndices, toggleAccordion, profileData, se
                     {guidedModeEnabled && (
                       <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-100">
                         <p className="font-semibold">Guided hint</p>
-                        {item.title === 'Officer Details' ? (
-                          <p className="mt-1">Start with Personal Information and use the Edit button inside that card, then continue to Dependent Details tree to add/update dependents and save them.</p>
-                        ) : (
-                          <p className="mt-1">Open the edit controls inside this section, save changes, then continue to the next pending section. In card-based sections, each card must be saved separately.</p>
-                        )}
+                        <p className="mt-1">{getGuidedHint(item.title)}</p>
                       </div>
                     )}
                     {item.content}
