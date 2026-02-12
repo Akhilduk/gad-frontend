@@ -765,12 +765,12 @@ function ProfileContent() {
             {shouldHighlightSparkButton
               ? <>Step 1 for new users: first open <span className="font-semibold">Spark Profile</span> and review the preview data.</>
               : isActiveSectionCompleted
-                ? <>This section is completed. If you want to enrich or add new details, you can use the <span className="font-semibold">Edit</span> button.</>
+                ? <>This section is completed. If you want to enrich or add new details, you can use the <span className="font-semibold">ADD</span> button.</>
                 : <>You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.</>}
           </p>
           {shouldHighlightSparkButton && (
             <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
-              New user flow: click the slowly pulsating <span className="font-semibold">Spark Profile</span> button first. Review the preview to understand what details are still pending, identify mandatory fields, and organize/collect that data in advance. Then start editing and saving from <span className="font-semibold">Officer Details</span>.
+              New user flow: click the slowly pulsating <span className="font-semibold">Spark Profile</span> button first. Review the preview to understand Spark Data and what details are still pending, identify mandatory fields, and organize/collect that data in advance. Then start editing and saving from <span className="font-semibold">Officer Details</span>.
             </p>
           )}
           {activeSection === 'Disciplinary Details' && (
