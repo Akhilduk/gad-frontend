@@ -945,6 +945,7 @@ const renderUserIndicator = (fieldKey) => {
                     <div className="mt-3 mx-3 flex justify-end">
                       <div className="relative group">
                         <button
+                          id="personal-info-edit-button"
                           className={`mb-3 px-2 py-1.5 border rounded-md transition-colors flex items-center gap-2 text-sm font-medium ${
                             isButtonDisabled
                               ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'

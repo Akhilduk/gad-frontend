@@ -142,7 +142,11 @@ export function ProfileAccordion({ openIndices, toggleAccordion, profileData, se
                     {guidedModeEnabled && (
                       <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-100">
                         <p className="font-semibold">Guided hint</p>
-                        <p className="mt-1">Open the edit controls inside this section, save changes, then continue to the next pending section. In card-based sections, each card must be saved separately.</p>
+                        {item.title === 'Officer Details' ? (
+                          <p className="mt-1">Start with Personal Information and use the Edit button inside that card, then continue to Dependent Details tree to add/update dependents and save them.</p>
+                        ) : (
+                          <p className="mt-1">Open the edit controls inside this section, save changes, then continue to the next pending section. In card-based sections, each card must be saved separately.</p>
+                        )}
                       </div>
                     )}
                     {item.content}

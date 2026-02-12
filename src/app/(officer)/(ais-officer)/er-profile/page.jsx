@@ -41,6 +41,7 @@ const HELP_PANEL_STORAGE_KEY = 'er_profile_help_panel_dismissed';
 const FLOW_STEPS = [
   { title: 'Check Spark data', description: 'Click Spark Profile on the left profile card to review imported data and pending fields.' },
   { title: 'Open section and edit', description: 'Use the left section list, click a section, then click Edit inside the opened area.' },
+  { title: 'Officer Details flow', description: 'Inside Officer Details, first complete Personal Information and use Edit button there, then continue to Dependent Details tree and add/update family members.' },
   { title: 'Save every form/card', description: 'For Education/Service type sections, edit and save each card item separately.' },
   { title: 'Preview and submit', description: 'After completion, open Profile Preview and submit for approval with OTP e-sign.' },
 ];
@@ -685,6 +686,11 @@ function ProfileContent() {
           <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
             You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.
           </p>
+          {activeSection === 'Officer Details' && (
+            <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
+              Officer Details order: complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.
+            </p>
+          )}
           <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
             {pendingSection ? `Next pending: ${pendingSection.title}` : 'All tracked sections are complete. Please go to Profile Preview and submit.'}
           </p>
