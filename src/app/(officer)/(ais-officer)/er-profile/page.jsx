@@ -56,7 +56,6 @@ const GUIDED_SECTION_ORDER = [
   'Training Details',
   'Awards and Publications',
   'Disability Details',
-  'Disciplinary Details',
 ];
 
 function ProfileContent() {
@@ -355,7 +354,6 @@ function ProfileContent() {
       { title: 'Training Details', key: 'training' },
       { title: 'Awards and Publications', key: 'awards' },
       { title: 'Disability Details', key: 'disability' },
-      { title: 'Disciplinary Details', key: 'disciplinary' },
     ];
 
     return orderedSections.find(({ key }) => {
