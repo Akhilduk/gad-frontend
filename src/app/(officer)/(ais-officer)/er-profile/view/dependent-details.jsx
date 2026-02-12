@@ -1002,13 +1002,13 @@ export function DependentDetails({ profileData }) {
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
-                                {saved > 0 && (
+                                {!isParentRelationship && saved > 0 && (
                                   <span className="inline-flex items-center text-green-600 text-xs">
                                     <CheckCircleIcon className="w-4 h-4" strokeWidth={2} />
                                     {!isParentRelationship && <span className="ml-0.5">{saved}</span>}
                                   </span>
                                 )}
-                                {unsaved > 0 && (
+                                {!isParentRelationship && unsaved > 0 && (
                                   <span className="inline-flex items-center text-red-600 text-xs">
                                     <ExclamationTriangleIcon className="w-4 h-4" strokeWidth={2} />
                                     {!isParentRelationship && <span className="ml-0.5">{unsaved}</span>}
