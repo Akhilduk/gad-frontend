@@ -913,17 +913,18 @@ const renderUserIndicator = (fieldKey) => {
                     <span className="text-sm text-gray-700 dark:text-white">Not Saved</span>
                   </div>
                 </div>
-                {isDbSparkApiEmpty && (
+                {section.title === 'Personal Information' && !isPersonalInfoComplete && (
                   <div className="mt-3 mx-2 p-2 bg-white dark:bg-red-900/30 border border-red-600 dark:border-red-700 rounded-lg flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <ExclamationTriangleIcon className="w-6 h-6 text-red-600 dark:text-red-400 text-xs" />
                       <p className="text-xs text-red-600 dark:text-red-200">
-                        Your details have not been saved. Please save your details.
+                        ⚠ Some information missing<br />
+                        {filledCount} of {requiredKeys.length} completed
                       </p>
                     </div>
                   </div>
                 )}
-                {isPersonalInfoComplete && !isDbSparkApiEmpty && (
+                {section.title === 'Personal Information' && isPersonalInfoComplete && !isDbSparkApiEmpty && (
                   <div className="mt-3 mx-2 p-2 bg-white dark:bg-green-900/30 border border-green-600 dark:border-green-800 rounded-lg flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <CheckCircleIcon className="w-6 h-6 text-green-600 dark:text-green-400" strokeWidth={2} />

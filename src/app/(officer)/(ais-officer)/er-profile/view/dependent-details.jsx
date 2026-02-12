@@ -1002,7 +1002,22 @@ export function DependentDetails({ profileData }) {
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
-                                {!isParentRelationship && saved > 0 && (
+                                {isParentRelationship && (saved > 0 || unsaved > 0) && (
+                                  <span className={`inline-flex items-center text-xs font-medium ${saved > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {saved > 0 ? (
+                                      <>
+                                        <CheckCircleIcon className="w-4 h-4" strokeWidth={2} />
+                                        <span className="ml-1">Saved</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ExclamationTriangleIcon className="w-4 h-4" strokeWidth={2} />
+                                        <span className="ml-1">Unsaved</span>
+                                      </>
+                                    )}
+                                  </span>
+                                )}
+                                {saved > 0 && (
                                   <span className="inline-flex items-center text-green-600 text-xs">
                                     <CheckCircleIcon className="w-4 h-4" strokeWidth={2} />
                                     {!isParentRelationship && <span className="ml-0.5">{saved}</span>}

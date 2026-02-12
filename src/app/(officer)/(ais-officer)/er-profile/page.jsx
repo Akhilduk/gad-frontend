@@ -684,6 +684,11 @@ function ProfileContent() {
           <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
             You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.
           </p>
+          {activeSection === 'Disciplinary Details' && (
+            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+              Disciplinary Details are updated by <span className="font-semibold">AS-II officer</span>. No save or edit action is required for AIS officer in this section.
+            </p>
+          )}
           {activeSection === 'Officer Details' && (
             <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
               Officer Details order: complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.
