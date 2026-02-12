@@ -1023,7 +1023,7 @@ export function DependentDetails({ profileData }) {
                                     {!isParentRelationship && <span className="ml-0.5">{saved}</span>}
                                   </span>
                                 )}
-                                {unsaved > 0 && (
+                                {!isParentRelationship && unsaved > 0 && (
                                   <span className="inline-flex items-center text-red-600 text-xs">
                                     <ExclamationTriangleIcon className="w-4 h-4" strokeWidth={2} />
                                     {!isParentRelationship && <span className="ml-0.5">{unsaved}</span>}
