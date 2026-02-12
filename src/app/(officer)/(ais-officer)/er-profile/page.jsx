@@ -751,7 +751,9 @@ function ProfileContent() {
         <div className="fixed inset-x-2 bottom-2 z-[90] rounded-xl border border-emerald-200 bg-white/95 p-3 shadow-xl backdrop-blur sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[min(28rem,calc(100vw-2rem))] sm:p-4 dark:border-emerald-700 dark:bg-gray-900/95">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Guidance Coach</p>
           <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
-            You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.
+            {shouldHighlightSparkButton
+              ? <>Step 1 for new users: first open <span className="font-semibold">Spark Profile</span> and review the preview data.</>
+              : <>You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.</>}
           </p>
           {shouldHighlightSparkButton && (
             <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
@@ -765,11 +767,17 @@ function ProfileContent() {
           )}
           {activeSection === 'Officer Details' && (
             <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
-              Officer Details order: complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.
+              {shouldHighlightSparkButton
+                ? <>After Spark preview, go to <span className="font-semibold">Officer Details</span> and complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.</>
+                : <>Officer Details order: complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.</>}
             </p>
           )}
           <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
-            {pendingSection ? `Next pending: ${pendingSection.title}` : 'All tracked sections are complete. Please go to Profile Preview and submit.'}
+            {shouldHighlightSparkButton
+              ? 'After viewing Spark Profile, continue with Officer Details editing.'
+              : pendingSection
+                ? `Next pending: ${pendingSection.title}`
+                : 'All tracked sections are complete. Please go to Profile Preview and submit.'}
           </p>
           {shouldHighlightProfileButton && (
             <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
