@@ -1,10 +1,15 @@
 "use client";
 
+import { ReactNode } from "react";
 import { HomeIcon } from "@heroicons/react/20/solid";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export function Breadcrumb() {
+type BreadcrumbProps = {
+  rightContent?: ReactNode;
+};
+
+export function Breadcrumb({ rightContent }: BreadcrumbProps) {
   const pathname = usePathname(); // Get the current route
   const pathSegments = pathname.split("/").filter((segment) => segment); // Remove empty segments
 
@@ -18,7 +23,7 @@ export function Breadcrumb() {
  
   return (
     <nav aria-label="Breadcrumb" className="my-3 w-full">
-      <ol className="flex space-x-4 rounded-md bg-white px-6 border dark:bg-neutral-700 dark:border-neutral-800 dark:text-white">
+      <ol className="flex items-center space-x-4 rounded-md bg-white px-6 border dark:bg-neutral-700 dark:border-neutral-800 dark:text-white">
         {/* Home Link */}
         <li className="flex">
       
@@ -50,6 +55,10 @@ export function Breadcrumb() {
             </Link>
           </li>
         ))}
+
+        {rightContent && (
+          <li className="ml-auto flex items-center gap-2 py-2">{rightContent}</li>
+        )}
       </ol>
     </nav>
   );
