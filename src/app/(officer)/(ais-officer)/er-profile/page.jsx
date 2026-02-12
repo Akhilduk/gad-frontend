@@ -599,17 +599,7 @@ function ProfileContent() {
                 <p className="mt-1 leading-6">After completion reaches 100%, open Profile Preview from left card and use Submit for approval (AS-2) with OTP e-sign.</p>
               </div>
 
-              {showHelpBadge && (
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleDismissHelpBadge}
-                  className="rounded-md border border-indigo-300 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-200 dark:hover:bg-indigo-900"
-                >
-                  Hide NEW badge
-                </button>
-              </div>
-            )}
+
             </div>
           </div>
         </div>
