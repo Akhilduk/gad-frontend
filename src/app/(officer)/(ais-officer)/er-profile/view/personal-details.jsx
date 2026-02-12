@@ -928,20 +928,44 @@ const renderUserIndicator = (fieldKey) => {
                 )}
                 {section.tabs ? (
                   <>
-                    <div className="flex flex-col sm:flex-row dark:border-gray-600 px-2 py-3">
-                      {section.tabs.map((tab) => (
-                        <button
-                          key={tab.label}
-                          className={`flex-1 text-sm font-medium p-2 mx-0.5 m-1 rounded-t-xl sm:rounded-t-md ${
-                            activeTabs[section.title] === tab.label
-                              ? 'bg-gray-200 text-gray-900 border border-gray-300'
-                              : 'bg-white border border-gray-300 dark:bg-gray-600 text-gray-900 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'
-                          }`}
-                          onClick={setActiveTab(section.title, tab.label)}
-                        >
-                          {tab.label}
-                        </button>
-                      ))}
+                    <div className="flex flex-col gap-2 px-2 py-3 sm:flex-row sm:items-start sm:justify-between dark:border-gray-600">
+                      <div className="flex-1 flex flex-col sm:flex-row">
+                        {section.tabs.map((tab) => (
+                          <button
+                            key={tab.label}
+                            className={`flex-1 text-sm font-medium p-2 mx-0.5 m-1 rounded-t-xl sm:rounded-t-md ${
+                              activeTabs[section.title] === tab.label
+                                ? 'bg-gray-200 text-gray-900 border border-gray-300'
+                                : 'bg-white border border-gray-300 dark:bg-gray-600 text-gray-900 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'
+                            }`}
+                            onClick={setActiveTab(section.title, tab.label)}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                      {section.title === 'Personal Information' && (
+                        <div className="relative group self-end sm:self-start">
+                          <button
+                            id="personal-info-edit-button"
+                            className={`mb-1 px-2 py-1.5 border rounded-md transition-colors flex items-center gap-2 text-sm font-medium ${
+                              isButtonDisabled
+                                ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'
+                                : 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-500'
+                            }`}
+                            onClick={handleEdit}
+                            disabled={isButtonDisabled}
+                          >
+                            <span>Edit</span>
+                            <PencilSquareIcon className="w-4 h-4" strokeWidth={2} />
+                          </button>
+                          {isButtonDisabled && (
+                            <div className="absolute right-0 top-full mt-1 hidden group-hover:block z-50 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap">
+                              Cannot edit personal details after the profile is submitted or approved
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 px-3">
                       {section.tabs
@@ -977,30 +1001,6 @@ const renderUserIndicator = (fieldKey) => {
                           </div>
                         ))}
                     </div>
-                  {section.title === 'Personal Information' && (
-                    <div className="mt-3 mx-3 flex justify-end">
-                      <div className="relative group">
-                        <button
-                          id="personal-info-edit-button"
-                          className={`mb-3 px-2 py-1.5 border rounded-md transition-colors flex items-center gap-2 text-sm font-medium ${
-                            isButtonDisabled
-                              ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'
-                              : 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-500'
-                          }`}
-                          onClick={handleEdit}
-                          disabled={isButtonDisabled}
-                        >
-                          <span>Edit</span>
-                          <PencilSquareIcon className="w-4 h-4" strokeWidth={2} />
-                        </button>
-                        {isButtonDisabled && (
-                          <div className="absolute right-0 top-full mt-1 hidden group-hover:block z-50 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap">
-                            Cannot edit personal details after the profile is submitted or approved
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
                   </>
                 ) : (
                   <div className="space-y-6 px-3 py-3">
