@@ -394,6 +394,9 @@ function ProfileContent() {
     return pendingSection?.title || activeSection || 'Officer Details';
   };
 
+  const guidedGhostButtonClass = 'inline-flex h-9 w-full items-center justify-center rounded-md border px-3 py-2 text-xs font-semibold shadow-sm transition-colors sm:h-8 sm:w-auto sm:py-1.5';
+  const guidedSolidButtonClass = 'inline-flex h-9 w-full items-center justify-center rounded-md border px-3 py-2 text-xs font-semibold shadow-sm transition-colors sm:h-8 sm:w-auto sm:py-1.5';
+
   const handleSkipZeroInfoSection = () => {
     if (!activeSectionIsZeroInfo) return;
 
@@ -450,7 +453,7 @@ function ProfileContent() {
     <>
       <Breadcrumb
         rightContent={(
-          <>
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <button
               type="button"
               onClick={handleOpenHelp}
@@ -463,19 +466,19 @@ function ProfileContent() {
             <button
               type="button"
               onClick={toggleGuidedMode}
-              className={`ml-2 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold shadow-sm transition-colors ${guidedModeEnabled
+              className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold shadow-sm transition-colors ${guidedModeEnabled
                 ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200'
                 : 'border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:bg-gray-800 dark:text-indigo-200 dark:hover:bg-indigo-950/40'
                 }`}
             >
               {guidedModeEnabled ? 'Guided Mode: On' : 'Start Guided Mode'}
             </button>
-          </>
+          </div>
         )}
       />
 
       {guidedModeEnabled && (
-        <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-700 dark:bg-emerald-950/30">
+        <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 sm:px-4 dark:border-emerald-700 dark:bg-emerald-950/30">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Guided completion</p>
@@ -483,12 +486,12 @@ function ProfileContent() {
                 Step {currentStep} of {totalGuidedSteps}: <span className="font-semibold">{activeSection}</span>
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
               <button
                 type="button"
                 onClick={() => handleGoToGuidedSection(previousGuidedSection)}
                 disabled={!previousGuidedSection}
-                className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-600 dark:bg-gray-900 dark:text-emerald-200"
+                className={`${guidedGhostButtonClass} border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-600 dark:bg-gray-900 dark:text-emerald-200`}
               >
                 Previous
               </button>
@@ -503,14 +506,14 @@ function ProfileContent() {
                 type="button"
                 onClick={handleSkipZeroInfoSection}
                 disabled={!activeSectionIsZeroInfo}
-                className="rounded-md border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/30 dark:text-sky-200"
+                className={`${guidedGhostButtonClass} border-sky-300 bg-sky-50 text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/30 dark:text-sky-200`}
               >
                 Skip this session
               </button>
               <button
                 type="button"
                 onClick={toggleGuidedMode}
-                className="rounded-md border border-transparent bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                className={`${guidedSolidButtonClass} border-transparent bg-emerald-600 text-white hover:bg-emerald-700`}
               >
                 Exit Guided Mode
               </button>
@@ -651,14 +654,14 @@ function ProfileContent() {
 
 
       {showHelpPanel && (
-        <div className="fixed inset-0 z-[95] bg-black/35">
+        <div className="fixed inset-0 z-[95] bg-black/40 backdrop-blur-[1px]">
           <div
-            className="absolute right-0 top-16 bottom-16 w-full max-w-2xl overflow-y-auto rounded-l-2xl border-l border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+            className="absolute inset-0 w-full overflow-y-auto border-gray-200 bg-white shadow-2xl sm:inset-y-10 sm:right-0 sm:left-auto sm:max-w-2xl sm:rounded-l-2xl sm:border-l dark:border-gray-700 dark:bg-gray-900"
             role="dialog"
             aria-modal="true"
             aria-label="Profile completion help"
           >
-            <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-900">
+            <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-4 sm:px-5 dark:border-gray-700 dark:bg-gray-900">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Profile completion help</h3>
@@ -674,7 +677,7 @@ function ProfileContent() {
               </div>
             </div>
 
-            <div className="space-y-5 p-5">
+            <div className="space-y-5 p-4 sm:p-5">
               <div className="grid gap-2 sm:grid-cols-2">
                 <button
                   type="button"
@@ -733,7 +736,7 @@ function ProfileContent() {
       )}
 
       {guidedModeEnabled && (
-        <div className="fixed bottom-4 right-4 z-[90] w-[min(26rem,calc(100vw-2rem))] rounded-xl border border-emerald-200 bg-white/95 p-4 shadow-xl backdrop-blur dark:border-emerald-700 dark:bg-gray-900/95">
+        <div className="fixed inset-x-2 bottom-2 z-[90] rounded-xl border border-emerald-200 bg-white/95 p-3 shadow-xl backdrop-blur sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[min(28rem,calc(100vw-2rem))] sm:p-4 dark:border-emerald-700 dark:bg-gray-900/95">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Guidance Coach</p>
           <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
             You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.
@@ -761,19 +764,19 @@ function ProfileContent() {
               You are currently on the next pending section.
             </p>
           )}
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
             <button
               type="button"
               onClick={() => handleGoToGuidedSection(previousGuidedSection)}
               disabled={!previousGuidedSection}
-              className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+              className={`${guidedGhostButtonClass} border-gray-200 text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800`}
             >
               Previous
             </button>
             <button
               type="button"
               onClick={() => handleGoToGuidedSection(pendingSection?.title || nextGuidedSection)}
-              className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
+              className={`${guidedGhostButtonClass} border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200`}
             >
               Open Next
             </button>
@@ -781,14 +784,14 @@ function ProfileContent() {
               type="button"
               onClick={handleSkipZeroInfoSection}
               disabled={!activeSectionIsZeroInfo}
-              className="rounded-md border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/30 dark:text-sky-200"
+              className={`${guidedGhostButtonClass} border-sky-300 bg-sky-50 text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/30 dark:text-sky-200`}
             >
               Skip this session
             </button>
             <button
               type="button"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="rounded-md border border-indigo-300 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-800 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200"
+              className={`${guidedGhostButtonClass} border-indigo-300 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200`}
             >
               Top / Spark Card
             </button>
