@@ -34,6 +34,10 @@ const ALL_REQUIRED_SECTIONS = [
   'disciplinary',
 ];
 
+// Backward-compatibility guard for older cached bundles during hot reload.
+// (Some environments may still reference this symbol from previous iterations.)
+const HELP_PANEL_STORAGE_KEY = 'er_profile_help_panel_dismissed';
+
 const FLOW_STEPS = [
   { title: 'Check Spark data', description: 'Click Spark Profile on the left profile card to review imported data and pending fields.' },
   { title: 'Open section and edit', description: 'Use the left section list, click a section, then click Edit inside the opened area.' },
