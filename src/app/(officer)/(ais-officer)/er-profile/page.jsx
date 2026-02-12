@@ -361,15 +361,6 @@ function ProfileContent() {
       <Breadcrumb
         rightContent={(
           <>
-            {showHelpBadge && (
-              <button
-                type="button"
-                onClick={handleDismissHelpBadge}
-                className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-200 dark:hover:bg-indigo-900"
-              >
-                Hide NEW badge
-              </button>
-            )}
             <button
               type="button"
               onClick={handleOpenHelp}
@@ -609,16 +600,16 @@ function ProfileContent() {
               </div>
 
               {showHelpBadge && (
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={handleDismissHelpBadge}
-                    className="rounded-md border border-indigo-300 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-200 dark:hover:bg-indigo-900"
-                  >
-                    Do not show NEW badge again
-                  </button>
-                </div>
-              )}
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleDismissHelpBadge}
+                  className="rounded-md border border-indigo-300 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-200 dark:hover:bg-indigo-900"
+                >
+                  Hide NEW badge
+                </button>
+              </div>
+            )}
             </div>
           </div>
         </div>
