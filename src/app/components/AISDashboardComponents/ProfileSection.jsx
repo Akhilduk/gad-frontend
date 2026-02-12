@@ -24,7 +24,7 @@ import ReactCrop from 'react-image-crop';
 import { createPortal } from "react-dom";
 import 'react-image-crop/dist/ReactCrop.css';
 
-export const ProfileSection = ({ compactMode = false }) => {
+export const ProfileSection = ({ compactMode = false, highlightSparkButton = false, highlightProfileButton = false }) => {
   const fileInputRef = useRef(null);
   const imgRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -790,7 +790,7 @@ const fetchProfileImage = async (officerDataParam = null) => {
                   onClick={handlePreviewProfile}
                   disabled={!isProfileComplete || isDataLoading}
                   title={isDataLoading ? "Loading data..." : "Preview your profile"}
-                  className={`w-full py-2 px-2 rounded-xl transition-all font-medium flex items-center justify-center space-x-1 group ${
+                  className={`w-full py-2 px-2 rounded-xl transition-all font-medium flex items-center justify-center space-x-1 group ${highlightProfileButton ? 'animate-pulse ring-2 ring-amber-300 ring-offset-1 ring-offset-transparent' : ''} ${
                     isProfileComplete && !isDataLoading
                       ? "bg-white/20 hover:bg-white/30 text-white shadow-lg backdrop-blur-sm dark:bg-white/10 dark:hover:bg-white/20"
                       : "bg-white/10 text-white/50 cursor-not-allowed dark:bg-white/5"
@@ -825,7 +825,7 @@ const fetchProfileImage = async (officerDataParam = null) => {
                   onClick={handlePreviewSparkProfile}
                   disabled={!isProfileComplete || isDataLoading}
                   title={isDataLoading ? "Loading data..." : "Preview your SPARK profile"}
-                  className={`w-full py-2 px-2 rounded-xl transition-all font-medium flex items-center justify-center space-x-1 group ${
+                  className={`w-full py-2 px-2 rounded-xl transition-all font-medium flex items-center justify-center space-x-1 group ${highlightSparkButton ? 'animate-pulse ring-2 ring-amber-300 ring-offset-1 ring-offset-transparent' : ''} ${
                     isProfileComplete && !isDataLoading
                       ? "bg-white/20 hover:bg-white/30 text-white shadow-lg backdrop-blur-sm dark:bg-white/10 dark:hover:bg-white/20"
                       : "bg-white/10 text-white/50 cursor-not-allowed dark:bg-white/5"
