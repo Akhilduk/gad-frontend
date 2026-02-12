@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { HomeIcon, ExclamationTriangleIcon, BriefcaseIcon, IdentificationIcon, EnvelopeIcon, PhoneIcon, CalendarIcon, HeartIcon, CakeIcon, LanguageIcon, ChevronDownIcon, PencilSquareIcon, CheckCircleIcon, MapPinIcon, UserCircleIcon} from '@heroicons/react/24/outline';
 import { BoltIcon, UserIcon,  } from '@heroicons/react/24/solid';
 import { ModalPersonalDetails } from '../modal/personal-details';
@@ -10,7 +10,7 @@ import axiosInstance from '@/utils/apiClient';
 import { getServiceTypeName } from '@/utils/serviceTypeUtils';
 import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 
-export function PersonalDetails({ profileData }) {
+export function PersonalDetails({ profileData, guidedModeEnabled = false }) {
   console.log('PersonalDetails profileData:', profileData);
   const [isModalOpen, setModalOpen] = useState(false);
   const [personalDetails, setPersonalDetails] = useState({});
@@ -25,6 +25,7 @@ export function PersonalDetails({ profileData }) {
   const [openSections, setOpenSections] = useState({});
   const [activeTabs, setActiveTabs] = useState({});
   const [localProfileData, setLocalProfileData] = useState(profileData);
+  const hasAutoGuidedOpened = useRef(false);
   // Get profile status from sessionStorage
   const profileStatus = sessionStorage.getItem('profile_status');
   const isButtonDisabled = profileStatus === '2' || profileStatus === '3'; // Disable for submitted or approved
@@ -353,6 +354,8 @@ export function PersonalDetails({ profileData }) {
       ? requiredKeys.filter(k => personalDetails[k]?.toString().trim()).length
       : 0;
   }, [personalDetails, requiredKeys]);
+
+  const isPersonalInfoComplete = filledCount === requiredKeys.length && requiredKeys.length > 0;
 
   const updatePersonalDetails = useCallback((newDetails) => {
 
@@ -737,6 +740,46 @@ setTimeout(() => {
     }
   }, [personalDetails, updateSectionProgress]);
 
+  useEffect(() => {
+    if (!guidedModeEnabled || hasAutoGuidedOpened.current) return;
+    if (!sections?.length) return;
+
+    const personalSection = sections.find((section) => section.title === 'Personal Information');
+    if (!personalSection) return;
+
+    setOpenSections((prev) => {
+      if (prev['Personal Information']) return prev;
+      return {
+        ...prev,
+        'Personal Information': true,
+      };
+    });
+
+    setActiveTabs((prev) => {
+      if (prev['Personal Information']) return prev;
+      const firstTab = personalSection.tabs?.[0]?.label;
+      if (!firstTab) return prev;
+      return {
+        ...prev,
+        'Personal Information': firstTab,
+      };
+    });
+
+    const timer = setTimeout(() => {
+      const editButton = document.getElementById('personal-info-edit-button');
+      if (editButton) {
+        editButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        editButton.classList.add('ring-2', 'ring-indigo-500', 'ring-offset-2');
+        setTimeout(() => {
+          editButton.classList.remove('ring-2', 'ring-indigo-500', 'ring-offset-2');
+        }, 1800);
+      }
+    }, 220);
+
+    hasAutoGuidedOpened.current = true;
+    return () => clearTimeout(timer);
+  }, [guidedModeEnabled, sections]);
+
   const handleEdit = useCallback((e) => {
     e.stopPropagation();
     setFormData(personalDetails);
@@ -880,7 +923,7 @@ const renderUserIndicator = (fieldKey) => {
                     </div>
                   </div>
                 )}
-                {!isDbSparkApiEmpty && (
+                {isPersonalInfoComplete && !isDbSparkApiEmpty && (
                   <div className="mt-3 mx-2 p-2 bg-white dark:bg-green-900/30 border border-green-600 dark:border-green-800 rounded-lg flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <CheckCircleIcon className="w-6 h-6 text-green-600 dark:text-green-400" strokeWidth={2} />
@@ -945,6 +988,7 @@ const renderUserIndicator = (fieldKey) => {
                     <div className="mt-3 mx-3 flex justify-end">
                       <div className="relative group">
                         <button
+                          id="personal-info-edit-button"
                           className={`mb-3 px-2 py-1.5 border rounded-md transition-colors flex items-center gap-2 text-sm font-medium ${
                             isButtonDisabled
                               ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'
