@@ -150,7 +150,7 @@ export function Accordion({ onSectionSelect, activeSection }) {
                    isComplete ? '✓ All information complete' : '⚠ Some information missing'}
                 </div>
                 <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  {isEmptySection ? 'You can add information if needed' : `${prog.completed} of ${prog.total} completed`}
+                  {isEmptySection ? 'You can add new details by Add button and can enrich the profile.' : `${prog.completed} of ${prog.total} completed`}
                 </div>
               </div>
             )}
