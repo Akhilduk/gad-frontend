@@ -384,6 +384,8 @@ function ProfileContent() {
 
   const pendingSection = getNextPendingSection();
   const activeSectionIsZeroInfo = isZeroInfoSection(activeSection);
+  const activeSectionProgress = getProgressBySectionTitle(activeSection);
+  const isActiveSectionCompleted = activeSectionProgress.total > 0 && activeSectionProgress.completed === activeSectionProgress.total;
   const officerDetailsProgress = sectionProgress.personal || { completed: 0, total: 0 };
   const isOfficerDetailsCompleted = officerDetailsProgress.total > 0 && officerDetailsProgress.completed === officerDetailsProgress.total;
   const shouldHighlightSparkButton = guidedModeEnabled && !isOfficerDetailsCompleted;
@@ -439,6 +441,15 @@ function ProfileContent() {
   const handleGoToGuidedSection = (sectionTitle) => {
     if (!sectionTitle) return;
     handleSectionSelect(sectionTitle);
+  };
+
+  const handleGuidedNextAction = () => {
+    if (shouldHighlightProfileButton) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    handleGoToGuidedSection(pendingSection?.title || nextGuidedSection);
   };
 
   if (loading) {
@@ -500,7 +511,7 @@ function ProfileContent() {
               </button>
               <button
                 type="button"
-                onClick={() => handleGoToGuidedSection(pendingSection?.title || nextGuidedSection)}
+                onClick={handleGuidedNextAction}
                 className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-600 dark:bg-gray-900 dark:text-emerald-200"
               >
                 Open Next Pending
@@ -753,7 +764,9 @@ function ProfileContent() {
           <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
             {shouldHighlightSparkButton
               ? <>Step 1 for new users: first open <span className="font-semibold">Spark Profile</span> and review the preview data.</>
-              : <>You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.</>}
+              : isActiveSectionCompleted
+                ? <>This section is completed. If you want to enrich or add new details, you can use the <span className="font-semibold">Edit</span> button.</>
+                : <>You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.</>}
           </p>
           {shouldHighlightSparkButton && (
             <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
@@ -805,7 +818,7 @@ function ProfileContent() {
             </button>
             <button
               type="button"
-              onClick={() => handleGoToGuidedSection(pendingSection?.title || nextGuidedSection)}
+              onClick={handleGuidedNextAction}
               className={`${guidedGhostButtonClass} border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200`}
             >
               Open Next
