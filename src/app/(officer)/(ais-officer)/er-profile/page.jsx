@@ -793,7 +793,7 @@ function ProfileContent() {
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className={`${guidedGhostButtonClass} border-indigo-300 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200`}
             >
-              Top / Spark Card
+             Move to top
             </button>
           </div>
         </div>
