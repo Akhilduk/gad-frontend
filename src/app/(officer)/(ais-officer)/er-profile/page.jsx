@@ -757,7 +757,7 @@ function ProfileContent() {
           </p>
           {shouldHighlightSparkButton && (
             <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
-              New user flow: click the slowly pulsating <span className="font-semibold">Spark Profile</span> button first, review preview data, note mandatory fields, and then start editing from <span className="font-semibold">Officer Details</span>.
+              New user flow: click the slowly pulsating <span className="font-semibold">Spark Profile</span> button first. Review the preview to understand what details are still pending, identify mandatory fields, and organize/collect that data in advance. Then start editing and saving from <span className="font-semibold">Officer Details</span>.
             </p>
           )}
           {activeSection === 'Disciplinary Details' && (
