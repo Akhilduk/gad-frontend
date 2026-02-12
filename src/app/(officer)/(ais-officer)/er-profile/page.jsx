@@ -383,6 +383,16 @@ function ProfileContent() {
 
   const pendingSection = getNextPendingSection();
   const activeSectionIsZeroInfo = isZeroInfoSection(activeSection);
+  const officerDetailsProgress = sectionProgress.personal || { completed: 0, total: 0 };
+  const isOfficerDetailsCompleted = officerDetailsProgress.total > 0 && officerDetailsProgress.completed === officerDetailsProgress.total;
+
+  const getGuidedStartSection = () => {
+    if (!isOfficerDetailsCompleted) {
+      return 'Officer Details';
+    }
+
+    return pendingSection?.title || activeSection || 'Officer Details';
+  };
 
   const handleSkipZeroInfoSection = () => {
     if (!activeSectionIsZeroInfo) return;
@@ -413,7 +423,8 @@ function ProfileContent() {
       const nextValue = !prev;
       localStorage.setItem(GUIDED_MODE_STORAGE_KEY, String(nextValue));
       if (nextValue) {
-        handleSectionSelect(activeSection || 'Officer Details');
+        setSkippedZeroInfoSections(new Set());
+        handleSectionSelect(getGuidedStartSection());
       }
       return nextValue;
     });
@@ -742,7 +753,12 @@ function ProfileContent() {
           </p>
           {activeSectionIsZeroInfo && (
             <p className="mt-1 text-xs text-sky-700 dark:text-sky-300">
-              No information added yet. You can add new details by Add button and enrich the profile.
+              This section has no information yet (0/0). Use the Add button to create records, or click "Skip this session" to continue to the next section.
+            </p>
+          )}
+          {activeSectionIsZeroInfo && pendingSection?.title === activeSection && (
+            <p className="mt-1 text-xs text-sky-700 dark:text-sky-300">
+              You are currently on the next pending section.
             </p>
           )}
           <div className="mt-3 flex flex-wrap gap-2">
