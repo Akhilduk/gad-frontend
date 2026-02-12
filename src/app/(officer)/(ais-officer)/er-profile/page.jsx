@@ -75,6 +75,10 @@ function ProfileContent() {
   const [showHelpBadge, setShowHelpBadge] = useState(false);
   const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
   const [skippedZeroInfoSections, setSkippedZeroInfoSections] = useState(new Set());
+  const [coachPosition, setCoachPosition] = useState(null);
+  const [isDraggingCoach, setIsDraggingCoach] = useState(false);
+  const coachPanelRef = useRef(null);
+  const coachDragStateRef = useRef({ pointerOffsetX: 0, pointerOffsetY: 0 });
   const sectionRefs = useRef([]);
   const contentContainerRef = useRef(null);
   const { sectionProgress, markInitialLoadComplete, initialLoadComplete } = useProfileCompletion();
@@ -452,6 +456,97 @@ function ProfileContent() {
     handleGoToGuidedSection(pendingSection?.title || nextGuidedSection);
   };
 
+  useEffect(() => {
+    if (!guidedModeEnabled || coachPosition) {
+      return;
+    }
+
+    const panelWidth = coachPanelRef.current?.offsetWidth ?? Math.min(window.innerWidth - 16, 448);
+    const panelHeight = coachPanelRef.current?.offsetHeight ?? 280;
+    const defaultLeft = Math.max(8, window.innerWidth - panelWidth - 16);
+    const defaultTop = Math.max(8, window.innerHeight - panelHeight - 16);
+    setCoachPosition({ x: defaultLeft, y: defaultTop });
+  }, [guidedModeEnabled, coachPosition]);
+
+  useEffect(() => {
+    if (!coachPosition) {
+      return;
+    }
+
+    const handleResize = () => {
+      const panelWidth = coachPanelRef.current?.offsetWidth ?? 320;
+      const panelHeight = coachPanelRef.current?.offsetHeight ?? 280;
+      const maxX = Math.max(8, window.innerWidth - panelWidth - 8);
+      const maxY = Math.max(8, window.innerHeight - panelHeight - 8);
+
+      setCoachPosition((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        return {
+          x: Math.min(Math.max(8, prev.x), maxX),
+          y: Math.min(Math.max(8, prev.y), maxY),
+        };
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [coachPosition]);
+
+  const handleCoachDragStart = (event) => {
+    const panelRect = coachPanelRef.current?.getBoundingClientRect();
+    if (!panelRect) {
+      return;
+    }
+
+    event.preventDefault();
+    coachDragStateRef.current = {
+      pointerOffsetX: event.clientX - panelRect.left,
+      pointerOffsetY: event.clientY - panelRect.top,
+    };
+    setIsDraggingCoach(true);
+  };
+
+  const handleCoachDragMove = (event) => {
+    if (!isDraggingCoach || !coachPanelRef.current) {
+      return;
+    }
+
+    const panelWidth = coachPanelRef.current.offsetWidth;
+    const panelHeight = coachPanelRef.current.offsetHeight;
+    const maxX = Math.max(8, window.innerWidth - panelWidth - 8);
+    const maxY = Math.max(8, window.innerHeight - panelHeight - 8);
+    const nextX = event.clientX - coachDragStateRef.current.pointerOffsetX;
+    const nextY = event.clientY - coachDragStateRef.current.pointerOffsetY;
+
+    setCoachPosition({
+      x: Math.min(Math.max(8, nextX), maxX),
+      y: Math.min(Math.max(8, nextY), maxY),
+    });
+  };
+
+  const handleCoachDragEnd = () => {
+    if (isDraggingCoach) {
+      setIsDraggingCoach(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isDraggingCoach) {
+      return;
+    }
+
+    window.addEventListener('pointermove', handleCoachDragMove);
+    window.addEventListener('pointerup', handleCoachDragEnd);
+
+    return () => {
+      window.removeEventListener('pointermove', handleCoachDragMove);
+      window.removeEventListener('pointerup', handleCoachDragEnd);
+    };
+  }, [isDraggingCoach]);
+
   if (loading) {
     return (
       <div className="p-4 text-center">
@@ -759,7 +854,20 @@ function ProfileContent() {
       )}
 
       {guidedModeEnabled && (
-        <div className="fixed inset-x-2 bottom-2 z-[90] rounded-xl border border-emerald-200 bg-white/95 p-3 shadow-xl backdrop-blur sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[min(28rem,calc(100vw-2rem))] sm:p-4 dark:border-emerald-700 dark:bg-gray-900/95">
+        <div
+          ref={coachPanelRef}
+          style={coachPosition ? { left: `${coachPosition.x}px`, top: `${coachPosition.y}px` } : undefined}
+          className="fixed z-[90] w-[min(28rem,calc(100vw-1rem))] rounded-xl border border-emerald-200 bg-white/95 p-3 shadow-xl backdrop-blur sm:p-4 dark:border-emerald-700 dark:bg-gray-900/95"
+        >
+          <button
+            type="button"
+            onPointerDown={handleCoachDragStart}
+            className="mb-2 inline-flex cursor-grab items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 active:cursor-grabbing dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
+            aria-label="Drag Guidance Coach"
+          >
+            <span aria-hidden="true">↕</span>
+            Drag Guidance Coach
+          </button>
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Guidance Coach</p>
           <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
             {shouldHighlightSparkButton
