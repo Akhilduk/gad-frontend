@@ -23,43 +23,39 @@ export function Breadcrumb({ rightContent }: BreadcrumbProps) {
  
   return (
     <nav aria-label="Breadcrumb" className="my-3 w-full">
-      <ol className="flex items-center space-x-4 rounded-md bg-white px-6 border dark:bg-neutral-700 dark:border-neutral-800 dark:text-white">
-        {/* Home Link */}
-        <li className="flex">
-      
-            <HomeIcon aria-hidden="true" className="size-5 shri
-            
-            
-            nk-0 mt-3" />
+      <div className="flex w-full items-center rounded-md border bg-white px-6 dark:border-neutral-800 dark:bg-neutral-700 dark:text-white">
+        <ol className="flex min-w-0 items-center space-x-4">
+          {/* Home Link */}
+          <li className="flex">
+            <HomeIcon aria-hidden="true" className="size-5 shrink-0 mt-3" />
             <span className="sr-only">Home</span>
-          
-        </li>
-
-        {/* Dynamic Breadcrumb Items */}
-        {breadcrumbItems.map((page, index) => (
-          <li key={index} className="flex items-center">
-            {/* Separator */}
-            <svg fill="currentColor" viewBox="0 0 24 44" preserveAspectRatio="none" aria-hidden="true" className="h-full w-6 shrink-0 text-gray-200">
-              <path d="M.293 0l22 22-22 22h1.414l22-22-22-22H.293z" />
-            </svg>
-            
-            {/* Breadcrumb Link */}
-            <Link
-              href="#"
-              // aria-current={page.current ? "page" : undefined}
-              className={`ml-4 text-sm font-medium capitalize ${
-                page.current ? "text-gray-700 dark:text-gray-100" : "text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
-              }`}
-            >
-              {page.name}
-            </Link>
           </li>
-        ))}
+
+          {/* Dynamic Breadcrumb Items */}
+          {breadcrumbItems.map((page, index) => (
+            <li key={index} className="flex items-center">
+              {/* Separator */}
+              <svg fill="currentColor" viewBox="0 0 24 44" preserveAspectRatio="none" aria-hidden="true" className="h-full w-6 shrink-0 text-gray-200">
+                <path d="M.293 0l22 22-22 22h1.414l22-22-22-22H.293z" />
+              </svg>
+
+              {/* Breadcrumb Link */}
+              <Link
+                href="#"
+                className={`ml-4 text-sm font-medium capitalize ${
+                  page.current ? "text-gray-700 dark:text-gray-100" : "text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+                }`}
+              >
+                {page.name}
+              </Link>
+            </li>
+          ))}
+        </ol>
 
         {rightContent && (
-          <li className="ml-auto flex items-center gap-2 py-2">{rightContent}</li>
+          <div className="ml-auto flex items-center gap-2 py-2">{rightContent}</div>
         )}
-      </ol>
+      </div>
     </nav>
   );
 }
