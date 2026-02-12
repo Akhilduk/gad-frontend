@@ -234,6 +234,11 @@ function ProfileContent() {
   }, [isInitializing, markInitialLoadComplete]);
 
   useEffect(() => {
+    const hideHelpBadge = localStorage.getItem(HELP_PANEL_STORAGE_KEY);
+    if (hideHelpBadge !== 'true') {
+      setShowHelpBadge(true);
+    }
+
     const fetchProfileData = async () => {
       try {
         const cachedData = sessionStorage.getItem('profileData');
@@ -411,6 +416,28 @@ function ProfileContent() {
         ref={contentContainerRef}
         className={`profile-layout-container relative isolate z-0 ${layoutTransition ? 'transition-all duration-300 ease-in-out' : ''} ${modalOpen ? 'overflow-hidden' : ''}`}
       >
+
+        {/* Guidance entry point (non-blocking) */}
+        <div className="mb-2 flex flex-wrap items-center justify-end gap-2">
+          {showHelpBadge && (
+            <button
+              type="button"
+              onClick={handleDismissHelpBadge}
+              className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-200 dark:hover:bg-indigo-900"
+            >
+              Hide NEW badge
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleOpenHelp}
+            className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-white px-3 py-2 text-xs font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50 dark:border-indigo-700 dark:bg-gray-800 dark:text-indigo-200 dark:hover:bg-indigo-950/40"
+          >
+            Help: How to complete profile
+            {showHelpBadge && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] text-white">New</span>}
+          </button>
+        </div>
+
         {/* When all collapsed - Horizontal compact ProfileSection at top */}
           {isAllCollapsed ? (
           <div className="space-y-3 py-2">
