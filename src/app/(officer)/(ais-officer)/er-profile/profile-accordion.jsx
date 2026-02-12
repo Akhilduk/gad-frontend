@@ -43,7 +43,7 @@ export function ProfileAccordion({ openIndices, toggleAccordion, profileData, se
       title: 'Officer Details',
       content: (
         <div>
-          <PersonalDetails profileData={profileData} />
+          <PersonalDetails profileData={profileData} guidedModeEnabled={guidedModeEnabled} />
           <DependentDetails profileData={profileData} />
         </div>
       ),
