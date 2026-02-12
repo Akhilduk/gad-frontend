@@ -358,7 +358,29 @@ function ProfileContent() {
 
   return (
     <>
-      <Breadcrumb />
+      <Breadcrumb
+        rightContent={(
+          <>
+            {showHelpBadge && (
+              <button
+                type="button"
+                onClick={handleDismissHelpBadge}
+                className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-200 dark:hover:bg-indigo-900"
+              >
+                Hide NEW badge
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleOpenHelp}
+              className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-white px-3 py-2 text-xs font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50 dark:border-indigo-700 dark:bg-gray-800 dark:text-indigo-200 dark:hover:bg-indigo-950/40"
+            >
+              Help: How to complete profile
+              {showHelpBadge && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] text-white">New</span>}
+            </button>
+          </>
+        )}
+      />
 
       {/* ER Profile page-level help actions (placed near breadcrumb) */}
       <div className="mb-2 mt-2 flex flex-wrap items-center justify-end gap-2 px-2 sm:px-0">
