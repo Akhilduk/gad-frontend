@@ -25,7 +25,7 @@ import ReactCrop from 'react-image-crop';
 import { createPortal } from "react-dom";
 import 'react-image-crop/dist/ReactCrop.css';
 
-export const CompactProfileSection = () => {
+export const CompactProfileSection = ({ highlightSparkButton = false, highlightProfileButton = false }) => {
   const fileInputRef = useRef(null);
   const imgRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -696,7 +696,7 @@ export const CompactProfileSection = () => {
                     whileTap={isProfileComplete && !isDataLoading ? { scale: 0.97 } : {}}
                     onClick={handlePreviewProfile}
                     disabled={!isProfileComplete || isDataLoading}
-                    className={`px-3 sm:px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-2 text-sm ${
+                    className={`px-3 sm:px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-2 text-sm ${highlightProfileButton ? 'animate-pulse ring-2 ring-amber-300 ring-offset-1 ring-offset-transparent' : ''} ${
                       isProfileComplete && !isDataLoading
                         ? "bg-white/20 hover:bg-white/30 text-white shadow backdrop-blur-sm dark:bg-white/10 dark:hover:bg-white/20"
                         : "bg-white/10 text-white/50 cursor-not-allowed dark:bg-white/5"
@@ -711,7 +711,7 @@ export const CompactProfileSection = () => {
                     whileTap={isProfileComplete && !isDataLoading ? { scale: 0.97 } : {}}
                     onClick={handlePreviewSparkProfile}
                     disabled={!isProfileComplete || isDataLoading}
-                    className={`px-3 sm:px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-2 text-sm ${
+                    className={`px-3 sm:px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-2 text-sm ${highlightSparkButton ? 'animate-pulse ring-2 ring-amber-300 ring-offset-1 ring-offset-transparent' : ''} ${
                       isProfileComplete && !isDataLoading
                         ? "bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 hover:from-cyan-500/30 hover:to-indigo-500/30 text-white border border-cyan-400/30 shadow backdrop-blur-sm"
                         : "bg-white/10 text-white/50 cursor-not-allowed border border-white/10"
