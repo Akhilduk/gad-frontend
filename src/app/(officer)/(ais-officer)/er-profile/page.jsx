@@ -39,11 +39,12 @@ const ALL_REQUIRED_SECTIONS = [
 const HELP_PANEL_STORAGE_KEY = 'er_profile_help_panel_dismissed';
 
 const FLOW_STEPS = [
-  { title: 'Check Spark data', description: 'Click Spark Profile on the left profile card to review imported data and pending fields.' },
-  { title: 'Open section and edit', description: 'Use the left section list, click a section, then click Edit inside the opened area.' },
+  { title: 'Start with Spark Profile', description: 'For a new session, click Spark Profile first and review the preview data that will be used in this system.' },
+  { title: 'Plan before editing', description: 'Use Spark preview to understand mandatory fields, take a print if needed, and collect all required details before data entry.' },
+  { title: 'Open section and edit', description: 'After reviewing Spark data, start from Officer Details. Use the left section list, open a section, then click Edit.' },
   { title: 'Officer Details flow', description: 'Inside Officer Details, first complete Personal Information and use Edit button there, then continue to Dependent Details tree and add/update family members.' },
   { title: 'Save every form/card', description: 'For Education/Service type sections, edit and save each card item separately.' },
-  { title: 'Preview and submit', description: 'After completion, open Profile Preview and submit for approval with OTP e-sign.' },
+  { title: 'Final preview and submit', description: 'After 100% completion, open Profile Preview, review all details, then click Submit at the bottom for OTP and e-sign to send it to AS-II for approval.' },
 ];
 
 const GUIDED_MODE_STORAGE_KEY = 'er_profile_guided_mode';
@@ -383,8 +384,12 @@ function ProfileContent() {
 
   const pendingSection = getNextPendingSection();
   const activeSectionIsZeroInfo = isZeroInfoSection(activeSection);
+  const activeSectionProgress = getProgressBySectionTitle(activeSection);
+  const isActiveSectionCompleted = activeSectionProgress.total > 0 && activeSectionProgress.completed === activeSectionProgress.total;
   const officerDetailsProgress = sectionProgress.personal || { completed: 0, total: 0 };
   const isOfficerDetailsCompleted = officerDetailsProgress.total > 0 && officerDetailsProgress.completed === officerDetailsProgress.total;
+  const shouldHighlightSparkButton = guidedModeEnabled && !isOfficerDetailsCompleted;
+  const shouldHighlightProfileButton = guidedModeEnabled && !pendingSection;
 
   const getGuidedStartSection = () => {
     if (!isOfficerDetailsCompleted) {
@@ -436,6 +441,15 @@ function ProfileContent() {
   const handleGoToGuidedSection = (sectionTitle) => {
     if (!sectionTitle) return;
     handleSectionSelect(sectionTitle);
+  };
+
+  const handleGuidedNextAction = () => {
+    if (shouldHighlightProfileButton) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    handleGoToGuidedSection(pendingSection?.title || nextGuidedSection);
   };
 
   if (loading) {
@@ -497,7 +511,7 @@ function ProfileContent() {
               </button>
               <button
                 type="button"
-                onClick={() => handleGoToGuidedSection(pendingSection?.title || nextGuidedSection)}
+                onClick={handleGuidedNextAction}
                 className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-600 dark:bg-gray-900 dark:text-emerald-200"
               >
                 Open Next Pending
@@ -576,7 +590,12 @@ function ProfileContent() {
           <div className="space-y-3 py-2">
             {/* Compact Horizontal ProfileSection at top */}
             <div className={`w-full transform transition-all duration-300 relative z-10 ${layoutTransition ? 'scale-[0.98] opacity-90' : ''}`}>
-              {profileData && <CompactProfileSection />}
+              {profileData && (
+                <CompactProfileSection
+                  highlightSparkButton={shouldHighlightSparkButton}
+                  highlightProfileButton={shouldHighlightProfileButton}
+                />
+              )}
             </div>
             
             {/* Main content area with sidebar and accordions */}
@@ -617,7 +636,11 @@ function ProfileContent() {
             <div className="lg:col-span-3 space-y-3 relative z-0">
               {profileData && (
                 <>
-                  <ProfileSection compactMode={false} />
+                  <ProfileSection
+                    compactMode={false}
+                    highlightSparkButton={shouldHighlightSparkButton}
+                    highlightProfileButton={shouldHighlightProfileButton}
+                  />
                   <Accordion 
                     onSectionSelect={handleSectionSelect}
                     activeSection={activeSection}
@@ -739,8 +762,17 @@ function ProfileContent() {
         <div className="fixed inset-x-2 bottom-2 z-[90] rounded-xl border border-emerald-200 bg-white/95 p-3 shadow-xl backdrop-blur sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[min(28rem,calc(100vw-2rem))] sm:p-4 dark:border-emerald-700 dark:bg-gray-900/95">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Guidance Coach</p>
           <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
-            You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.
+            {shouldHighlightSparkButton
+              ? <>Step 1 for new users: first open <span className="font-semibold">Spark Profile</span> and review the preview data.</>
+              : isActiveSectionCompleted
+                ? <>This section is completed. If you want to enrich or add new details, you can use the <span className="font-semibold">Edit</span> button.</>
+                : <>You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.</>}
           </p>
+          {shouldHighlightSparkButton && (
+            <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
+              New user flow: click the slowly pulsating <span className="font-semibold">Spark Profile</span> button first. Review the preview to understand what details are still pending, identify mandatory fields, and organize/collect that data in advance. Then start editing and saving from <span className="font-semibold">Officer Details</span>.
+            </p>
+          )}
           {activeSection === 'Disciplinary Details' && (
             <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
               Disciplinary Details are updated by <span className="font-semibold">AS-II officer</span>. No save or edit action is required for AIS officer in this section.
@@ -748,12 +780,23 @@ function ProfileContent() {
           )}
           {activeSection === 'Officer Details' && (
             <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
-              Officer Details order: complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.
+              {shouldHighlightSparkButton
+                ? <>After Spark preview, go to <span className="font-semibold">Officer Details</span> and complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.</>
+                : <>Officer Details order: complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.</>}
             </p>
           )}
           <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
-            {pendingSection ? `Next pending: ${pendingSection.title}` : 'All tracked sections are complete. Please go to Profile Preview and submit.'}
+            {shouldHighlightSparkButton
+              ? 'After viewing Spark Profile, continue with Officer Details editing.'
+              : pendingSection
+                ? `Next pending: ${pendingSection.title}`
+                : 'All tracked sections are complete. Please go to Profile Preview and submit.'}
           </p>
+          {shouldHighlightProfileButton && (
+            <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
+              Completion flow: click the slowly pulsating <span className="font-semibold">Profile</span> button, review the full data, then use the <span className="font-semibold">Submit</span> action at the bottom for OTP + e-sign. Final submission goes to <span className="font-semibold">AS-II</span> for approval.
+            </p>
+          )}
           {activeSectionIsZeroInfo && (
             <p className="mt-1 text-xs text-sky-700 dark:text-sky-300">
               This section has no information yet (0/0). Use the Add button to create records, or click "Skip this session" to continue to the next section.
@@ -775,7 +818,7 @@ function ProfileContent() {
             </button>
             <button
               type="button"
-              onClick={() => handleGoToGuidedSection(pendingSection?.title || nextGuidedSection)}
+              onClick={handleGuidedNextAction}
               className={`${guidedGhostButtonClass} border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200`}
             >
               Open Next
