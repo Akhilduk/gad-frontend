@@ -349,6 +349,8 @@ export function PersonalDetails({ profileData, guidedModeEnabled = false }) {
 
   const isPersonalInfoComplete = filledCount === mandatoryFields.length && mandatoryFields.length > 0;
 
+  const isPersonalInfoComplete = filledCount === requiredKeys.length && requiredKeys.length > 0;
+
   const updatePersonalDetails = useCallback((newDetails) => {
 
     setPersonalDetails((prev) => {

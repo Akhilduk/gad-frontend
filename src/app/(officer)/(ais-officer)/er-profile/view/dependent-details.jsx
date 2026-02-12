@@ -1014,13 +1014,13 @@ export function DependentDetails({ profileData }) {
                                 {saved > 0 && !isParentRelationship && (
                                   <span className="inline-flex items-center text-green-600 text-xs">
                                     <CheckCircleIcon className="w-4 h-4" strokeWidth={2} />
-                                    <span className="ml-0.5">{saved}</span>
+                                    {!isParentRelationship && <span className="ml-0.5">{saved}</span>}
                                   </span>
                                 )}
                                 {unsaved > 0 && !isParentRelationship && (
                                   <span className="inline-flex items-center text-red-600 text-xs">
                                     <ExclamationTriangleIcon className="w-4 h-4" strokeWidth={2} />
-                                    <span className="ml-0.5">{unsaved}</span>
+                                    {!isParentRelationship && <span className="ml-0.5">{unsaved}</span>}
                                   </span>
                                 )}
                                 <motion.div
