@@ -1003,27 +1003,21 @@ export function DependentDetails({ profileData }) {
                               </div>
                               <div className="flex items-center gap-2">
                                 {isParentRelationship && (saved > 0 || unsaved > 0) && (
-                                  <span className={`inline-flex items-center text-xs font-medium ${saved > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  <span className={`inline-flex items-center text-xs ${saved > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                     {saved > 0 ? (
-                                      <>
-                                        <CheckCircleIcon className="w-4 h-4" strokeWidth={2} />
-                                        <span className="ml-1">Saved</span>
-                                      </>
+                                      <CheckCircleIcon className="w-4 h-4" strokeWidth={2} />
                                     ) : (
-                                      <>
-                                        <ExclamationTriangleIcon className="w-4 h-4" strokeWidth={2} />
-                                        <span className="ml-1">Unsaved</span>
-                                      </>
+                                      <ExclamationTriangleIcon className="w-4 h-4" strokeWidth={2} />
                                     )}
                                   </span>
                                 )}
-                                {saved > 0 && (
+                                {saved > 0 && !isParentRelationship && (
                                   <span className="inline-flex items-center text-green-600 text-xs">
                                     <CheckCircleIcon className="w-4 h-4" strokeWidth={2} />
                                     {!isParentRelationship && <span className="ml-0.5">{saved}</span>}
                                   </span>
                                 )}
-                                {!isParentRelationship && unsaved > 0 && (
+                                {unsaved > 0 && !isParentRelationship && (
                                   <span className="inline-flex items-center text-red-600 text-xs">
                                     <ExclamationTriangleIcon className="w-4 h-4" strokeWidth={2} />
                                     {!isParentRelationship && <span className="ml-0.5">{unsaved}</span>}

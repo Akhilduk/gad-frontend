@@ -341,19 +341,13 @@ export function PersonalDetails({ profileData, guidedModeEnabled = false }) {
     }
   ], [personalDetails, masterData, calculateAge, formatDate]);
 
-  const requiredKeys = useMemo(() => [
-    'first_name', 'last_name', 'ais_number', 'email', 'allotment_year','date_of_joining',
-    'pen_number', 'source_of_recruitment_id', 'cadre_id', 'dob', 'gender_id',
-    'mother_tongue_id', 'service_type_id', 'mobile_no', 'address_line1_com', 'district_id_com',
-    'state_id_com', 'pin_code_com', 'address_line1_per', 'district_id_per', 'state_id_per',
-    'pin_code_per'
-  ], []);
-
   const filledCount = useMemo(() => {
     return personalDetails
-      ? requiredKeys.filter(k => personalDetails[k]?.toString().trim()).length
+      ? mandatoryFields.filter(k => personalDetails[k]?.toString().trim()).length
       : 0;
-  }, [personalDetails, requiredKeys]);
+  }, [personalDetails, mandatoryFields]);
+
+  const isPersonalInfoComplete = filledCount === mandatoryFields.length && mandatoryFields.length > 0;
 
   const isPersonalInfoComplete = filledCount === requiredKeys.length && requiredKeys.length > 0;
 
@@ -919,7 +913,7 @@ const renderUserIndicator = (fieldKey) => {
                       <ExclamationTriangleIcon className="w-6 h-6 text-red-600 dark:text-red-400 text-xs" />
                       <p className="text-xs text-red-600 dark:text-red-200">
                         ⚠ Some information missing<br />
-                        {filledCount} of {requiredKeys.length} completed
+                        {filledCount} of {mandatoryFields.length} completed
                       </p>
                     </div>
                   </div>
