@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { HomeIcon, ExclamationTriangleIcon, BriefcaseIcon, IdentificationIcon, EnvelopeIcon, PhoneIcon, CalendarIcon, HeartIcon, CakeIcon, LanguageIcon, ChevronDownIcon, PencilSquareIcon, CheckCircleIcon, MapPinIcon, UserCircleIcon} from '@heroicons/react/24/outline';
 import { BoltIcon, UserIcon,  } from '@heroicons/react/24/solid';
 import { ModalPersonalDetails } from '../modal/personal-details';
@@ -10,7 +10,7 @@ import axiosInstance from '@/utils/apiClient';
 import { getServiceTypeName } from '@/utils/serviceTypeUtils';
 import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 
-export function PersonalDetails({ profileData }) {
+export function PersonalDetails({ profileData, guidedModeEnabled = false }) {
   console.log('PersonalDetails profileData:', profileData);
   const [isModalOpen, setModalOpen] = useState(false);
   const [personalDetails, setPersonalDetails] = useState({});
@@ -25,6 +25,7 @@ export function PersonalDetails({ profileData }) {
   const [openSections, setOpenSections] = useState({});
   const [activeTabs, setActiveTabs] = useState({});
   const [localProfileData, setLocalProfileData] = useState(profileData);
+  const hasAutoGuidedOpened = useRef(false);
   // Get profile status from sessionStorage
   const profileStatus = sessionStorage.getItem('profile_status');
   const isButtonDisabled = profileStatus === '2' || profileStatus === '3'; // Disable for submitted or approved
@@ -340,19 +341,13 @@ export function PersonalDetails({ profileData }) {
     }
   ], [personalDetails, masterData, calculateAge, formatDate]);
 
-  const requiredKeys = useMemo(() => [
-    'first_name', 'last_name', 'ais_number', 'email', 'allotment_year','date_of_joining',
-    'pen_number', 'source_of_recruitment_id', 'cadre_id', 'dob', 'gender_id',
-    'mother_tongue_id', 'service_type_id', 'mobile_no', 'address_line1_com', 'district_id_com',
-    'state_id_com', 'pin_code_com', 'address_line1_per', 'district_id_per', 'state_id_per',
-    'pin_code_per'
-  ], []);
-
   const filledCount = useMemo(() => {
     return personalDetails
-      ? requiredKeys.filter(k => personalDetails[k]?.toString().trim()).length
+      ? mandatoryFields.filter(k => personalDetails[k]?.toString().trim()).length
       : 0;
-  }, [personalDetails, requiredKeys]);
+  }, [personalDetails, mandatoryFields]);
+
+  const isPersonalInfoComplete = filledCount === mandatoryFields.length && mandatoryFields.length > 0;
 
   const updatePersonalDetails = useCallback((newDetails) => {
 
@@ -737,6 +732,46 @@ setTimeout(() => {
     }
   }, [personalDetails, updateSectionProgress]);
 
+  useEffect(() => {
+    if (!guidedModeEnabled || hasAutoGuidedOpened.current) return;
+    if (!sections?.length) return;
+
+    const personalSection = sections.find((section) => section.title === 'Personal Information');
+    if (!personalSection) return;
+
+    setOpenSections((prev) => {
+      if (prev['Personal Information']) return prev;
+      return {
+        ...prev,
+        'Personal Information': true,
+      };
+    });
+
+    setActiveTabs((prev) => {
+      if (prev['Personal Information']) return prev;
+      const firstTab = personalSection.tabs?.[0]?.label;
+      if (!firstTab) return prev;
+      return {
+        ...prev,
+        'Personal Information': firstTab,
+      };
+    });
+
+    const timer = setTimeout(() => {
+      const editButton = document.getElementById('personal-info-edit-button');
+      if (editButton) {
+        editButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        editButton.classList.add('ring-2', 'ring-indigo-500', 'ring-offset-2');
+        setTimeout(() => {
+          editButton.classList.remove('ring-2', 'ring-indigo-500', 'ring-offset-2');
+        }, 1800);
+      }
+    }, 220);
+
+    hasAutoGuidedOpened.current = true;
+    return () => clearTimeout(timer);
+  }, [guidedModeEnabled, sections]);
+
   const handleEdit = useCallback((e) => {
     e.stopPropagation();
     setFormData(personalDetails);
@@ -870,17 +905,18 @@ const renderUserIndicator = (fieldKey) => {
                     <span className="text-sm text-gray-700 dark:text-white">Not Saved</span>
                   </div>
                 </div>
-                {isDbSparkApiEmpty && (
+                {section.title === 'Personal Information' && !isPersonalInfoComplete && (
                   <div className="mt-3 mx-2 p-2 bg-white dark:bg-red-900/30 border border-red-600 dark:border-red-700 rounded-lg flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <ExclamationTriangleIcon className="w-6 h-6 text-red-600 dark:text-red-400 text-xs" />
                       <p className="text-xs text-red-600 dark:text-red-200">
-                        Your details have not been saved. Please save your details.
+                        ⚠ Some information missing<br />
+                        {filledCount} of {mandatoryFields.length} completed
                       </p>
                     </div>
                   </div>
                 )}
-                {!isDbSparkApiEmpty && (
+                {section.title === 'Personal Information' && isPersonalInfoComplete && !isDbSparkApiEmpty && (
                   <div className="mt-3 mx-2 p-2 bg-white dark:bg-green-900/30 border border-green-600 dark:border-green-800 rounded-lg flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <CheckCircleIcon className="w-6 h-6 text-green-600 dark:text-green-400" strokeWidth={2} />
@@ -945,6 +981,7 @@ const renderUserIndicator = (fieldKey) => {
                     <div className="mt-3 mx-3 flex justify-end">
                       <div className="relative group">
                         <button
+                          id="personal-info-edit-button"
                           className={`mb-3 px-2 py-1.5 border rounded-md transition-colors flex items-center gap-2 text-sm font-medium ${
                             isButtonDisabled
                               ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'

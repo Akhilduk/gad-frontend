@@ -376,7 +376,8 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
       newErrors.praan_number = 'PRAN must be exactly 12 numeric digits (0-9 only,no letters, spaces, or special characters).';
    }
 
-   if (formData.pf_number && !isValidPFNumber(formData.pf_number)) {
+   const shouldValidatePFNumber = !isFieldDisabled('pf_number');
+   if (shouldValidatePFNumber && formData.pf_number && !isValidPFNumber(formData.pf_number)) {
         newErrors.pf_number = 'PF Account Number must be exactly 12 numeric digits (0-9 only, no letters, spaces, or special characters).'; // Updated error message
     }
    if (formData.ais_number && !isValidAISNumber(formData.ais_number)) {
@@ -463,7 +464,7 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
         }
         break;
       case 'pf_number':
-        if (trimmedValue && !/^\d{12}$/.test(trimmedValue)) {
+        if (!isFieldDisabled('pf_number') && trimmedValue && !/^\d{12}$/.test(trimmedValue)) {
           error = 'PF Account Number must be exactly 12 numeric digits (0-9 only, no letters, spaces, or special characters).';
         }
         break;
