@@ -34,8 +34,6 @@ const ALL_REQUIRED_SECTIONS = [
   'disciplinary',
 ];
 
-const HELP_PANEL_STORAGE_KEY = 'er_profile_help_panel_dismissed';
-
 const FLOW_STEPS = [
   { title: 'Check Spark data', description: 'Click Spark Profile on the left profile card to review imported data and pending fields.' },
   { title: 'Open section and edit', description: 'Use the left section list, click a section, then click Edit inside the opened area.' },
@@ -56,7 +54,6 @@ function ProfileContent() {
   const [layoutTransition, setLayoutTransition] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [showHelpPanel, setShowHelpPanel] = useState(false);
-  const [showHelpBadge, setShowHelpBadge] = useState(false);
   const sectionRefs = useRef([]);
   const contentContainerRef = useRef(null);
   const { sectionProgress, markInitialLoadComplete, initialLoadComplete } = useProfileCompletion();
@@ -340,11 +337,6 @@ function ProfileContent() {
     setShowHelpPanel(true);
   };
 
-  const handleDismissHelpBadge = () => {
-    setShowHelpBadge(false);
-    localStorage.setItem(HELP_PANEL_STORAGE_KEY, 'true');
-  };
-
   if (loading) {
     return (
       <div className="p-4 text-center">
@@ -367,7 +359,6 @@ function ProfileContent() {
               className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-white px-3 py-2 text-xs font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50 dark:border-indigo-700 dark:bg-gray-800 dark:text-indigo-200 dark:hover:bg-indigo-950/40"
             >
               Help: How to complete profile
-              {showHelpBadge && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] text-white">New</span>}
             </button>
           </>
         )}
