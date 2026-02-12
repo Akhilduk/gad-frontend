@@ -508,7 +508,7 @@ function ProfileContent() {
                 disabled={!activeSectionIsZeroInfo}
                 className={`${guidedGhostButtonClass} border-sky-300 bg-sky-50 text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/30 dark:text-sky-200`}
               >
-                Skip
+                Skip this session
               </button>
               <button
                 type="button"
@@ -756,7 +756,7 @@ function ProfileContent() {
           </p>
           {activeSectionIsZeroInfo && (
             <p className="mt-1 text-xs text-sky-700 dark:text-sky-300">
-              This section has no information yet (0/0). Use the Add button to create records, or click "Skip" to continue to the next section.
+              This section has no information yet (0/0). Use the Add button to create records, or click "Skip this session" to continue to the next section.
             </p>
           )}
           {activeSectionIsZeroInfo && pendingSection?.title === activeSection && (
@@ -786,7 +786,7 @@ function ProfileContent() {
               disabled={!activeSectionIsZeroInfo}
               className={`${guidedGhostButtonClass} border-sky-300 bg-sky-50 text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/30 dark:text-sky-200`}
             >
-              Skip
+              Skip this session
             </button>
             <button
               type="button"
