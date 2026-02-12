@@ -73,6 +73,7 @@ function ProfileContent() {
   const [showHelpPanel, setShowHelpPanel] = useState(false);
   const [showHelpBadge, setShowHelpBadge] = useState(false);
   const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
+  const [skippedZeroInfoSections, setSkippedZeroInfoSections] = useState(new Set());
   const sectionRefs = useRef([]);
   const contentContainerRef = useRef(null);
   const { sectionProgress, markInitialLoadComplete, initialLoadComplete } = useProfileCompletion();
@@ -345,27 +346,71 @@ function ProfileContent() {
   const previousGuidedSection = currentGuidedIndex > 0 ? GUIDED_SECTION_ORDER[currentGuidedIndex - 1] : null;
   const nextGuidedSection = currentGuidedIndex < totalGuidedSteps - 1 ? GUIDED_SECTION_ORDER[currentGuidedIndex + 1] : null;
 
-  const getNextPendingSection = () => {
-    const orderedSections = [
-      { title: 'Officer Details', key: 'personal' },
-      { title: 'Educational Qualifications', key: 'education' },
-      { title: 'Service Details', key: 'service' },
-      { title: 'Deputation Details', key: 'central_deputation' },
-      { title: 'Training Details', key: 'training' },
-      { title: 'Awards and Publications', key: 'awards' },
-      { title: 'Disability Details', key: 'disability' },
-    ];
+  const orderedSections = [
+    { title: 'Officer Details', key: 'personal' },
+    { title: 'Educational Qualifications', key: 'education' },
+    { title: 'Service Details', key: 'service' },
+    { title: 'Deputation Details', key: 'central_deputation' },
+    { title: 'Training Details', key: 'training' },
+    { title: 'Awards and Publications', key: 'awards' },
+    { title: 'Disability Details', key: 'disability' },
+  ];
 
-    return orderedSections.find(({ key }) => {
+  const getProgressBySectionTitle = (sectionTitle) => {
+    const sectionMeta = orderedSections.find((section) => section.title === sectionTitle);
+    if (!sectionMeta) return { completed: 0, total: 0 };
+    return sectionProgress[sectionMeta.key] || { completed: 0, total: 0 };
+  };
+
+  const isZeroInfoSection = (sectionTitle) => {
+    const progress = getProgressBySectionTitle(sectionTitle);
+    return progress.completed === 0 && progress.total === 0;
+  };
+
+  const getNextPendingSection = (skippedSections = skippedZeroInfoSections) => {
+    return orderedSections.find(({ title, key }) => {
       const progress = sectionProgress[key] || { completed: 0, total: 0 };
-      if (progress.total === 0) {
+      const isIncomplete = progress.total > 0 && progress.completed < progress.total;
+      const isZeroInfo = progress.completed === 0 && progress.total === 0;
+
+      if (isZeroInfo && skippedSections.has(title)) {
         return false;
       }
-      return progress.completed < progress.total;
+
+      return isIncomplete || isZeroInfo;
     });
   };
 
   const pendingSection = getNextPendingSection();
+  const activeSectionIsZeroInfo = isZeroInfoSection(activeSection);
+  const officerDetailsProgress = sectionProgress.personal || { completed: 0, total: 0 };
+  const isOfficerDetailsCompleted = officerDetailsProgress.total > 0 && officerDetailsProgress.completed === officerDetailsProgress.total;
+
+  const getGuidedStartSection = () => {
+    if (!isOfficerDetailsCompleted) {
+      return 'Officer Details';
+    }
+
+    return pendingSection?.title || activeSection || 'Officer Details';
+  };
+
+  const handleSkipZeroInfoSection = () => {
+    if (!activeSectionIsZeroInfo) return;
+
+    const updatedSkippedSections = new Set(skippedZeroInfoSections);
+    updatedSkippedSections.add(activeSection);
+    setSkippedZeroInfoSections(updatedSkippedSections);
+
+    const nextSection = getNextPendingSection(updatedSkippedSections);
+    if (nextSection?.title) {
+      handleGoToGuidedSection(nextSection.title);
+      return;
+    }
+
+    if (nextGuidedSection) {
+      handleGoToGuidedSection(nextGuidedSection);
+    }
+  };
 
   const handleOpenHelp = () => {
     localStorage.setItem(HELP_PANEL_STORAGE_KEY, 'true');
@@ -378,7 +423,8 @@ function ProfileContent() {
       const nextValue = !prev;
       localStorage.setItem(GUIDED_MODE_STORAGE_KEY, String(nextValue));
       if (nextValue) {
-        handleSectionSelect(activeSection || 'Officer Details');
+        setSkippedZeroInfoSections(new Set());
+        handleSectionSelect(getGuidedStartSection());
       }
       return nextValue;
     });
@@ -452,6 +498,14 @@ function ProfileContent() {
                 className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-600 dark:bg-gray-900 dark:text-emerald-200"
               >
                 Open Next Pending
+              </button>
+              <button
+                type="button"
+                onClick={handleSkipZeroInfoSection}
+                disabled={!activeSectionIsZeroInfo}
+                className="rounded-md border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/30 dark:text-sky-200"
+              >
+                Skip this session
               </button>
               <button
                 type="button"
@@ -697,6 +751,16 @@ function ProfileContent() {
           <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
             {pendingSection ? `Next pending: ${pendingSection.title}` : 'All tracked sections are complete. Please go to Profile Preview and submit.'}
           </p>
+          {activeSectionIsZeroInfo && (
+            <p className="mt-1 text-xs text-sky-700 dark:text-sky-300">
+              This section has no information yet (0/0). Use the Add button to create records, or click "Skip this session" to continue to the next section.
+            </p>
+          )}
+          {activeSectionIsZeroInfo && pendingSection?.title === activeSection && (
+            <p className="mt-1 text-xs text-sky-700 dark:text-sky-300">
+              You are currently on the next pending section.
+            </p>
+          )}
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
@@ -712,6 +776,14 @@ function ProfileContent() {
               className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
             >
               Open Next
+            </button>
+            <button
+              type="button"
+              onClick={handleSkipZeroInfoSection}
+              disabled={!activeSectionIsZeroInfo}
+              className="rounded-md border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/30 dark:text-sky-200"
+            >
+              Skip this session
             </button>
             <button
               type="button"
