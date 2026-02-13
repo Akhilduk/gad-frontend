@@ -603,7 +603,7 @@ function ProfileContent() {
                 disabled={!previousGuidedSection}
                 className={`${guidedGhostButtonClass} border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-600 dark:bg-gray-900 dark:text-emerald-200`}
               >
-                Previous
+                Prev
               </button>
               <button
                 type="button"
@@ -941,21 +941,21 @@ function ProfileContent() {
                   : 'All tracked sections are complete. Please go to Profile Preview and submit.'}
             </p>
 
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-0.5">
               <button
                 type="button"
                 onClick={() => handleGoToGuidedSection(previousGuidedSection)}
                 disabled={!previousGuidedSection}
                 className={`${guidedGhostButtonClass} border-gray-200 text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800`}
               >
-                Previous
+                Prev
               </button>
               <button
                 type="button"
                 onClick={handleGuidedNextAction}
                 className={`${guidedGhostButtonClass} border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200`}
               >
-                Open Next
+                Next
               </button>
               <button
                 type="button"
@@ -970,7 +970,7 @@ function ProfileContent() {
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className={`${guidedGhostButtonClass} border-indigo-300 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200`}
               >
-                Move to top
+                Top
               </button>
             </div>
           </div>
