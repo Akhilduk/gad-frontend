@@ -74,6 +74,7 @@ function ProfileContent() {
   const [showHelpPanel, setShowHelpPanel] = useState(false);
   const [showHelpBadge, setShowHelpBadge] = useState(false);
   const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
+  const [isCoachDetailsExpanded, setIsCoachDetailsExpanded] = useState(false);
   const [skippedZeroInfoSections, setSkippedZeroInfoSections] = useState(new Set());
   const [coachPosition, setCoachPosition] = useState(null);
   const [isDraggingCoach, setIsDraggingCoach] = useState(false);
@@ -857,95 +858,121 @@ function ProfileContent() {
         <div
           ref={coachPanelRef}
           style={coachPosition ? { left: `${coachPosition.x}px`, top: `${coachPosition.y}px` } : undefined}
-          className="fixed z-[90] w-[min(28rem,calc(100vw-1rem))] rounded-xl border border-emerald-200 bg-white/95 p-3 shadow-xl backdrop-blur sm:p-4 dark:border-emerald-700 dark:bg-gray-900/95"
+          className="fixed z-[90] w-[min(26rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-white via-emerald-50/40 to-white shadow-2xl ring-1 ring-emerald-100 backdrop-blur dark:border-emerald-700 dark:from-gray-900 dark:via-emerald-950/20 dark:to-gray-900 dark:ring-emerald-900/60"
         >
-          <button
-            type="button"
-            onPointerDown={handleCoachDragStart}
-            className="mb-2 inline-flex cursor-grab items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 active:cursor-grabbing dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
-            aria-label="Drag Guidance Coach"
-          >
-            <span aria-hidden="true">↕</span>
-            Drag Guidance Coach
-          </button>
-          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Guidance Coach</p>
-          <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
-            {shouldHighlightSparkButton
-              ? <>Step 1 for new users: first open <span className="font-semibold">Spark Profile</span> and review the preview data.</>
-              : isActiveSectionCompleted
-                ? <>This section is completed. If you want to enrich or add new details, you can use the <span className="font-semibold">ADD</span> button.</>
-                : <>You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.</>}
-          </p>
-          {shouldHighlightSparkButton && (
-            <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
-              New user flow: click the slowly pulsating <span className="font-semibold">Spark Profile</span> button first. Review the preview to understand Spark Data and what details are still pending, identify mandatory fields, and organize/collect that data in advance. Then start editing and saving from <span className="font-semibold">Officer Details</span>.
-            </p>
-          )}
-          {activeSection === 'Disciplinary Details' && (
-            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-              Disciplinary Details are updated by <span className="font-semibold">AS-II officer</span>. No save or edit action is required for AIS officer in this section.
-            </p>
-          )}
-          {activeSection === 'Officer Details' && (
-            <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
+          <div className="border-b border-emerald-200/80 bg-emerald-50/70 px-3 py-2.5 sm:px-4 dark:border-emerald-800 dark:bg-emerald-950/30">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700 dark:text-emerald-300">Guidance Coach</p>
+                <p className="mt-0.5 text-xs font-medium text-gray-700 dark:text-gray-200">Compact step-by-step help</p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setIsCoachDetailsExpanded((prev) => !prev)}
+                  className="inline-flex items-center rounded-md border border-emerald-200 bg-white px-2 py-1 text-[11px] font-semibold text-emerald-800 shadow-sm dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
+                >
+                  {isCoachDetailsExpanded ? 'Less' : 'More'} tips
+                </button>
+                <button
+                  type="button"
+                  onPointerDown={handleCoachDragStart}
+                  className="inline-flex cursor-grab items-center gap-2 rounded-md border border-emerald-200 bg-white px-2.5 py-1 text-xs font-medium text-emerald-800 shadow-sm active:cursor-grabbing dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
+                  aria-label="Drag Guidance Coach"
+                >
+                  <span aria-hidden="true">↕</span>
+                  Drag
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-h-[min(50vh,18rem)] space-y-2 overflow-y-auto p-2.5 sm:p-3">
+            <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm dark:border-emerald-800 dark:bg-gray-900 dark:text-gray-100">
               {shouldHighlightSparkButton
-                ? <>After Spark preview, go to <span className="font-semibold">Officer Details</span> and complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.</>
-                : <>Officer Details order: complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.</>}
+                ? <>Step 1 for new users: first open <span className="font-semibold">Spark Profile</span> and review the preview data.</>
+                : isActiveSectionCompleted
+                  ? <>This section is completed. If you want to enrich or add new details, you can use the <span className="font-semibold">ADD</span> button.</>
+                  : <>You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.</>}
+            </div>
+
+            {isCoachDetailsExpanded && (shouldHighlightSparkButton || activeSection === 'Disciplinary Details' || activeSection === 'Officer Details' || shouldHighlightProfileButton || activeSectionIsZeroInfo) && (
+              <div className="space-y-2">
+                {shouldHighlightSparkButton && (
+                  <p className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs leading-5 text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300">
+                    New user flow: click the slowly pulsating <span className="font-semibold">Spark Profile</span> button first. Review the preview to understand Spark Data and what details are still pending, identify mandatory fields, and organize/collect that data in advance. Then start editing and saving from <span className="font-semibold">Officer Details</span>.
+                  </p>
+                )}
+                {activeSection === 'Disciplinary Details' && (
+                  <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+                    Disciplinary Details are updated by <span className="font-semibold">AS-II officer</span>. No save or edit action is required for AIS officer in this section.
+                  </p>
+                )}
+                {activeSection === 'Officer Details' && (
+                  <p className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs leading-5 text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300">
+                    {shouldHighlightSparkButton
+                      ? <>After Spark preview, go to <span className="font-semibold">Officer Details</span> and complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.</>
+                      : <>Officer Details order: complete <span className="font-semibold">Personal Information</span> first (Edit button inside that card), then continue with the <span className="font-semibold">Dependent Details</span> tree.</>}
+                  </p>
+                )}
+                {shouldHighlightProfileButton && (
+                  <p className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs leading-5 text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300">
+                    Completion flow: click the slowly pulsating <span className="font-semibold">Profile</span> button, review the full data, then use the <span className="font-semibold">Submit</span> action at the bottom for OTP + e-sign. Final submission goes to <span className="font-semibold">AS-II</span> for approval.
+                  </p>
+                )}
+                {activeSectionIsZeroInfo && (
+                  <p className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-800 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-300">
+                    This section has no information yet (0/0). Use the Add button to create records, or click "Skip" to continue to the next section.
+                  </p>
+                )}
+                {activeSectionIsZeroInfo && pendingSection?.title === activeSection && (
+                  <p className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-800 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-300">
+                    You are currently on the next pending section.
+                  </p>
+                )}
+              </div>
+            )}
+
+            <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              {shouldHighlightSparkButton
+                ? 'After viewing Spark Profile, continue with Officer Details editing.'
+                : pendingSection
+                  ? `Next pending: ${pendingSection.title}`
+                  : 'All tracked sections are complete. Please go to Profile Preview and submit.'}
             </p>
-          )}
-          <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
-            {shouldHighlightSparkButton
-              ? 'After viewing Spark Profile, continue with Officer Details editing.'
-              : pendingSection
-                ? `Next pending: ${pendingSection.title}`
-                : 'All tracked sections are complete. Please go to Profile Preview and submit.'}
-          </p>
-          {shouldHighlightProfileButton && (
-            <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
-              Completion flow: click the slowly pulsating <span className="font-semibold">Profile</span> button, review the full data, then use the <span className="font-semibold">Submit</span> action at the bottom for OTP + e-sign. Final submission goes to <span className="font-semibold">AS-II</span> for approval.
-            </p>
-          )}
-          {activeSectionIsZeroInfo && (
-            <p className="mt-1 text-xs text-sky-700 dark:text-sky-300">
-              This section has no information yet (0/0). Use the Add button to create records, or click "Skip" to continue to the next section.
-            </p>
-          )}
-          {activeSectionIsZeroInfo && pendingSection?.title === activeSection && (
-            <p className="mt-1 text-xs text-sky-700 dark:text-sky-300">
-              You are currently on the next pending section.
-            </p>
-          )}
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
-            <button
-              type="button"
-              onClick={() => handleGoToGuidedSection(previousGuidedSection)}
-              disabled={!previousGuidedSection}
-              className={`${guidedGhostButtonClass} border-gray-200 text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800`}
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              onClick={handleGuidedNextAction}
-              className={`${guidedGhostButtonClass} border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200`}
-            >
-              Open Next
-            </button>
-            <button
-              type="button"
-              onClick={handleSkipZeroInfoSection}
-              disabled={!activeSectionIsZeroInfo}
-              className={`${guidedGhostButtonClass} border-sky-300 bg-sky-50 text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/30 dark:text-sky-200`}
-            >
-              Skip
-            </button>
-            <button
-              type="button"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className={`${guidedGhostButtonClass} border-indigo-300 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200`}
-            >
-             Move to top
-            </button>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => handleGoToGuidedSection(previousGuidedSection)}
+                disabled={!previousGuidedSection}
+                className={`${guidedGhostButtonClass} border-gray-200 text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800`}
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={handleGuidedNextAction}
+                className={`${guidedGhostButtonClass} border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200`}
+              >
+                Open Next
+              </button>
+              <button
+                type="button"
+                onClick={handleSkipZeroInfoSection}
+                disabled={!activeSectionIsZeroInfo}
+                className={`${guidedGhostButtonClass} border-sky-300 bg-sky-50 text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/30 dark:text-sky-200`}
+              >
+                Skip
+              </button>
+              <button
+                type="button"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className={`${guidedGhostButtonClass} border-indigo-300 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200`}
+              >
+                Move to top
+              </button>
+            </div>
           </div>
         </div>
       )}
