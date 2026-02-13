@@ -74,6 +74,7 @@ function ProfileContent() {
   const [showHelpPanel, setShowHelpPanel] = useState(false);
   const [showHelpBadge, setShowHelpBadge] = useState(false);
   const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
+  const [isCoachDetailsExpanded, setIsCoachDetailsExpanded] = useState(false);
   const [skippedZeroInfoSections, setSkippedZeroInfoSections] = useState(new Set());
   const [coachPosition, setCoachPosition] = useState(null);
   const [isDraggingCoach, setIsDraggingCoach] = useState(false);
@@ -857,28 +858,37 @@ function ProfileContent() {
         <div
           ref={coachPanelRef}
           style={coachPosition ? { left: `${coachPosition.x}px`, top: `${coachPosition.y}px` } : undefined}
-          className="fixed z-[90] w-[min(30rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-white via-emerald-50/40 to-white shadow-2xl ring-1 ring-emerald-100 backdrop-blur dark:border-emerald-700 dark:from-gray-900 dark:via-emerald-950/20 dark:to-gray-900 dark:ring-emerald-900/60"
+          className="fixed z-[90] w-[min(26rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-white via-emerald-50/40 to-white shadow-2xl ring-1 ring-emerald-100 backdrop-blur dark:border-emerald-700 dark:from-gray-900 dark:via-emerald-950/20 dark:to-gray-900 dark:ring-emerald-900/60"
         >
-          <div className="border-b border-emerald-200/80 bg-emerald-50/70 px-3 py-3 sm:px-4 dark:border-emerald-800 dark:bg-emerald-950/30">
+          <div className="border-b border-emerald-200/80 bg-emerald-50/70 px-3 py-2.5 sm:px-4 dark:border-emerald-800 dark:bg-emerald-950/30">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700 dark:text-emerald-300">Guidance Coach</p>
-                <p className="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">Clear, step-by-step guidance while you update sections</p>
+                <p className="mt-0.5 text-xs font-medium text-gray-700 dark:text-gray-200">Compact step-by-step help</p>
               </div>
-              <button
-                type="button"
-                onPointerDown={handleCoachDragStart}
-                className="inline-flex cursor-grab items-center gap-2 rounded-md border border-emerald-200 bg-white px-2.5 py-1 text-xs font-medium text-emerald-800 shadow-sm active:cursor-grabbing dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
-                aria-label="Drag Guidance Coach"
-              >
-                <span aria-hidden="true">↕</span>
-                Drag
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setIsCoachDetailsExpanded((prev) => !prev)}
+                  className="inline-flex items-center rounded-md border border-emerald-200 bg-white px-2 py-1 text-[11px] font-semibold text-emerald-800 shadow-sm dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
+                >
+                  {isCoachDetailsExpanded ? 'Less' : 'More'} tips
+                </button>
+                <button
+                  type="button"
+                  onPointerDown={handleCoachDragStart}
+                  className="inline-flex cursor-grab items-center gap-2 rounded-md border border-emerald-200 bg-white px-2.5 py-1 text-xs font-medium text-emerald-800 shadow-sm active:cursor-grabbing dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
+                  aria-label="Drag Guidance Coach"
+                >
+                  <span aria-hidden="true">↕</span>
+                  Drag
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-3 p-3 sm:p-4">
-            <div className="rounded-xl border border-emerald-200 bg-white p-3 text-sm text-gray-800 shadow-sm dark:border-emerald-800 dark:bg-gray-900 dark:text-gray-100">
+          <div className="max-h-[min(50vh,18rem)] space-y-2 overflow-y-auto p-2.5 sm:p-3">
+            <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm dark:border-emerald-800 dark:bg-gray-900 dark:text-gray-100">
               {shouldHighlightSparkButton
                 ? <>Step 1 for new users: first open <span className="font-semibold">Spark Profile</span> and review the preview data.</>
                 : isActiveSectionCompleted
@@ -886,7 +896,7 @@ function ProfileContent() {
                   : <>You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.</>}
             </div>
 
-            {(shouldHighlightSparkButton || activeSection === 'Disciplinary Details' || activeSection === 'Officer Details' || shouldHighlightProfileButton || activeSectionIsZeroInfo) && (
+            {isCoachDetailsExpanded && (shouldHighlightSparkButton || activeSection === 'Disciplinary Details' || activeSection === 'Officer Details' || shouldHighlightProfileButton || activeSectionIsZeroInfo) && (
               <div className="space-y-2">
                 {shouldHighlightSparkButton && (
                   <p className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs leading-5 text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300">
