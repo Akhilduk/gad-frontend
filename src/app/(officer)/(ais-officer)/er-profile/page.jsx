@@ -398,19 +398,23 @@ function ProfileContent() {
 
   const coachPrimaryMessage = shouldHighlightSparkButton
     ? 'Start with Spark Profile and review the preview data before editing.'
-    : activeSectionIsZeroInfo
-      ? `You are on ${activeSection}. This section currently has no records (0/0). Use Add to create entries, or use Skip to continue.`
-      : isActiveSectionCompleted
-        ? `You are on ${activeSection}. This section is complete. You can still add more details if needed.`
-        : `You are on ${activeSection}. Complete the required edits and save this section to continue.`;
+    : shouldHighlightProfileButton
+      ? 'Profile completion is 100%. Next step: open Profile Preview, verify details, and submit with OTP e-sign for AS-II approval.'
+      : activeSectionIsZeroInfo
+        ? `You are on ${activeSection}. This section currently has no records (0/0). Use Add to create entries and enrich your profile, or use Skip to continue.`
+        : isActiveSectionCompleted
+          ? `You are on ${activeSection}. This section is complete. You can still add more details if needed.`
+          : `You are on ${activeSection}. Complete the required edits and save this section to continue.`;
 
   const coachProgressMessage = shouldHighlightSparkButton
     ? 'After Spark review, continue from Officer Details and save each section after editing.'
-    : pendingSection && pendingSection.title !== activeSection
-      ? `Next pending section: ${pendingSection.title}.`
-      : pendingSection?.title === activeSection
-        ? 'You are currently on the next pending section.'
-        : 'All tracked sections are complete. Please open Profile Preview and submit.';
+    : shouldHighlightProfileButton
+      ? 'Next action: Open Profile Preview and submit your profile.'
+      : pendingSection && pendingSection.title !== activeSection
+        ? `Next pending section: ${pendingSection.title}.`
+        : pendingSection?.title === activeSection
+          ? 'You are currently on the next pending section.'
+          : 'All tracked sections are complete. Please open Profile Preview and submit.';
 
   const getGuidedStartSection = () => {
     if (!isOfficerDetailsCompleted) {
@@ -920,7 +924,7 @@ function ProfileContent() {
               {coachPrimaryMessage}
             </div>
 
-            {isCoachDetailsExpanded && (shouldHighlightSparkButton || activeSection === 'Disciplinary Details' || activeSection === 'Officer Details' || shouldHighlightProfileButton || activeSectionIsZeroInfo) && (
+            {isCoachDetailsExpanded && (shouldHighlightSparkButton || activeSection === 'Disciplinary Details' || activeSection === 'Officer Details' || shouldHighlightProfileButton || (activeSectionIsZeroInfo && pendingSection?.title !== activeSection)) && (
               <div className="space-y-2">
                 {shouldHighlightSparkButton && (
                   <p className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs leading-5 text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300">
@@ -940,18 +944,13 @@ function ProfileContent() {
                   </p>
                 )}
                 {shouldHighlightProfileButton && (
-                  <p className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs leading-5 text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300">
-                    Completion flow: click the slowly pulsating <span className="font-semibold">Profile</span> button, review the full data, then use the <span className="font-semibold">Submit</span> action at the bottom for OTP + e-sign. Final submission goes to <span className="font-semibold">AS-II</span> for approval.
+                  <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300">
+                    Completion flow: open <span className="font-semibold">Profile Preview</span>, verify all details, then click <span className="font-semibold">Submit</span> for OTP + e-sign. Final submission goes to <span className="font-semibold">AS-II</span> for approval.
                   </p>
                 )}
-                {activeSectionIsZeroInfo && (
+                {activeSectionIsZeroInfo && pendingSection?.title !== activeSection && (
                   <p className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-800 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-300">
                     0/0 means there are no records yet. Add at least one entry to mark progress for this section.
-                  </p>
-                )}
-                {activeSectionIsZeroInfo && pendingSection?.title === activeSection && (
-                  <p className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-800 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-300">
-                    You are currently on the next pending section.
                   </p>
                 )}
               </div>
