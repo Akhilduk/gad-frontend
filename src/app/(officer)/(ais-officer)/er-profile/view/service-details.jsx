@@ -1401,7 +1401,42 @@ const renderEditButton = (service) => {
               </div>
               {renderAddButton()}
             </div>
-           
+
+            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-800">
+              <div className="flex items-center space-x-2 min-w-[120px]">
+                <span className="inline-flex items-center rounded-full bg-orange-100 p-0.5 text-xs text-orange-600">
+                  <BoltIcon className="h-2 w-2" />
+                </span>
+                <span className="text-sm text-gray-700 dark:text-white">Synced from SPARK</span>
+              </div>
+              <div className="flex items-center space-x-2 min-w-[120px]">
+                <span className="inline-flex items-center rounded-full bg-indigo-100 p-0.5 text-xs text-indigo-600">
+                  <svg className="h-2 w-2" fill="currentColor" viewBox="0 0 8 8">
+                    <circle cx="4" cy="4" r="3" />
+                  </svg>
+                </span>
+                <span className="text-sm text-gray-700 dark:text-white">Updated by AS-II</span>
+              </div>
+              <div className="flex items-center space-x-2 min-w-[120px]">
+                <span className="inline-flex items-center rounded-full bg-indigo-100 p-0.5 text-xs text-indigo-600">
+                  <UserIcon className="h-2 w-2" />
+                </span>
+                <span className="text-sm text-gray-700 dark:text-white">User Entered</span>
+              </div>
+              <div className="flex items-center space-x-2 min-w-[100px]">
+                <span className="inline-flex items-center rounded-full text-xs text-green-600">
+                  <CheckCircleIcon className="h-4 w-4" strokeWidth={2} />
+                </span>
+                <span className="text-sm text-gray-700 dark:text-white">Saved</span>
+              </div>
+              <div className="flex items-center space-x-2 min-w-[100px]">
+                <span className="inline-flex items-center rounded-full text-xs text-red-600">
+                  <ExclamationCircleIcon className="h-4 w-4" strokeWidth={2} />
+                </span>
+                <span className="text-sm text-gray-700 dark:text-white">Not Saved</span>
+              </div>
+            </div>
+            
              {viewMode === 'cards' ? (
             filteredServices.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
