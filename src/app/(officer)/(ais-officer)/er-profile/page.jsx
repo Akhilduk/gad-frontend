@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Breadcrumb } from '@/app/components/breadcrumb';
 import { ProfileSection } from '@/app/components/AISDashboardComponents/ProfileSection';
 import { CompactProfileSection } from '@/app/components/AISDashboardComponents/CompactProfileSection';
@@ -396,6 +396,22 @@ function ProfileContent() {
   const shouldHighlightSparkButton = guidedModeEnabled && !isOfficerDetailsCompleted;
   const shouldHighlightProfileButton = guidedModeEnabled && !pendingSection;
 
+  const coachPrimaryMessage = shouldHighlightSparkButton
+    ? 'Start with Spark Profile and review the preview data before editing.'
+    : activeSectionIsZeroInfo
+      ? `You are on ${activeSection}. This section currently has no records (0/0). Use Add to create entries, or use Skip to continue.`
+      : isActiveSectionCompleted
+        ? `You are on ${activeSection}. This section is complete. You can still add more details if needed.`
+        : `You are on ${activeSection}. Complete the required edits and save this section to continue.`;
+
+  const coachProgressMessage = shouldHighlightSparkButton
+    ? 'After Spark review, continue from Officer Details and save each section after editing.'
+    : pendingSection && pendingSection.title !== activeSection
+      ? `Next pending section: ${pendingSection.title}.`
+      : pendingSection?.title === activeSection
+        ? 'You are currently on the next pending section.'
+        : 'All tracked sections are complete. Please open Profile Preview and submit.';
+
   const getGuidedStartSection = () => {
     if (!isOfficerDetailsCompleted) {
       return 'Officer Details';
@@ -404,8 +420,30 @@ function ProfileContent() {
     return pendingSection?.title || activeSection || 'Officer Details';
   };
 
-  const guidedGhostButtonClass = 'inline-flex h-9 w-full items-center justify-center rounded-md border px-3 py-2 text-xs font-semibold shadow-sm transition-colors sm:h-8 sm:w-auto sm:py-1.5';
+  const guidedGhostButtonClass = 'inline-flex h-8 shrink-0 items-center justify-center rounded-md border px-2.5 py-1 text-xs font-semibold shadow-sm transition-colors';
   const guidedSolidButtonClass = 'inline-flex h-9 w-full items-center justify-center rounded-md border px-3 py-2 text-xs font-semibold shadow-sm transition-colors sm:h-8 sm:w-auto sm:py-1.5';
+
+  const clampCoachPositionToViewport = useCallback(() => {
+    if (!coachPosition) {
+      return;
+    }
+
+    const panelWidth = coachPanelRef.current?.offsetWidth ?? 320;
+    const panelHeight = coachPanelRef.current?.offsetHeight ?? 280;
+    const maxX = Math.max(8, window.innerWidth - panelWidth - 8);
+    const maxY = Math.max(8, window.innerHeight - panelHeight - 8);
+
+    setCoachPosition((prev) => {
+      if (!prev) {
+        return prev;
+      }
+
+      return {
+        x: Math.min(Math.max(8, prev.x), maxX),
+        y: Math.min(Math.max(8, prev.y), maxY),
+      };
+    });
+  }, [coachPosition]);
 
   const handleSkipZeroInfoSection = () => {
     if (!activeSectionIsZeroInfo) return;
@@ -475,26 +513,13 @@ function ProfileContent() {
     }
 
     const handleResize = () => {
-      const panelWidth = coachPanelRef.current?.offsetWidth ?? 320;
-      const panelHeight = coachPanelRef.current?.offsetHeight ?? 280;
-      const maxX = Math.max(8, window.innerWidth - panelWidth - 8);
-      const maxY = Math.max(8, window.innerHeight - panelHeight - 8);
-
-      setCoachPosition((prev) => {
-        if (!prev) {
-          return prev;
-        }
-
-        return {
-          x: Math.min(Math.max(8, prev.x), maxX),
-          y: Math.min(Math.max(8, prev.y), maxY),
-        };
-      });
+      clampCoachPositionToViewport();
     };
 
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [coachPosition]);
+  }, [coachPosition, clampCoachPositionToViewport, isCoachDetailsExpanded, activeSection, pendingSection?.title, shouldHighlightSparkButton, shouldHighlightProfileButton, activeSectionIsZeroInfo]);
 
   const handleCoachDragStart = (event) => {
     const panelRect = coachPanelRef.current?.getBoundingClientRect();
@@ -858,7 +883,7 @@ function ProfileContent() {
         <div
           ref={coachPanelRef}
           style={coachPosition ? { left: `${coachPosition.x}px`, top: `${coachPosition.y}px` } : undefined}
-          className="fixed z-[90] w-[min(26rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-white via-emerald-50/40 to-white shadow-2xl ring-1 ring-emerald-100 backdrop-blur dark:border-emerald-700 dark:from-gray-900 dark:via-emerald-950/20 dark:to-gray-900 dark:ring-emerald-900/60"
+          className="fixed z-[90] flex max-h-[calc(100dvh-1rem)] w-[min(26rem,calc(100vw-1rem))] flex-col overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-white via-emerald-50/40 to-white shadow-2xl ring-1 ring-emerald-100 backdrop-blur dark:border-emerald-700 dark:from-gray-900 dark:via-emerald-950/20 dark:to-gray-900 dark:ring-emerald-900/60"
         >
           <div className="border-b border-emerald-200/80 bg-emerald-50/70 px-3 py-2.5 sm:px-4 dark:border-emerald-800 dark:bg-emerald-950/30">
             <div className="flex items-start justify-between gap-3">
@@ -887,13 +912,9 @@ function ProfileContent() {
             </div>
           </div>
 
-          <div className="max-h-[min(50vh,18rem)] space-y-2 overflow-y-auto p-2.5 sm:p-3">
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2.5 sm:p-3">
             <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm dark:border-emerald-800 dark:bg-gray-900 dark:text-gray-100">
-              {shouldHighlightSparkButton
-                ? <>Step 1 for new users: first open <span className="font-semibold">Spark Profile</span> and review the preview data.</>
-                : isActiveSectionCompleted
-                  ? <>This section is completed. If you want to enrich or add new details, you can use the <span className="font-semibold">ADD</span> button.</>
-                  : <>You are on <span className="font-semibold">{activeSection}</span>. Complete edits and save this section, then continue.</>}
+              {coachPrimaryMessage}
             </div>
 
             {isCoachDetailsExpanded && (shouldHighlightSparkButton || activeSection === 'Disciplinary Details' || activeSection === 'Officer Details' || shouldHighlightProfileButton || activeSectionIsZeroInfo) && (
@@ -922,7 +943,7 @@ function ProfileContent() {
                 )}
                 {activeSectionIsZeroInfo && (
                   <p className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-800 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-300">
-                    This section has no information yet (0/0). Use the Add button to create records, or click "Skip" to continue to the next section.
+                    0/0 means there are no records yet. Add at least one entry to mark progress for this section.
                   </p>
                 )}
                 {activeSectionIsZeroInfo && pendingSection?.title === activeSection && (
@@ -934,11 +955,7 @@ function ProfileContent() {
             )}
 
             <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
-              {shouldHighlightSparkButton
-                ? 'After viewing Spark Profile, continue with Officer Details editing.'
-                : pendingSection
-                  ? `Next pending: ${pendingSection.title}`
-                  : 'All tracked sections are complete. Please go to Profile Preview and submit.'}
+              {coachProgressMessage}
             </p>
 
             <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-0.5">
