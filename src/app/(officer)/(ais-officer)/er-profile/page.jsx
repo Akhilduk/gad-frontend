@@ -901,6 +901,13 @@ function ProfileContent() {
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
+                  onClick={toggleGuidedMode}
+                  className="inline-flex items-center rounded-md border border-rose-200 bg-white px-2 py-1 text-[11px] font-semibold text-rose-700 shadow-sm hover:bg-rose-50 dark:border-rose-700 dark:bg-rose-950/20 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                >
+                  Exit guide
+                </button>
+                <button
+                  type="button"
                   onClick={() => setIsCoachDetailsExpanded((prev) => !prev)}
                   className="inline-flex items-center rounded-md border border-emerald-200 bg-white px-2 py-1 text-[11px] font-semibold text-emerald-800 shadow-sm dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
                 >
