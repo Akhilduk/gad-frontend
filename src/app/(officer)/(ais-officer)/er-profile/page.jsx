@@ -424,10 +424,6 @@ function ProfileContent() {
   const guidedSolidButtonClass = 'inline-flex h-9 w-full items-center justify-center rounded-md border px-3 py-2 text-xs font-semibold shadow-sm transition-colors sm:h-8 sm:w-auto sm:py-1.5';
 
   const clampCoachPositionToViewport = useCallback(() => {
-    if (!coachPosition) {
-      return;
-    }
-
     const panelWidth = coachPanelRef.current?.offsetWidth ?? 320;
     const panelHeight = coachPanelRef.current?.offsetHeight ?? 280;
     const maxX = Math.max(8, window.innerWidth - panelWidth - 8);
@@ -438,12 +434,19 @@ function ProfileContent() {
         return prev;
       }
 
+      const nextX = Math.min(Math.max(8, prev.x), maxX);
+      const nextY = Math.min(Math.max(8, prev.y), maxY);
+
+      if (nextX === prev.x && nextY === prev.y) {
+        return prev;
+      }
+
       return {
-        x: Math.min(Math.max(8, prev.x), maxX),
-        y: Math.min(Math.max(8, prev.y), maxY),
+        x: nextX,
+        y: nextY,
       };
     });
-  }, [coachPosition]);
+  }, []);
 
   const handleSkipZeroInfoSection = () => {
     if (!activeSectionIsZeroInfo) return;
