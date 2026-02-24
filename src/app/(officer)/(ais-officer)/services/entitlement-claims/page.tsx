@@ -4,11 +4,12 @@ import { useState, useRef, useEffect } from 'react';
 import { PlusIcon, XMarkIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
 import styles from '../servicepage.module.css';
 import Image from 'next/image';
+import Link from 'next/link';
 
 type ServicesCardProps = {
   title: string;
   imageSrc: string;
-  links?: { label: string; url: string }[];
+  links?: { label: string; url: string; isNew?: boolean }[];
   navigateTo?: string;
 };
 
@@ -91,8 +92,8 @@ const ServicesCard: React.FC<ServicesCardProps> = ({
                   key={index}
                   className="relative group flex items-center mt-2"
                 >
-                  <a
-                    href={isComingSoon ? undefined : link.url}
+                  <Link
+                    href={isComingSoon ? '#' : link.url}
                     onClick={(e) => isComingSoon && e.preventDefault()}
                     className={`w-full p-3 rounded-lg text-xs shadow-sm transition-all duration-300
                       ${
@@ -101,8 +102,15 @@ const ServicesCard: React.FC<ServicesCardProps> = ({
                           : 'bg-gray-200 text-gray-900 hover:bg-indigo-200 hover:text-indigo-900'
                       }`}
                   >
-                    {link.label}
-                  </a>
+                    <span className="inline-flex items-center gap-2">
+                      {link.label}
+                      {link.isNew && (
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                          New
+                        </span>
+                      )}
+                    </span>
+                  </Link>
 
                   {/* Tooltip */}
                   {isComingSoon && (
@@ -149,7 +157,7 @@ const EntitlementClaims = () => {
         title="REIMBURSEMENT"
         imageSrc="/images/services/reimbursement.svg"
         links={[
-          { label: 'Medical Reimbursement', url: '#' },
+          { label: 'Medical Reimbursement', url: '/reimbursement/medical', isNew: true },
           { label: 'Travel Reimbursement', url: '#' },
           { label: 'Miscellaneous Reimbursement', url: '#' },
         ]}
