@@ -1,0 +1,38 @@
+.dependentDetailsTree :global(.org-chart-node) {
+  margin: 0 24px !important;
+  padding: 12px 0 !important;
+}
+.dependentDetailsTree :global(.org-chart-node-children) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
+  padding-top: 20px;
+}
+.dependentDetailsTree :global(.org-chart-line) {
+  stroke-width: 2px !important;
+  stroke: #3b82f6 !important;
+  stroke-linecap: round;
+}
+.dependentDetailsTree {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 #e5e7eb;
+}
+.dependentDetailsTree::-webkit-scrollbar {
+  height: 8px;
+}
+.dependentDetailsTree::-webkit-scrollbar-thumb {
+  background-color: #3b82f6;
+  border-radius: 4px;
+}
+.dependentDetailsTree::-webkit-scrollbar-track {
+  background-color: #e5e7eb;
+}
+@media (max-width: 768px) {
+  .dependentDetailsTree :global(.org-chart-node-children) {
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+}
