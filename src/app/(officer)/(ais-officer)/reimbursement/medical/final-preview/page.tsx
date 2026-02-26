@@ -24,6 +24,16 @@ export default function FinalPreviewPage() {
   }, []);
 
   const item = useMemo(() => cases.find((c) => c.mrId === mrId), [cases, mrId]);
+
+  useEffect(() => {
+    if (!cases.length) return;
+    if (cases.some((c) => c.mrId === mrId)) return;
+    const fallback = [...cases].sort((a, b) => b.lastUpdated.localeCompare(a.lastUpdated))[0];
+    if (!fallback) return;
+    setMrId(fallback.mrId);
+    setActiveMrCaseId(fallback.mrId);
+  }, [cases, mrId]);
+
   if (!item || !profile) return null;
   const total = item.bills.reduce((s, b) => s + b.totalAmount, 0);
   const adv = item.advances.filter((a) => a.status === 'Paid').reduce((s, a) => s + a.amount, 0);

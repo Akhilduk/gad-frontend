@@ -31,6 +31,16 @@ export default function MedicalCaseWorkspaceClient() {
     return () => clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    if (!cases.length) return;
+    const matched = cases.find((c) => c.mrId === mrId || c.mrNo === mrId);
+    if (matched) return;
+    const fallback = [...cases].sort((a, b) => b.lastUpdated.localeCompare(a.lastUpdated))[0];
+    if (!fallback) return;
+    setMrId(fallback.mrId);
+    setActiveMrCaseId(fallback.mrId);
+  }, [cases, mrId]);
+
   const item = useMemo(() => cases.find((c) => c.mrId === mrId || c.mrNo === mrId), [cases, mrId]);
 
   if (!item || !profile) {
