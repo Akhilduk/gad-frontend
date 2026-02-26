@@ -96,7 +96,7 @@ export default function MedicalReimbursementPage() {
 
     setCases(upsertCase(next, cases));
     setOpen(false);
-    window.location.href = `/reimbursement/medical/${next.mrId}`;
+    window.location.href = `/reimbursement/medical/workspace?mrId=${next.mrId}`;
   };
 
   return (
@@ -115,14 +115,6 @@ export default function MedicalReimbursementPage() {
           </div>
         </section>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-          {statusOrder.slice(1).map((s) => (
-            <button key={s} onClick={() => setStatus(s as MRStatus)} className={styles.tab}>
-              {s} ({cases.filter((c) => c.status === s).length})
-            </button>
-          ))}
-        </div>
-
         <section className={`${styles.page} mt-4`}>
           <h3 className="font-semibold">Recently Updated</h3>
           <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -130,13 +122,24 @@ export default function MedicalReimbursementPage() {
               .sort((a, b) => b.lastUpdated.localeCompare(a.lastUpdated))
               .slice(0, 7)
               .map((c) => (
-                <Link href={`/reimbursement/medical/${c.mrId}`} key={c.mrId} className={styles.bookCard}>
+                <Link href={`/reimbursement/medical/workspace?mrId=${c.mrId}`} key={c.mrId} className={styles.bookCard}>
                   <div className="text-sm font-semibold">{c.mrNo}</div>
                   <div className="text-xs text-slate-700">{c.patient.name}</div>
                   <div className="text-xs text-slate-600">{c.treatment.hospitalName}</div>
                   <div className="mt-1 text-xs font-medium text-indigo-700">{c.status}</div>
                 </Link>
               ))}
+          </div>
+        </section>
+
+        <section className={`${styles.page} mt-4`}>
+          <h3 className="font-semibold">Filters</h3>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+            {statusOrder.slice(1).map((s) => (
+              <button key={s} onClick={() => setStatus(s as MRStatus)} className={styles.tab}>
+                {s} ({cases.filter((c) => c.status === s).length})
+              </button>
+            ))}
           </div>
         </section>
 
@@ -163,7 +166,7 @@ export default function MedicalReimbursementPage() {
                 <article key={c.mrId} className={styles.bookCard}>
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
-                      <Link href={`/reimbursement/medical/${c.mrId}`} className="font-semibold text-indigo-900">
+                      <Link href={`/reimbursement/medical/workspace?mrId=${c.mrId}`} className="font-semibold text-indigo-900">
                         {c.mrNo}
                       </Link>
                       <div className="text-sm text-slate-700">
@@ -175,9 +178,9 @@ export default function MedicalReimbursementPage() {
                   <div className="mt-2 text-xs text-slate-600">{c.treatment.hospitalName} | {c.treatment.fromDate}</div>
                   <div className="mt-1 text-xs text-slate-700">Bills ₹{total} | Advance Paid ₹{adv} | Balance ₹{Math.max(total - adv, 0)}</div>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                    <Link className="rounded border border-indigo-300 px-2 py-1" href={`/reimbursement/medical/${c.mrId}`}>Continue</Link>
-                    <Link className="rounded border border-slate-300 px-2 py-1" href={`/reimbursement/medical/${c.mrId}#annexures`}>Add Bill/Doc</Link>
-                    <Link className="rounded border border-slate-300 px-2 py-1" href={`/reimbursement/medical/${c.mrId}#advance`}>Add Advance</Link>
+                    <Link className="rounded border border-indigo-300 px-2 py-1" href={`/reimbursement/medical/workspace?mrId=${c.mrId}`}>Continue</Link>
+                    <Link className="rounded border border-slate-300 px-2 py-1" href={`/reimbursement/medical/workspace?mrId=${c.mrId}#annexures`}>Add Bill/Doc</Link>
+                    <Link className="rounded border border-slate-300 px-2 py-1" href={`/reimbursement/medical/workspace?mrId=${c.mrId}#advance`}>Add Advance</Link>
                     <button disabled={missing.length > 0} title={missing.length ? `Missing: ${missing.join(', ')}` : ''} className="rounded border border-slate-300 px-2 py-1 disabled:opacity-40">Submit Final</button>
                   </div>
                 </article>
@@ -189,7 +192,7 @@ export default function MedicalReimbursementPage() {
         {open && (
           <div className={styles.modalBackdrop}>
             <div className={styles.modalCard}>
-              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-[#fff9f0] px-4 py-3">
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
                 <h3 className="text-base font-semibold text-indigo-900">Create Medical Reimbursement Case</h3>
                 <button onClick={() => setOpen(false)} className="rounded p-1 text-slate-700 hover:bg-slate-100">
                   <XMarkIcon className="h-5 w-5" />
@@ -248,7 +251,7 @@ export default function MedicalReimbursementPage() {
                 </div>
               </div>
 
-              <div className="sticky bottom-0 flex justify-end gap-2 border-t border-slate-200 bg-[#fff9f0] px-4 py-3">
+              <div className="sticky bottom-0 flex justify-end gap-2 border-t border-slate-200 bg-white px-4 py-3">
                 <button className="rounded border border-slate-300 px-3 py-2 text-sm" onClick={() => setOpen(false)}>Cancel</button>
                 <button className="rounded bg-indigo-700 px-3 py-2 text-sm font-semibold text-white" onClick={createCase}>Create MR Case</button>
               </div>
