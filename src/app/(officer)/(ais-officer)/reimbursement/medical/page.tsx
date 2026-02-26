@@ -115,14 +115,6 @@ export default function MedicalReimbursementPage() {
           </div>
         </section>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-          {statusOrder.slice(1).map((s) => (
-            <button key={s} onClick={() => setStatus(s as MRStatus)} className={styles.tab}>
-              {s} ({cases.filter((c) => c.status === s).length})
-            </button>
-          ))}
-        </div>
-
         <section className={`${styles.page} mt-4`}>
           <h3 className="font-semibold">Recently Updated</h3>
           <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -137,6 +129,17 @@ export default function MedicalReimbursementPage() {
                   <div className="mt-1 text-xs font-medium text-indigo-700">{c.status}</div>
                 </Link>
               ))}
+          </div>
+        </section>
+
+        <section className={`${styles.page} mt-4`}>
+          <h3 className="font-semibold">Filters</h3>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+            {statusOrder.slice(1).map((s) => (
+              <button key={s} onClick={() => setStatus(s as MRStatus)} className={styles.tab}>
+                {s} ({cases.filter((c) => c.status === s).length})
+              </button>
+            ))}
           </div>
         </section>
 
@@ -189,7 +192,7 @@ export default function MedicalReimbursementPage() {
         {open && (
           <div className={styles.modalBackdrop}>
             <div className={styles.modalCard}>
-              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-[#fff9f0] px-4 py-3">
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
                 <h3 className="text-base font-semibold text-indigo-900">Create Medical Reimbursement Case</h3>
                 <button onClick={() => setOpen(false)} className="rounded p-1 text-slate-700 hover:bg-slate-100">
                   <XMarkIcon className="h-5 w-5" />
@@ -248,7 +251,7 @@ export default function MedicalReimbursementPage() {
                 </div>
               </div>
 
-              <div className="sticky bottom-0 flex justify-end gap-2 border-t border-slate-200 bg-[#fff9f0] px-4 py-3">
+              <div className="sticky bottom-0 flex justify-end gap-2 border-t border-slate-200 bg-white px-4 py-3">
                 <button className="rounded border border-slate-300 px-3 py-2 text-sm" onClick={() => setOpen(false)}>Cancel</button>
                 <button className="rounded bg-indigo-700 px-3 py-2 text-sm font-semibold text-white" onClick={createCase}>Create MR Case</button>
               </div>
