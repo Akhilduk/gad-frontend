@@ -1,6 +1,6 @@
 import MedicalCaseWorkspaceClient from './medical-case-workspace-client';
 
-const staticMrIds = ['[mrId]', ...Array.from({ length: 8 }, (_, index) => `mr-${index + 1}`)];
+const staticMrIds = ['mr-1', 'mr-2', 'mr-3', 'mr-4', 'mr-5', 'mr-6', 'mr-7', 'mr-8', '[mrId]', '%5BmrId%5D'];
 
 export function generateStaticParams() {
   return staticMrIds.map((mrId) => ({ mrId }));
