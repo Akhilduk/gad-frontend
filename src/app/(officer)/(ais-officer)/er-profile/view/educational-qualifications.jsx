@@ -16,6 +16,7 @@ import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 import { toast } from "react-toastify";
 import axiosInstance from "@/utils/apiClient";
 import ConfirmModal from "@/app/components/confirmModal";
+import { isProfileEditDisabledByStatus } from "@/utils/profileStatusUtils";
 
 export function EducationalQualifications({ profileData }) {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -36,7 +37,7 @@ export function EducationalQualifications({ profileData }) {
   
   // Get profile status from sessionStorage
   const profileStatus = sessionStorage.getItem('profile_status');
-  const isButtonDisabled = profileStatus === '2' || profileStatus === '3'; // Disable for submitted or approved
+  const isButtonDisabled = isProfileEditDisabledByStatus(profileStatus);
 
 
   // ALL EXISTING CODE BELOW REMAINS EXACTLY THE SAME

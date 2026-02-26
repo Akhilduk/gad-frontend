@@ -35,37 +35,40 @@ const ServicesCard: React.FC<ServicesCardProps> = ({
   }, [isExpanded]);
 
   return (
-    <div className="rounded-xl border overflow-hidden mb-3 bg-primary-500 dark:bg-neutral-700 relative dark:border-neutral-700">
+    <div className="relative mb-3 overflow-hidden rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-900 via-indigo-500 to-indigo-900 dark:border-neutral-700 dark:bg-none dark:bg-neutral-800">
+      <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-white/10 blur-2xl dark:hidden" />
+      <div className="pointer-events-none absolute -bottom-12 -left-10 h-24 w-24 rounded-full bg-indigo-200/30 blur-2xl dark:hidden" />
       {/* Image */}
-      <div>
+      <div className="relative">
         <Image
-          className="w-full h-52 object-cover rounded-t-lg"
+          className="h-52 w-full rounded-t-lg object-cover transition dark:brightness-90 dark:contrast-110"
           src={imageSrc}
           alt={`${title} image`}
           width={372}
           height={208}
           loading="lazy"
         />
+        <div className="pointer-events-none absolute inset-0 rounded-t-lg ring-1 ring-black/10 dark:ring-white/35" />
       </div>
 
       {/* Expandable section */}
       <div
-        className={`absolute left-0 w-full pt-5 bg-primary-500 dark:bg-neutral-700 transition-transform duration-500 ease-in-out ${
+        className={`absolute left-0 w-full pt-5 bg-gradient-to-r from-indigo-900 via-indigo-500 to-indigo-900 dark:bg-none dark:bg-neutral-800 transition-transform duration-500 ease-in-out ${
           isExpanded ? '-translate-y-full' : 'translate-y-0'
         }`}
       >
         {/* Icon */}
         <div
-          className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white dark:bg-neutral-400 flex items-center justify-center rounded-full transition-transform duration-500 border-2 border-primary-500 dark:border-neutral-800 cursor-pointer"
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white dark:bg-neutral-400 flex items-center justify-center rounded-full transition-transform duration-500 border-2 border-indigo-500 dark:border-neutral-800 cursor-pointer"
           onClick={() => {
             if (links.length > 0) toggleExpand();
           }}
         >
           {links.length > 0 ? (
             isExpanded ? (
-              <XMarkIcon className="w-5 h-5 text-primary-500 dark:text-neutral-800" />
+              <XMarkIcon className="w-5 h-5 text-indigo-600 dark:text-neutral-800" />
             ) : (
-              <PlusIcon className="w-5 h-5 text-primary-500 dark:text-neutral-800" />
+              <PlusIcon className="w-5 h-5 text-indigo-600 dark:text-neutral-800" />
             )
           ) : (
             <a
@@ -73,7 +76,7 @@ const ServicesCard: React.FC<ServicesCardProps> = ({
               onClick={(e) => e.stopPropagation()}
               className="flex items-center justify-center w-full h-full"
             >
-              <ChevronRightIcon className="w-5 h-5 text-primary-500 dark:text-neutral-800" />
+              <ChevronRightIcon className="w-5 h-5 text-indigo-600 dark:text-neutral-800" />
             </a>
           )}
         </div>
@@ -129,7 +132,7 @@ const ServicesCard: React.FC<ServicesCardProps> = ({
 
       {/* Title */}
       <div className="mt-5 relative">
-        <div className="flex items-center justify-center bg-primary-500 dark:bg-neutral-700">
+        <div className="flex items-center justify-center bg-gradient-to-r from-indigo-900 via-indigo-500 to-indigo-900 dark:bg-none dark:bg-neutral-800">
           <h2 className="text-md text-white dark:text-neutral-400 font-bold px-2 py-3 mb-2">
             {title}
           </h2>

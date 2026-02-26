@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 import ConfirmModal from "@/app/components/confirmModal";
 import moment from 'moment';
+import { isProfileEditDisabledByStatus } from "@/utils/profileStatusUtils";
 
 // Helper function to safely format dates using moment.js
 const formatDate = (dateString) => {
@@ -51,7 +52,7 @@ export function AwardsAndPublications({ profileData }) {
   const [awardToDelete, setAwardToDelete] = useState(null);
   
   const profileStatus = sessionStorage.getItem('profile_status');
-  const isButtonDisabled = profileStatus === '2' || profileStatus === '3';
+  const isButtonDisabled = isProfileEditDisabledByStatus(profileStatus);
   const [officerFields, setOfficerFields] = useState({
     GAD_OFFICER: [],
     AIS_OFFICER: [],

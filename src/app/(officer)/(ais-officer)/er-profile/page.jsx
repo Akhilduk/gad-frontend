@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Breadcrumb } from '@/app/components/breadcrumb';
 import { ProfileSection } from '@/app/components/AISDashboardComponents/ProfileSection';
 import { CompactProfileSection } from '@/app/components/AISDashboardComponents/CompactProfileSection';
@@ -72,6 +72,7 @@ function ProfileContent() {
   const [modalOpen, setModalOpen] = useState(false);
   const [showHelpPanel, setShowHelpPanel] = useState(false);
   const [showHelpBadge, setShowHelpBadge] = useState(false);
+  const [profileStatus, setProfileStatus] = useState('1');
   const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
   const [manualButtonHighlight, setManualButtonHighlight] = useState({
     help: false,
@@ -352,6 +353,21 @@ function ProfileContent() {
     fetchProfileData();
   }, []);
 
+  useEffect(() => {
+    const syncProfileStatus = () => {
+      const storedStatus = sessionStorage.getItem('profile_status');
+      if (storedStatus) {
+        setProfileStatus(String(storedStatus));
+      }
+    };
+
+    syncProfileStatus();
+    window.addEventListener('storage', syncProfileStatus);
+    return () => {
+      window.removeEventListener('storage', syncProfileStatus);
+    };
+  }, []);
+
   const getCurrentGuidedIndex = () => {
     const index = GUIDED_SECTION_ORDER.indexOf(activeSection);
     return index === -1 ? 0 : index;
@@ -422,6 +438,30 @@ function ProfileContent() {
     'Disability Details': 'This section has 0/0 right now. Add disability details only if applicable, complete required fields, and save.',
   };
   const activeZeroInfoTip = zeroInfoTipBySection[activeSection] || 'This section has 0/0 right now. Add at least one record, complete mandatory fields, and save.';
+
+  const profileCompletionPercent = useMemo(() => {
+    const totals = ALL_REQUIRED_SECTIONS.reduce(
+      (acc, sectionKey) => {
+        const section = sectionProgress[sectionKey];
+        if (
+          section &&
+          typeof section.completed === 'number' &&
+          typeof section.total === 'number'
+        ) {
+          acc.completed += section.completed;
+          acc.total += section.total;
+        }
+        return acc;
+      },
+      { completed: 0, total: 0 }
+    );
+
+    if (totals.total === 0) return 0;
+    return Math.round((totals.completed / totals.total) * 100);
+  }, [sectionProgress]);
+
+  const shouldShowApprovedIncompleteAlert =
+    initialLoadComplete && profileStatus === '3' && profileCompletionPercent < 100;
 
   const coachPrimaryMessage = shouldHighlightSparkButton
     ? 'Start with Spark Profile and review the preview data before editing.'
@@ -800,6 +840,11 @@ function ProfileContent() {
       )}
 
       {/* Main Content Grid */}
+      {shouldShowApprovedIncompleteAlert && (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
+          New details updated in your profile. Kindly view, edit and save details, and submit again for approval to reflect that in your profile.
+        </div>
+      )}
       <div 
         ref={contentContainerRef}
         className={`profile-layout-container relative isolate z-0 ${layoutTransition ? 'transition-all duration-300 ease-in-out' : ''} ${modalOpen ? 'overflow-hidden' : ''}`}

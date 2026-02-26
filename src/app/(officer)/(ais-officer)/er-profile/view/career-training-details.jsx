@@ -20,6 +20,7 @@ import axiosInstance from "@/utils/apiClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 import ConfirmModal from "@/app/components/confirmModal";
+import { isProfileEditDisabledByStatus } from "@/utils/profileStatusUtils";
 
 export function CareerTrainingDetails({ profileData }) {
   
@@ -40,7 +41,7 @@ export function CareerTrainingDetails({ profileData }) {
   const [trainingToDelete, setTrainingToDelete] = useState(null);
   
   const profileStatus = sessionStorage.getItem('profile_status');
-  const isButtonDisabled = profileStatus === '2' || profileStatus === '3';
+  const isButtonDisabled = isProfileEditDisabledByStatus(profileStatus);
   
   const [masterData, setMasterData] = useState({
     training_types: [],

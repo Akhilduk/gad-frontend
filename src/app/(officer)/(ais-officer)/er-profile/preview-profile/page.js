@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import { axiosInstanceFile } from "../../../../../utils/apiClient";
 import downloadFile from '@/utils/downloadFile';
 import saveDocument from "../../../../../utils/saveDocument";
+import { isApprovedButIncomplete } from "@/utils/profileStatusUtils";
 
 const ProfilePreviewPage = () => {
   const [progress, setProgress] = useState(0);
@@ -68,8 +69,10 @@ const ProfilePreviewPage = () => {
   const [documentError, setDocumentError] = useState(null);
 
   const latestStatus = statusTimeline.find(status => status.is_current) || statusTimeline[statusTimeline.length - 1] || {};
-  const isResubmitAllowed = latestStatus.action_key === 'return_for_correction';
+  const isApprovedStatus = profileStatus === '3' || latestStatus.action_key === 'approved';
+  const isResubmitAllowed = latestStatus.action_key === 'return_for_correction' || isApprovedStatus;
   const isSubmitAllowed = statusTimeline.length === 0;
+  const shouldShowApprovedIncompleteMessage = (isApprovedStatus && progress < 100) || isApprovedButIncomplete(profileStatus);
 
   // Read profile status from sessionStorage on component mount
   useEffect(() => {
@@ -964,6 +967,11 @@ const ProfilePreviewPage = () => {
                         Profile {progress}% Complete
                       </span>
                     )}
+                    {shouldShowApprovedIncompleteMessage && (
+                      <span className="bg-amber-500/20 text-amber-200 px-3 py-1.5 rounded-full text-xs font-medium border border-amber-400/30">
+                        New details updated in your profile kindly view, edit and save details and submit again for approval to reflect that in your profile.
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1067,7 +1075,7 @@ const ProfilePreviewPage = () => {
               </button>
             )}
 
-            {/* Show Resubmit button only when profile has been returned for correction */}
+            {/* Show Resubmit button when profile has been returned for correction or approved for update flow */}
             {isResubmitAllowed && (
               <button
                 onClick={() => handleActionClick('resubmit')}

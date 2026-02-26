@@ -21,6 +21,7 @@ import axiosInstance from '@/utils/apiClient';
 import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 import ConfirmModal from '@/app/components/confirmModal';
 import moment from 'moment';
+import { isProfileEditDisabledByStatus } from '@/utils/profileStatusUtils';
 
 export function CentralDeputationDetails({ profileData }) {
   const { updateSectionProgress } = useProfileCompletion();
@@ -53,7 +54,7 @@ export function CentralDeputationDetails({ profileData }) {
   const profileStatus = sessionStorage.getItem('profile_status');
   console.log('profile_status:==========================================', sessionStorage.getItem('profile_status'));
   console.log('profile_status type:', typeof profileStatus, 'value:', profileStatus);
-  const isButtonDisabled = profileStatus === '2' || profileStatus === '3'; // Disable for submitted or approved
+  const isButtonDisabled = isProfileEditDisabledByStatus(profileStatus);
   console.log('isButtonDisabled:', isButtonDisabled, 'profileStatus:', profileStatus);
  
 

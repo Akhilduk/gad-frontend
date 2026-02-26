@@ -9,6 +9,7 @@ import PrimaryDetails from '../primary-details';
 import axiosInstance from '@/utils/apiClient';
 import { getServiceTypeName } from '@/utils/serviceTypeUtils';
 import { useProfileCompletion } from '@/contexts/Profile-completion-context';
+import { isProfileEditDisabledByStatus } from '@/utils/profileStatusUtils';
 
 export function PersonalDetails({ profileData, guidedModeEnabled = false }) {
   console.log('PersonalDetails profileData:', profileData);
@@ -28,7 +29,7 @@ export function PersonalDetails({ profileData, guidedModeEnabled = false }) {
   const hasAutoGuidedOpened = useRef(false);
   // Get profile status from sessionStorage
   const profileStatus = sessionStorage.getItem('profile_status');
-  const isButtonDisabled = profileStatus === '2' || profileStatus === '3'; // Disable for submitted or approved
+  const isButtonDisabled = isProfileEditDisabledByStatus(profileStatus);
   const { updateSectionProgress,markSectionLoaded  } = useProfileCompletion();
 
   const mandatoryFields = [
@@ -1065,4 +1066,3 @@ const renderUserIndicator = (fieldKey) => {
     </div>
   );
 }
-
