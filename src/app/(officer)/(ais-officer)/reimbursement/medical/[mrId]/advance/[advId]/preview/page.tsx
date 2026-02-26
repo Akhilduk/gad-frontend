@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import styles from '../../../../../mr-book.module.css';
-import { fetchProfilePreview2 } from '../../../../../profile-mapper';
-import { loadCases } from '../../../../../mock-store';
-import type { MRCase, OfficerProfileVM } from '../../../../../mr-types';
+import styles from '../../../../mr-book.module.css';
+import { fetchProfilePreview2 } from '../../../../profile-mapper';
+import { loadCases } from '../../../../mock-store';
+import type { MRCase, OfficerProfileVM } from '../../../../mr-types';
 
 export default function AdvancePreviewPage({ params }: { params: { mrId: string; advId: string } }) {
   const [profile, setProfile] = useState<OfficerProfileVM | null>(null);
