@@ -1,246 +1,283 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { BanknotesIcon, CheckBadgeIcon, ChevronLeftIcon, CloudArrowUpIcon, DocumentArrowDownIcon, PencilSquareIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
-import type { BillItem, LocalMedicalCase, OtherDocumentItem } from '../storage';
-import { getMedicalCase, loadMedicalCases, upsertMedicalCase } from '../storage';
-import { ChapterCard, DeclarationBlock, StatusStamp } from '../_components/case-book-ui';
+import { useEffect, useMemo, useState } from 'react';
+import styles from '../mr-book.module.css';
+import { fetchProfilePreview2 } from '../profile-mapper';
+import { loadCases, makeAdvNo, upsertCase } from '../mock-store';
+import type { MRCase, OfficerProfileVM } from '../mr-types';
 
-type Props = { mrId: string };
-const ACTIVE_MR_STORAGE_KEY = 'medical_reimbursement_active_mr';
+const tabs = ['SUMMARY', 'TREATMENT NOTE', 'ANNEXURES', 'ADVANCE NOTES', 'CERTIFICATE', 'FINAL NOTE', 'MOVEMENT REGISTER'] as const;
 
-const readAsDataUrl = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
-export default function MedicalCaseWorkspaceClient({ mrId }: Props) {
-  const router = useRouter();
-  const billInputRef = useRef<HTMLInputElement | null>(null);
-  const docInputRef = useRef<HTMLInputElement | null>(null);
-  const [caseData, setCaseData] = useState<LocalMedicalCase | null>(null);
+export default function MedicalCaseWorkspaceClient({ mrId }: { mrId: string }) {
+  const [profile, setProfile] = useState<OfficerProfileVM | null>(null);
+  const [cases, setCases] = useState<MRCase[]>([]);
+  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('SUMMARY');
   const [toast, setToast] = useState('');
-  const [docTab, setDocTab] = useState<'bills' | 'docs'>('bills');
-  const [editTreatment, setEditTreatment] = useState(false);
-  const [declaration, setDeclaration] = useState(false);
 
   useEffect(() => {
-    const active = typeof window !== 'undefined' ? sessionStorage.getItem(ACTIVE_MR_STORAGE_KEY) : null;
-    const resolvedId = mrId === 'case' ? active || 'case' : mrId;
-    const item = resolvedId === 'case' ? loadMedicalCases()[0] || null : getMedicalCase(resolvedId);
-    setCaseData(item);
-    if (item) sessionStorage.setItem(ACTIVE_MR_STORAGE_KEY, item.mrNo);
-  }, [mrId]);
+    fetchProfilePreview2().then(({ profile: p }) => {
+      setProfile(p);
+      setCases(loadCases(p));
+    });
+  }, []);
 
   useEffect(() => {
     if (!toast) return;
-    const timer = setTimeout(() => setToast(''), 2200);
+    const timer = setTimeout(() => setToast(''), 2000);
     return () => clearTimeout(timer);
   }, [toast]);
 
-  if (!caseData) {
+  const item = useMemo(() => cases.find((c) => c.mrId === mrId || c.mrNo === mrId), [cases, mrId]);
+
+  if (!item || !profile) {
     return (
-      <main className="space-y-4">
-        <Link href="/reimbursement/medical" className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
-          <ChevronLeftIcon className="h-4 w-4" />
-          Back to Cases
-        </Link>
-      </main>
+      <div className={styles.shellBg}>
+        <div className={styles.container}>Case not found</div>
+      </div>
     );
   }
 
-  const persist = (next: LocalMedicalCase, message = 'Draft saved') => {
-    const merged = { ...next, updatedOn: new Date().toISOString() };
-    upsertMedicalCase(merged);
-    setCaseData(merged);
-    setToast(message);
+  const save = (next: MRCase, msg = 'Saved') => {
+    const withMovement: MRCase = {
+      ...next,
+      movement: [...next.movement, { id: crypto.randomUUID(), action: msg, at: new Date().toISOString() }],
+    };
+    setCases(upsertCase(withMovement, cases));
+    setToast(msg);
   };
 
-  const totals = {
-    bills: caseData.bills.reduce((sum, bill) => sum + Number(bill.extracted.amount || 0), 0),
-    advances: caseData.advances.reduce((sum, adv) => sum + Number(adv.amount || 0), 0),
-  };
-  const net = Math.max(totals.bills - totals.advances, 0);
-
-  const readiness = {
-    bills: caseData.bills.length > 0,
-    ec: caseData.otherDocuments.some((doc) => doc.title.toLowerCase().includes('essentiality')),
-    discharge: caseData.otherDocuments.some((doc) => doc.title.toLowerCase().includes('discharge')),
-    treatment: Boolean(caseData.treatment.hospitalName && caseData.treatment.placeOfIllness && caseData.treatment.fromDate),
+  const billTotal = item.bills.reduce((s, b) => s + b.totalAmount, 0);
+  const advPaid = item.advances.filter((a) => a.status === 'Paid').reduce((s, a) => s + a.amount, 0);
+  const missing = {
+    bills: item.bills.length < 1,
+    ec: !item.docs.some((d) => d.type === 'EC_SIGNED'),
+    discharge: !item.docs.some((d) => d.type === 'DISCHARGE'),
+    treatment: !item.treatment.placeOfIllness || !item.treatment.hospitalName || !item.treatment.fromDate,
   };
 
-  const canFinal = readiness.bills && readiness.ec && readiness.discharge && readiness.treatment;
-
-  const updateTreatment = (key: keyof LocalMedicalCase['treatment'], value: string) => {
-    persist({ ...caseData, treatment: { ...caseData.treatment, [key]: value } }, 'Treatment updated');
+  const addBill = () => {
+    const duplicate = item.bills.some((x) => x.invoiceNo === 'INV-1001' && x.gstNo === 'GST-001' && x.totalAmount === 3500);
+    save(
+      {
+        ...item,
+        status: 'Active',
+        bills: [
+          ...item.bills,
+          {
+            id: crypto.randomUUID(),
+            fileName: `bill-${item.bills.length + 1}.pdf`,
+            invoiceNo: `INV-${1000 + item.bills.length + 1}`,
+            gstNo: 'GST-001',
+            billDate: '2026-02-25',
+            hospitalName: item.treatment.hospitalName,
+            totalAmount: 3500,
+            taxAmount: 120,
+            status: 'Extracted',
+            duplicateFlag: duplicate,
+          },
+        ],
+      },
+      'Bill extracted',
+    );
   };
 
-  const uploadBills = async (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    if (!files.length) return;
-    const additions: BillItem[] = [];
-    for (const file of files) {
-      additions.push({
-        id: `bill-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        fileName: file.name,
-        fileType: file.type || 'application/octet-stream',
-        fileSize: file.size,
-        previewUrl: await readAsDataUrl(file),
-        extracted: {
-          invoiceNo: `INV-${Math.floor(Math.random() * 90000 + 10000)}`,
-          invoiceDate: new Date().toISOString().slice(0, 10),
-          amount: 0,
-          hospital: caseData.treatment.hospitalName || 'Hospital',
-          description: `OCR extracted from ${file.name}`,
-        },
-        ocrConfidence: 0.82,
-      });
-    }
-    persist({ ...caseData, bills: [...caseData.bills, ...additions] }, 'Bill added and totals updated');
-    event.target.value = '';
+  const addDoc = (type: MRCase['docs'][number]['type']) => {
+    save(
+      {
+        ...item,
+        docs: [...item.docs, { id: crypto.randomUUID(), type, fileName: `${type.toLowerCase()}.pdf`, uploadedAt: new Date().toISOString() }],
+      },
+      type === 'EC_SIGNED' ? 'EC uploaded' : 'Saved',
+    );
   };
 
-  const uploadDocs = async (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    if (!files.length) return;
-    const additions: OtherDocumentItem[] = [];
-    for (const file of files) {
-      additions.push({
-        id: `doc-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        title: file.name.toLowerCase().includes('essentiality') ? 'Essentiality Certificate' : file.name.toLowerCase().includes('discharge') ? 'Discharge Summary' : 'Supporting Document',
-        fileName: file.name,
-        fileType: file.type || 'application/octet-stream',
-        fileSize: file.size,
-        previewUrl: await readAsDataUrl(file),
-      });
-    }
-    persist({ ...caseData, otherDocuments: [...caseData.otherDocuments, ...additions] }, 'Document uploaded');
-    event.target.value = '';
+  const addAdvance = () => {
+    save(
+      {
+        ...item,
+        status: 'Advance Submitted',
+        advances: [
+          ...item.advances,
+          {
+            advId: crypto.randomUUID(),
+            advNo: makeAdvNo(),
+            amount: 12000,
+            status: 'Submitted',
+            estimateDocId: 'est-1',
+            submittedAt: new Date().toISOString(),
+            signed: true,
+          },
+        ],
+      },
+      'Advance submitted',
+    );
   };
 
   return (
-    <main className="space-y-4">
-      <section className="rounded-2xl border border-indigo-200/80 bg-gradient-to-r from-indigo-900 via-indigo-500 to-indigo-900 p-4 text-white shadow-lg">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-indigo-100">Case Cover</p>
-            <h1 className="font-mono text-xl font-semibold">{caseData.mrNo}</h1>
-            <p className="text-sm text-indigo-100">{caseData.treatment.patientName || caseData.claimant.name} | {caseData.treatment.hospitalName || 'Hospital not set'}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusStamp text={caseData.status} />
-            <div className="rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-xs">Bills Rs {totals.bills.toLocaleString('en-IN')} | Advance Rs {totals.advances.toLocaleString('en-IN')} | Balance Rs {net.toLocaleString('en-IN')}</div>
-          </div>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button onClick={() => billInputRef.current?.click()} className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-3 text-sm font-semibold text-white"><CloudArrowUpIcon className="h-4 w-4" />Add Bill/Doc</button>
-          <button onClick={() => router.push('/reimbursement/medical/case/advance/new')} className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-3 text-sm font-semibold text-white"><BanknotesIcon className="h-4 w-4" />Request Advance</button>
-          <button onClick={() => canFinal && router.push('/reimbursement/medical/case/final/review')} disabled={!canFinal} className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"><ShieldCheckIcon className="h-4 w-4" />Submit Final Claim</button>
-          <button onClick={() => window.print()} className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-3 text-sm font-semibold text-white"><DocumentArrowDownIcon className="h-4 w-4" />Download Preview</button>
-        </div>
-      </section>
-
-      <ChapterCard chapter="Chapter 1" title="Member & Posting">
-        <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
-          <p><span className="font-medium">Name:</span> {caseData.claimant.name}</p>
-          <p><span className="font-medium">PEN:</span> {caseData.claimant.pen}</p>
-          <p><span className="font-medium">Service:</span> {caseData.treatment.serviceType || 'IAS'}</p>
-          <p><span className="font-medium">Cadre:</span> {caseData.claimant.cadre || 'Kerala'}</p>
-          <p><span className="font-medium">Role:</span> {caseData.claimant.currentRole || 'Joint Director'}</p>
-          <p><span className="font-medium">Grade/Scale:</span> {caseData.claimant.grade || 'Selection Grade'} / {caseData.claimant.scale || 'Level 12'}</p>
-        </div>
-      </ChapterCard>
-
-      <ChapterCard chapter="Chapter 2" title="Treatment Snapshot" actions={<button onClick={() => setEditTreatment((prev) => !prev)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-100"><PencilSquareIcon className="h-4 w-4" />{editTreatment ? 'Close Edit' : 'Edit'}</button>}>
-        {editTreatment ? (
-          <div className="grid gap-2 md:grid-cols-2">
-            <input value={caseData.treatment.hospitalName} onChange={(event) => updateTreatment('hospitalName', event.target.value)} className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="Hospital name" />
-            <input value={caseData.treatment.placeOfIllness} onChange={(event) => updateTreatment('placeOfIllness', event.target.value)} className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder="Place of illness" />
-            <input type="date" value={caseData.treatment.fromDate} onChange={(event) => updateTreatment('fromDate', event.target.value)} className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
-            <input type="date" value={caseData.treatment.toDate} onChange={(event) => updateTreatment('toDate', event.target.value)} className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
-            <textarea value={caseData.treatment.diagnosis} onChange={(event) => updateTreatment('diagnosis', event.target.value)} rows={2} className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 md:col-span-2" placeholder="Diagnosis / treatment notes" />
-          </div>
-        ) : (
-          <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
-            <p><span className="font-medium">Hospital:</span> {caseData.treatment.hospitalName || '-'}</p>
-            <p><span className="font-medium">Place:</span> {caseData.treatment.placeOfIllness || '-'}</p>
-            <p><span className="font-medium">Period:</span> {caseData.treatment.fromDate || '-'} to {caseData.treatment.toDate || '-'}</p>
-            <p className="sm:col-span-2 lg:col-span-3"><span className="font-medium">Diagnosis:</span> {caseData.treatment.diagnosis || '-'}</p>
-          </div>
-        )}
-      </ChapterCard>
-
-      <ChapterCard chapter="Chapter 3" title="Annexures Board">
-        <div className="mb-2 flex gap-2">
-          <button onClick={() => setDocTab('bills')} className={`h-9 rounded-lg border px-3 text-sm font-semibold ${docTab === 'bills' ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-100'}`}>Bills (OCR)</button>
-          <button onClick={() => setDocTab('docs')} className={`h-9 rounded-lg border px-3 text-sm font-semibold ${docTab === 'docs' ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-100'}`}>Other Docs</button>
-        </div>
-        {docTab === 'bills' ? (
-          <div className="space-y-2">
-            <button onClick={() => billInputRef.current?.click()} className="inline-flex h-10 items-center gap-2 rounded-xl border border-indigo-400 bg-indigo-50 px-3 text-sm font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300"><CloudArrowUpIcon className="h-4 w-4" />Upload Bill</button>
-            <input ref={billInputRef} type="file" multiple accept="image/*,.pdf" className="hidden" onChange={uploadBills} />
-            {caseData.bills.length ? caseData.bills.map((bill) => (
-              <article key={bill.id} className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-700 dark:bg-slate-900">
-                <p className="font-medium text-slate-900 dark:text-slate-100">{bill.fileName}</p>
-                <p className="text-xs text-slate-500">Invoice: {bill.extracted.invoiceNo} | Date: {bill.extracted.invoiceDate} | Amount: Rs {Number(bill.extracted.amount || 0).toLocaleString('en-IN')}</p>
-              </article>
-            )) : <p className="text-sm text-slate-500">No bills uploaded.</p>}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <button onClick={() => docInputRef.current?.click()} className="inline-flex h-10 items-center gap-2 rounded-xl border border-indigo-400 bg-indigo-50 px-3 text-sm font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300"><CloudArrowUpIcon className="h-4 w-4" />Upload Document</button>
-            <input ref={docInputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx" className="hidden" onChange={uploadDocs} />
-            {caseData.otherDocuments.length ? caseData.otherDocuments.map((doc) => (
-              <article key={doc.id} className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-700 dark:bg-slate-900">
-                <p className="font-medium text-slate-900 dark:text-slate-100">{doc.title}</p>
-                <p className="text-xs text-slate-500">{doc.fileName}</p>
-              </article>
-            )) : <p className="text-sm text-slate-500">No documents uploaded.</p>}
-          </div>
-        )}
-      </ChapterCard>
-
-      <ChapterCard chapter="Chapter 4" title="Final Claim Note">
-        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-          {[
-            ['Bills uploaded', readiness.bills],
-            ['Essentiality uploaded', readiness.ec],
-            ['Discharge summary uploaded', readiness.discharge],
-            ['Treatment details present', readiness.treatment],
-          ].map(([label, ok]) => (
-            <div key={String(label)} className={`rounded-xl border p-3 text-sm ${ok ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : 'border-rose-300 bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300'}`}>
-              {label}
+    <div className={styles.shellBg}>
+      <div className={styles.container}>
+        <section className={styles.cover}>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-semibold">Medical Reimbursement Case File</h1>
+              <p className="text-sm text-indigo-100">{item.mrNo} | {item.officer.fullName} | PEN {item.officer.penNumber}</p>
+              <p className="text-sm text-indigo-100">Patient: {item.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'} - {item.patient.name}</p>
             </div>
+            <div className="text-right">
+              <span className={styles.stamp}>{item.status}</span>
+              <p className="mt-2 text-xs text-indigo-100">Bills ₹{billTotal} | Advance paid ₹{advPaid} | Balance ₹{Math.max(billTotal - advPaid, 0)}</p>
+              {item.docs.some((d) => d.type === 'GO') && <span className="text-xs text-emerald-200">GO attached</span>}
+            </div>
+          </div>
+        </section>
+
+        <div className={`mt-3 ${styles.command}`}>
+          <button className="rounded border border-indigo-300 bg-white px-3 py-2 text-sm" onClick={addBill}>Add Bill/Doc</button>
+          <button className="rounded border border-indigo-300 bg-white px-3 py-2 text-sm" onClick={addAdvance}>Request Advance</button>
+          <button
+            className="rounded border border-indigo-300 bg-white px-3 py-2 text-sm disabled:opacity-40"
+            disabled={Object.values(missing).some(Boolean)}
+            title={Object.entries(missing).filter(([, v]) => v).map(([k]) => k).join(', ')}
+          >
+            Submit Final Claim
+          </button>
+          <button className="rounded border border-indigo-300 bg-white px-3 py-2 text-sm" onClick={() => window.print()}>Download Preview</button>
+        </div>
+
+        <div className={`mt-4 ${styles.tabs}`}>
+          {tabs.map((tab) => (
+            <button key={tab} className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ''}`} onClick={() => setActiveTab(tab)}>
+              {tab}
+            </button>
           ))}
         </div>
-        <div className="mt-2 grid gap-2 md:grid-cols-3">
-          <p className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-700 dark:bg-slate-900">Total bills: Rs {totals.bills.toLocaleString('en-IN')}</p>
-          <p className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-700 dark:bg-slate-900">Total advance: Rs {totals.advances.toLocaleString('en-IN')}</p>
-          <p className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-700 dark:bg-slate-900">Net claim: Rs {net.toLocaleString('en-IN')}</p>
-        </div>
-        <DeclarationBlock checked={declaration} onChange={setDeclaration} text="I hereby declare the details are true and reimbursement has not been claimed from any other source." />
-      </ChapterCard>
 
-      <section className="flex flex-wrap items-center justify-between gap-2">
-        <Link href="/reimbursement/medical" className="inline-flex h-10 items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
-          <ChevronLeftIcon className="h-4 w-4" />
-          Back to Cases
-        </Link>
-        <div className="flex gap-2">
-          <button onClick={() => persist(caseData, 'Draft saved')} className="inline-flex h-10 items-center rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">Save Draft</button>
-          <button onClick={() => canFinal && router.push('/reimbursement/medical/case/final/review')} disabled={!canFinal} className="inline-flex h-10 items-center gap-2 rounded-xl border border-indigo-500 bg-gradient-to-r from-indigo-700 to-indigo-500 px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">
-            <CheckBadgeIcon className="h-4 w-4" />
-            Open Final Review
-          </button>
-        </div>
-      </section>
+        <section className={`${styles.page} ${styles.slide} mt-2`}>
+          {activeTab === 'SUMMARY' && (
+            <div className="grid gap-3 text-sm md:grid-cols-2">
+              <div className="rounded border border-slate-200 bg-white p-3">
+                <p><b>Officer:</b> {item.officer.fullName}</p>
+                <p><b>Designation:</b> {item.officer.designation}</p>
+                <p><b>Posting:</b> {item.officer.administrativeDepartment}, {item.officer.district}</p>
+              </div>
+              <div className="rounded border border-slate-200 bg-white p-3">
+                <p><b>Patient:</b> {item.patient.name} ({item.patient.relation})</p>
+                <p><b>Hospital:</b> {item.treatment.hospitalName}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {missing.discharge && <span className="rounded bg-rose-100 px-2 py-1 text-xs text-rose-700">Discharge Missing</span>}
+                  {missing.ec && <span className="rounded bg-rose-100 px-2 py-1 text-xs text-rose-700">EC Missing</span>}
+                </div>
+              </div>
+            </div>
+          )}
 
-      {toast && <div className="fixed bottom-4 right-4 z-50 rounded-lg border border-indigo-300 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 shadow-lg dark:bg-indigo-500/15 dark:text-indigo-300">{toast}</div>}
-    </main>
+          {activeTab === 'TREATMENT NOTE' && (
+            <div className="grid gap-2 md:grid-cols-2">
+              <input className={styles.field} value={item.treatment.placeOfIllness} onChange={(e) => save({ ...item, treatment: { ...item.treatment, placeOfIllness: e.target.value } }, 'Saved')} />
+              <input className={styles.field} value={item.treatment.hospitalName} onChange={(e) => save({ ...item, treatment: { ...item.treatment, hospitalName: e.target.value } }, 'Saved')} />
+              <input type="date" className={styles.field} value={item.treatment.fromDate} onChange={(e) => save({ ...item, treatment: { ...item.treatment, fromDate: e.target.value } }, 'Saved')} />
+              <textarea className="min-h-24 rounded-lg border border-slate-300 p-2 md:col-span-2" value={item.treatment.diagnosis} onChange={(e) => save({ ...item, treatment: { ...item.treatment, diagnosis: e.target.value } }, 'Saved')} />
+            </div>
+          )}
+
+          {activeTab === 'ANNEXURES' && (
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <button className="rounded border border-slate-300 px-2 py-1 text-sm" onClick={addBill}>Upload Bill</button>
+                <button className="rounded border border-slate-300 px-2 py-1 text-sm">Scan from Camera</button>
+                <button className="rounded border border-slate-300 px-2 py-1 text-sm" onClick={addBill}>Bulk Upload</button>
+              </div>
+
+              <div className="overflow-x-auto rounded border border-slate-200 bg-white">
+                <table className="w-full text-xs">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-2 py-2 text-left">File</th><th className="px-2 py-2 text-left">Invoice No</th><th className="px-2 py-2 text-left">GST No</th><th className="px-2 py-2 text-left">Bill Date</th><th className="px-2 py-2 text-left">Hospital</th><th className="px-2 py-2 text-left">Total</th><th className="px-2 py-2 text-left">Tax</th><th className="px-2 py-2 text-left">Status</th><th className="px-2 py-2 text-left">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {item.bills.map((b) => (
+                      <tr key={b.id} className="border-t border-slate-100">
+                        <td className="px-2 py-2">{b.fileName}</td><td className="px-2 py-2">{b.invoiceNo}</td><td className="px-2 py-2">{b.gstNo}</td><td className="px-2 py-2">{b.billDate}</td><td className="px-2 py-2">{b.hospitalName}</td><td className="px-2 py-2">{b.totalAmount}</td><td className="px-2 py-2">{b.taxAmount}</td>
+                        <td className="px-2 py-2">{b.status} {b.duplicateFlag && <span className="ml-1 rounded bg-rose-100 px-1 text-rose-700">Possible duplicate</span>}</td>
+                        <td className="px-2 py-2">Edit | View | Remove</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex flex-wrap gap-2 text-xs">
+                {['ESTIMATE', 'DISCHARGE', 'EC_SIGNED', 'PRESCRIPTION', 'LAB', 'GO', 'OTHER'].map((t) => (
+                  <button key={t} className="rounded-full border border-slate-300 px-2 py-1" onClick={() => addDoc(t as MRCase['docs'][number]['type'])}>{t}</button>
+                ))}
+                {missing.discharge && <span className="rounded bg-rose-100 px-2 py-1 text-rose-700">REQUIRED: Discharge Summary</span>}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'ADVANCE NOTES' && (
+            <div className="space-y-2">
+              {item.advances.map((a) => (
+                <div key={a.advId} className="rounded border border-slate-200 bg-white p-3 text-sm">
+                  <p>{a.advNo} | ₹{a.amount} | {a.status}</p>
+                  <p className="text-xs text-slate-600">eSign: {a.signed ? 'Yes' : 'No'}</p>
+                  <div className="mt-1 flex gap-3 text-xs">
+                    <Link href={`/reimbursement/medical/${item.mrId}/advance/${a.advId}/preview`} className="underline">View Preview</Link>
+                    <button className="underline" onClick={() => save({ ...item, status: 'Advance Paid', advances: item.advances.map((x) => (x.advId === a.advId ? { ...x, status: 'Paid' } : x)) }, 'Saved')}>Mark Paid</button>
+                  </div>
+                </div>
+              ))}
+              <button className="rounded border border-slate-300 px-3 py-1 text-sm" onClick={addAdvance}>New Advance Request</button>
+            </div>
+          )}
+
+          {activeTab === 'CERTIFICATE' && (
+            <div className="space-y-2 text-sm">
+              <div className="flex flex-wrap gap-2">
+                <button className="rounded border border-slate-300 px-2 py-1" onClick={() => save(item, 'Saved')}>Download EC Template</button>
+                <button className="rounded border border-slate-300 px-2 py-1" onClick={() => addDoc('EC_SIGNED')}>Upload Signed EC</button>
+              </div>
+              <p>Template downloaded ✓ | Signed EC uploaded {missing.ec ? '—' : '✓'}</p>
+              <div className="max-h-52 overflow-auto rounded border border-slate-200 bg-white p-2 text-xs">
+                <p className="mb-2 font-semibold">Essentiality Certificate Template Preview</p>
+                <table className="w-full">
+                  <thead><tr><th>SlNo</th><th>Bill No & Date</th><th>Medicine</th><th>Chemical</th><th>Qty</th><th>Price</th></tr></thead>
+                  <tbody>{item.bills.map((b, i) => <tr key={b.id}><td>{i + 1}</td><td>{b.invoiceNo} {b.billDate}</td><td>—</td><td>—</td><td>—</td><td>{b.totalAmount}</td></tr>)}</tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'FINAL NOTE' && (
+            <div className="space-y-2 text-sm">
+              <ul className="list-disc pl-4">
+                <li>Bills &gt;= 1: {missing.bills ? '✗' : '✓'}</li>
+                <li>Signed EC uploaded: {missing.ec ? '✗' : '✓'}</li>
+                <li>Discharge summary uploaded: {missing.discharge ? '✗' : '✓'}</li>
+                <li>Treatment minimum complete: {missing.treatment ? '✗' : '✓'}</li>
+              </ul>
+              <p>Total bills ₹{billTotal} | Advance Paid ₹{advPaid} | Net claim ₹{Math.max(billTotal - advPaid, 0)}</p>
+              <Link className="inline-block rounded border border-slate-300 px-3 py-2" href={`/reimbursement/medical/${item.mrId}/final/preview`}>Open Final Preview</Link>
+            </div>
+          )}
+
+          {activeTab === 'MOVEMENT REGISTER' && (
+            <div className="space-y-1 text-sm">
+              {item.movement.map((m) => (
+                <div key={m.id} className="border-b border-dashed border-slate-300 py-1">{new Date(m.at).toLocaleString()} — {m.action}</div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <div className="mt-3">
+          <Link href="/reimbursement/medical" className="text-sm underline">Back to control center</Link>
+        </div>
+
+        {toast && <div className="fixed bottom-4 right-4 z-50 rounded bg-slate-900 px-3 py-2 text-xs text-white">{toast}</div>}
+      </div>
+    </div>
   );
 }
