@@ -96,7 +96,7 @@ export default function MedicalReimbursementPage() {
 
     setCases(upsertCase(next, cases));
     setOpen(false);
-    window.location.href = `/reimbursement/medical/${next.mrId}`;
+    window.location.href = `/reimbursement/medical/workspace?mrId=${next.mrId}`;
   };
 
   return (
@@ -122,7 +122,7 @@ export default function MedicalReimbursementPage() {
               .sort((a, b) => b.lastUpdated.localeCompare(a.lastUpdated))
               .slice(0, 7)
               .map((c) => (
-                <Link href={`/reimbursement/medical/${c.mrId}`} key={c.mrId} className={styles.bookCard}>
+                <Link href={`/reimbursement/medical/workspace?mrId=${c.mrId}`} key={c.mrId} className={styles.bookCard}>
                   <div className="text-sm font-semibold">{c.mrNo}</div>
                   <div className="text-xs text-slate-700">{c.patient.name}</div>
                   <div className="text-xs text-slate-600">{c.treatment.hospitalName}</div>
@@ -166,7 +166,7 @@ export default function MedicalReimbursementPage() {
                 <article key={c.mrId} className={styles.bookCard}>
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
-                      <Link href={`/reimbursement/medical/${c.mrId}`} className="font-semibold text-indigo-900">
+                      <Link href={`/reimbursement/medical/workspace?mrId=${c.mrId}`} className="font-semibold text-indigo-900">
                         {c.mrNo}
                       </Link>
                       <div className="text-sm text-slate-700">
@@ -178,9 +178,9 @@ export default function MedicalReimbursementPage() {
                   <div className="mt-2 text-xs text-slate-600">{c.treatment.hospitalName} | {c.treatment.fromDate}</div>
                   <div className="mt-1 text-xs text-slate-700">Bills ₹{total} | Advance Paid ₹{adv} | Balance ₹{Math.max(total - adv, 0)}</div>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                    <Link className="rounded border border-indigo-300 px-2 py-1" href={`/reimbursement/medical/${c.mrId}`}>Continue</Link>
-                    <Link className="rounded border border-slate-300 px-2 py-1" href={`/reimbursement/medical/${c.mrId}#annexures`}>Add Bill/Doc</Link>
-                    <Link className="rounded border border-slate-300 px-2 py-1" href={`/reimbursement/medical/${c.mrId}#advance`}>Add Advance</Link>
+                    <Link className="rounded border border-indigo-300 px-2 py-1" href={`/reimbursement/medical/workspace?mrId=${c.mrId}`}>Continue</Link>
+                    <Link className="rounded border border-slate-300 px-2 py-1" href={`/reimbursement/medical/workspace?mrId=${c.mrId}#annexures`}>Add Bill/Doc</Link>
+                    <Link className="rounded border border-slate-300 px-2 py-1" href={`/reimbursement/medical/workspace?mrId=${c.mrId}#advance`}>Add Advance</Link>
                     <button disabled={missing.length > 0} title={missing.length ? `Missing: ${missing.join(', ')}` : ''} className="rounded border border-slate-300 px-2 py-1 disabled:opacity-40">Submit Final</button>
                   </div>
                 </article>

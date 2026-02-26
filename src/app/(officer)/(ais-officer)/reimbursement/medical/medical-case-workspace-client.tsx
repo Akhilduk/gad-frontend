@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import styles from '../mr-book.module.css';
-import { fetchProfilePreview2 } from '../profile-mapper';
-import { loadCases, makeAdvNo, upsertCase } from '../mock-store';
-import type { MRCase, OfficerProfileVM } from '../mr-types';
+import styles from './mr-book.module.css';
+import { fetchProfilePreview2 } from './profile-mapper';
+import { loadCases, makeAdvNo, upsertCase } from './mock-store';
+import type { MRCase, OfficerProfileVM } from './mr-types';
 
 const tabs = ['SUMMARY', 'TREATMENT NOTE', 'ANNEXURES', 'ADVANCE NOTES', 'CERTIFICATE', 'FINAL NOTE', 'MOVEMENT REGISTER'] as const;
 
@@ -224,7 +224,7 @@ export default function MedicalCaseWorkspaceClient({ mrId }: { mrId: string }) {
                   <p>{a.advNo} | ₹{a.amount} | {a.status}</p>
                   <p className="text-xs text-slate-600">eSign: {a.signed ? 'Yes' : 'No'}</p>
                   <div className="mt-1 flex gap-3 text-xs">
-                    <Link href={`/reimbursement/medical/${item.mrId}/advance/${a.advId}/preview`} className="underline">View Preview</Link>
+                    <Link href={`/reimbursement/medical/advance-preview?mrId=${item.mrId}&advId=${a.advId}`} className="underline">View Preview</Link>
                     <button className="underline" onClick={() => save({ ...item, status: 'Advance Paid', advances: item.advances.map((x) => (x.advId === a.advId ? { ...x, status: 'Paid' } : x)) }, 'Saved')}>Mark Paid</button>
                   </div>
                 </div>
@@ -259,7 +259,7 @@ export default function MedicalCaseWorkspaceClient({ mrId }: { mrId: string }) {
                 <li>Treatment minimum complete: {missing.treatment ? '✗' : '✓'}</li>
               </ul>
               <p>Total bills ₹{billTotal} | Advance Paid ₹{advPaid} | Net claim ₹{Math.max(billTotal - advPaid, 0)}</p>
-              <Link className="inline-block rounded border border-slate-300 px-3 py-2" href={`/reimbursement/medical/${item.mrId}/final/preview`}>Open Final Preview</Link>
+              <Link className="inline-block rounded border border-slate-300 px-3 py-2" href={`/reimbursement/medical/final-preview?mrId=${item.mrId}`}>Open Final Preview</Link>
             </div>
           )}
 
