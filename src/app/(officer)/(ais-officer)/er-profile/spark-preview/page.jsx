@@ -68,7 +68,7 @@ const mandatoryDeputationFields = [
   "cen_min_id", "cen_dept_id", "cen_org_id", "deputation_type"
 ];
   const mandatoryTrainingFields = [
-    "training_name", "training_type_id", "country_id", "institute_name",
+    "training_type_id", "country_id", "institute_name",
     "subject", "place", "training_from", "training_to"
   ];
 
@@ -192,7 +192,7 @@ const mandatoryDeputationFields = [
         return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
       }
       return "";
-    };
+    }; 
 
     const nameParts = personal.name ? personal.name.trim().split(/\s+/) : [];
     const firstName = nameParts.slice(0, -1).join(" ");
@@ -309,7 +309,7 @@ const mandatoryDeputationFields = [
         (q) => q.qualification?.toLowerCase() === (edu.course_type || "").toLowerCase()
       )?.qualification_id || "",
       raw_qualification: edu.course_type || "",
-      subject_name: edu.subject || "",
+      subject_name: edu.qualification || "",
       institute_name: edu.university || "",
       _source: "SPARK",
       isSaved: false,
@@ -318,6 +318,32 @@ const mandatoryDeputationFields = [
 
   const mapServiceDetails = (serviceDetails) => {
     const normalize = (str) => str?.toString().trim().toLowerCase() || "";
+    const normalizeSparkServiceDate = (dateStr) => {
+      if (!dateStr) return "";
+      const raw = String(dateStr).trim();
+      if (!raw) return "";
+
+      // SPARK format: DD/MM/YYYY HH:mm:ss (or DD/MM/YYYY)
+      const sparkParts = raw.split(" ")[0].split("/");
+      if (sparkParts.length === 3) {
+        const [day, month, year] = sparkParts;
+        if (day && month && year) {
+          return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+        }
+      }
+
+      // Already ISO-like
+      const parsed = new Date(raw);
+      if (!Number.isNaN(parsed.getTime())) {
+        const y = parsed.getFullYear();
+        const m = String(parsed.getMonth() + 1).padStart(2, "0");
+        const d = String(parsed.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+      return "";
+    };
+
     return (serviceDetails || []).map((service, index) => {
       const designationMatch = masterData.designations.find(
         (d) => normalize(d.designation) === normalize(service.designation)
@@ -338,11 +364,11 @@ const mandatoryDeputationFields = [
         department_id: departmentMatch?.administrative_department_id || null,
         district_id: districtMatch?.district_id || null,
         state_id: stateMatch?.state_id || null,
-        start_date: service.date_from || "",
-        end_date: service.date_to || "",
+        start_date: normalizeSparkServiceDate(service.date_from),
+        end_date: normalizeSparkServiceDate(service.date_to),
         other_details: service.remarks || "",
-        order_no: service.order_number || "",
-        order_date: service.order_date || "",
+        order_no: service.order_no || service.order_number || "",
+        order_date: normalizeSparkServiceDate(service.order_date),
         _source: "SPARK",
         isSaved: false,
       };
@@ -379,7 +405,7 @@ const mandatoryDeputationFields = [
 
       return {
         ais_tr_id: `spark_${index}`,
-        training_name: train.title || train.training_name || "",
+        // training_name: train.title || train.training_name || "",
         training_type_id: train.training_type_id || "",
         country_id: train.country || "",
         institute_name: train.conducted_by || train.institute_name || "",
@@ -497,6 +523,7 @@ const mandatoryDeputationFields = [
     const storedProfile = sessionStorage.getItem("profileData");
     if (storedProfile) {
       const parsed = JSON.parse(storedProfile);
+      console.log("Loaded SPARK data from session:***********", parsed);
       setSparkData(parsed.spark_data?.data || {});
     }
     setLoading(false);
@@ -642,6 +669,7 @@ const mandatoryDeputationFields = [
 
   const formatFieldName = (key) => {
   // Special handling for specific field labels
+  if (key === "ais_number") return "AIS Number";
   if (key === "agency_id") return "Office";
   if (key === "cen_dept_id") return "Department";
   if (key === "cen_org_id") return "Office";
@@ -1073,7 +1101,7 @@ const FamilyInstructions = () => {
             <TwoColumnDetailSection
               title="TRAINING"
               data={trainingList}
-              fields={["training_name", "training_type_id", "country_id", "institute_name", "subject", "place", "training_from", "training_to"]}
+              fields={[ "training_type_id", "country_id", "institute_name", "subject", "place", "training_from", "training_to"]}
               getMasterName={getMasterName}
               formatDate={formatDate}
               formatFieldName={formatFieldName}
@@ -1291,8 +1319,6 @@ const TwoColumnDetailSection = ({
               }
             } else if (item.qualification_id) {
               entryTitle = getMasterName(item.qualification_id, "qualification_id") || `Entry ${index + 1}`;
-            } else if (item.training_name) {
-              entryTitle = item.training_name;
             } else if (item.reward_name) {
               entryTitle = item.reward_name;
             } else if (item.disability_type_id) {

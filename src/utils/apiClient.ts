@@ -82,7 +82,8 @@ axiosInstance.interceptors.response.use(
 
     if (
       originalRequest.url?.includes("/auth/login") ||
-      originalRequest.url?.includes("/auth/refresh")
+      originalRequest.url?.includes("/auth/refresh") ||
+      originalRequest.url?.includes("/auth/otp-login/") 
     ) {
       return Promise.reject(error);
     }

@@ -7,8 +7,10 @@ import { CompactProfileSection } from '@/app/components/AISDashboardComponents/C
 import { Accordion } from '@/app/components/accordion';
 import { ProfileCompletionProvider, useProfileCompletion } from '@/contexts/Profile-completion-context';
 import { ProfileAccordion } from './profile-accordion';
+import ConfirmModal from "@/app/components/confirmModal";
 import axiosInstance from '@/utils/apiClient';
-import { XMarkIcon, QuestionMarkCircleIcon, AcademicCapIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { toast } from 'react-toastify';
+import { XMarkIcon, QuestionMarkCircleIcon, AcademicCapIcon, ClockIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 // Create a mapping between section titles and indices
 const SECTION_MAPPING = {
@@ -120,6 +122,8 @@ function ProfileContent() {
   const [showHelpPanel, setShowHelpPanel] = useState(false);
   const [showHelpBadge, setShowHelpBadge] = useState(false);
   const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
+  const [isRefreshingSpark, setIsRefreshingSpark] = useState(false);
+  const [isSparkRefreshConfirmOpen, setIsSparkRefreshConfirmOpen] = useState(false);
   const [manualButtonHighlight, setManualButtonHighlight] = useState({
     help: false,
     guided: false,
@@ -313,6 +317,119 @@ function ProfileContent() {
     }
   }, [isInitializing, markInitialLoadComplete]);
 
+  const fetchProfileData = useCallback(async ({ forceRefresh = false, useCachedData = true } = {}) => {
+    try {
+      if (useCachedData) {
+        const cachedData = sessionStorage.getItem('profileData');
+        if (cachedData) {
+          setProfileData(JSON.parse(cachedData));
+          setInfoMessage('Using cached profile data');
+        }
+      }
+
+      const response = await axiosInstance.get('/officer/officer', {
+        params: forceRefresh ? { force_refresh: true } : undefined,
+      });
+      const responseData = response.data.data;
+      console.log('Fetched profile data:*************************', responseData);
+      setProfileData(responseData);
+      sessionStorage.setItem('profileData', JSON.stringify(responseData));
+
+      // SPARK check
+      const spark = responseData?.spark_data?.data?.personal_details;
+
+      // Officer info array
+      const officerInfo = responseData?.officer_data?.get_all_officer_info_by_user_id?.officer_info?.[0];
+      const fields = officerInfo?.fields;
+
+      // AIS & GAD
+      const ais = fields?.AIS_OFFICER;
+      const gad = fields?.GAD_OFFICER;
+
+      const sparkDOJ = spark?.date_of_joining || null;
+      const sparkRetirement = spark?.retirement_date || null;
+
+      // STEP 2 -> From AIS
+      const aisDOJ = ais?.date_of_joining || null;
+
+      // STEP 3 -> From GAD
+      const gadRetirement = gad?.retirement_date || null;
+
+      // FINAL VALUES
+      const finalDOJ = sparkDOJ ?? aisDOJ ?? null;
+      const finalRetirement = sparkRetirement ?? gadRetirement ?? null;
+
+      // STORE
+      sessionStorage.setItem('date_of_joining', finalDOJ);
+      sessionStorage.setItem('retirement_date', finalRetirement);
+
+      console.log('Final Date of Joining--------------------------------------------:', finalDOJ);
+      console.log('Final Retirement Date:', finalRetirement);
+
+      if (response.data.success) {
+        setInfoMessage(response.data.message);
+        setError(null);
+        return {
+          success: true,
+          message: response.data.message || 'SPARK data refreshed successfully.',
+        };
+      } else {
+        const failureMessage = response.data.detail || 'Failed to fetch profile data';
+        setError(failureMessage);
+        return {
+          success: false,
+          message: failureMessage,
+        };
+      }
+    } catch (err) {
+      const status = err.response?.status;
+      const responseData = err.response?.data?.data;
+      setProfileData(responseData);
+      sessionStorage.setItem('profileData', JSON.stringify(responseData));
+
+      let errorMessage = 'Failed to fetch profile data. Please try again later.';
+      if (status === 404) {
+        errorMessage = 'Profile not found. Please verify your account details.';
+      } else if (status === 400) {
+        errorMessage = err.response?.data?.detail || 'Invalid profile data provided.';
+      } else if (status === 502 || status === 503) {
+        errorMessage = err.response?.data?.detail || 'Profile service is temporarily unavailable. Please try again later.';
+      }
+
+      setError(errorMessage);
+      return {
+        success: false,
+        message: errorMessage,
+      };
+    } finally {
+      if (!forceRefresh) {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  const refreshSparkNow = useCallback(async () => {
+    if (isRefreshingSpark) {
+      return;
+    }
+
+    setIsRefreshingSpark(true);
+    const refreshResult = await fetchProfileData({ forceRefresh: true, useCachedData: false });
+    if (refreshResult?.success) {
+      toast.success(refreshResult.message || 'SPARK data refreshed successfully.');
+    } else {
+      toast.error(refreshResult?.message || 'Failed to refresh data from SPARK.');
+    }
+    setIsRefreshingSpark(false);
+  }, [fetchProfileData, isRefreshingSpark]);
+
+  const handleRefreshFromSpark = useCallback(() => {
+    if (isRefreshingSpark) {
+      return;
+    }
+    setIsSparkRefreshConfirmOpen(true);
+  }, [isRefreshingSpark]);
+
   useEffect(() => {
     const hideHelpBadge = localStorage.getItem(HELP_PANEL_STORAGE_KEY);
     if (hideHelpBadge !== 'true') {
@@ -323,82 +440,11 @@ function ProfileContent() {
     if (storedGuidedMode === 'true') {
       setGuidedModeEnabled(true);
     }
-
-    const fetchProfileData = async () => {
-      try {
-        const cachedData = sessionStorage.getItem('profileData');
-        if (cachedData) {
-          setProfileData(JSON.parse(cachedData));
-          setInfoMessage('Using cached profile data');
-        }
-
-        const response = await axiosInstance.get('/officer/officer');
-        const responseData = response.data.data;
-        console.log('Fetched profile data:*************************', responseData);
-        setProfileData(responseData);
-        sessionStorage.setItem('profileData', JSON.stringify(responseData));
-
-        // SPARK check
-        const spark = responseData?.spark_data?.data?.personal_details;
-        
-        // Officer info array
-        const officerInfo = responseData?.officer_data?.get_all_officer_info_by_user_id?.officer_info?.[0];
-        const fields = officerInfo?.fields;
-        
-        // AIS & GAD
-        const ais = fields?.AIS_OFFICER;
-        const gad = fields?.GAD_OFFICER;
-        
-        const sparkDOJ = spark?.date_of_joining || null;
-        const sparkRetirement = spark?.retirement_date || null;
-
-       // STEP 2 → From AIS
-       const aisDOJ = ais?.date_of_joining || null;
-
-       // STEP 3 → From GAD
-       const gadRetirement = gad?.retirement_date || null;
-
-       // FINAL VALUES
-       const finalDOJ = sparkDOJ ?? aisDOJ ?? null;
-       const finalRetirement = sparkRetirement ?? gadRetirement ?? null;
-
-       // STORE
-       sessionStorage.setItem("date_of_joining", finalDOJ);
-       sessionStorage.setItem("retirement_date", finalRetirement);
-
-        console.log('Final Date of Joining--------------------------------------------:', finalDOJ);
-        console.log('Final Retirement Date:', finalRetirement);
-       
-
-        if (response.data.success) {
-          setInfoMessage(response.data.message);
-          setError(null);
-        } else {
-          setError(response.data.detail || 'Failed to fetch profile data');
-        }
-      } catch (err) {
-        const status = err.response?.status;
-        const responseData = err.response?.data?.data;
-        setProfileData(responseData);
-        sessionStorage.setItem('profileData', JSON.stringify(responseData));
-
-        let errorMessage = 'Failed to fetch profile data. Please try again later.';
-        if (status === 404) {
-          errorMessage = 'Profile not found. Please verify your account details.';
-        } else if (status === 400) {
-          errorMessage = err.response?.data?.detail || 'Invalid profile data provided.';
-        } else if (status === 502 || status === 503) {
-          errorMessage = err.response?.data?.detail || 'Profile service is temporarily unavailable. Please try again later.';
-        }
-
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfileData();
   }, []);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [fetchProfileData]);
 
   const getCurrentGuidedIndex = () => {
     const index = GUIDED_SECTION_ORDER.indexOf(activeSection);
@@ -745,6 +791,16 @@ function ProfileContent() {
             <span>
               Last fetched from SPARK: <span className='text-amber-600 font-semibold'>{formattedSparkFetchedTime || 'Not available'}</span> 
             </span>
+            <button
+              type="button"
+              onClick={handleRefreshFromSpark}
+              disabled={isRefreshingSpark || loading}
+              title="Refresh from spark"
+              aria-label="Refresh from spark"
+              className="inline-flex items-center p-0.5 text-indigo-600 transition-colors hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >
+              <ArrowPathIcon className={`h-4 w-4 stroke-[2.5] ${isRefreshingSpark ? 'animate-spin' : ''}`} />
+            </button>
           </div>
 
           {/* Buttons on the right */}
@@ -1246,58 +1302,29 @@ function ProfileContent() {
 
       {/* Initial Loading Modal */}
       {showInitLoader && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-indigo-200 bg-white/95 p-6 shadow-2xl dark:border-gray-700 dark:bg-gray-900/95">
-            <div className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-indigo-200/60 blur-2xl dark:bg-indigo-600/20"></div>
-            <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-cyan-200/60 blur-2xl dark:bg-cyan-600/20"></div>
-
-            <div className="relative z-10 flex items-start gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-cyan-500 shadow-lg">
-                <div className="loader-ring h-8 w-8 rounded-full border-2 border-white/35 border-t-white"></div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center max-w-sm dark:bg-gray-800 dark:text-gray-100">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+            <div className="text-lg font-medium">Initializing profile sections...</div>
+            <div className="text-sm text-gray-500 mt-2 text-center">
+              Loading all section data to calculate accurate progress
+              <div className="mt-1 text-xs">
+                {Object.keys(sectionProgress).length} of {ALL_REQUIRED_SECTIONS.length} sections loaded
               </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100">
-                  Preparing your ER profile
-                </h3>
-                <p className="mt-1 text-sm text-slate-600 dark:text-gray-300">
-                  We are loading all sections to calculate accurate completion.
-                </p>
-              </div>
-            </div>
-
-            <div className="relative z-10 mt-5">
-              <div className="mb-2 flex items-center justify-between text-xs font-semibold">
-                <span className="text-slate-600 dark:text-gray-300">
-                  {Object.keys(sectionProgress).length} of {ALL_REQUIRED_SECTIONS.length} sections loaded
-                </span>
-                <span className="text-indigo-700 dark:text-indigo-300">
-                  {Math.round(
-                    (Object.keys(sectionProgress).length / Math.max(ALL_REQUIRED_SECTIONS.length, 1)) * 100
-                  )}
-                  %
-                </span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-indigo-100 dark:bg-gray-700">
-                <div
-                  className="loader-progress h-full rounded-full bg-gradient-to-r from-indigo-600 to-cyan-500"
-                  style={{
-                    width: `${Math.round(
-                      (Object.keys(sectionProgress).length / Math.max(ALL_REQUIRED_SECTIONS.length, 1)) * 100
-                    )}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="relative z-10 mt-4 flex items-center justify-center gap-1.5 text-xs font-medium text-slate-500 dark:text-gray-400">
-              <span>Please wait</span>
-              <span className="loader-dot">.</span>
-              <span className="loader-dot" style={{ animationDelay: '0.2s' }}>.</span>
-              <span className="loader-dot" style={{ animationDelay: '0.4s' }}>.</span>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isSparkRefreshConfirmOpen}
+        setIsOpen={setIsSparkRefreshConfirmOpen}
+        onConfirm={refreshSparkNow}
+        title="Refresh From SPARK"
+        message="Do you want to fetch the latest profile data from SPARK now?"
+        iconType="info"
+        confirmText="Refresh"
+      />
 
       <style jsx global>{`
         @keyframes helpBorderPulse {
@@ -1331,35 +1358,6 @@ function ProfileContent() {
         .help-section-focus {
           animation: guidedBorderPulse 2.1s ease-in-out 2;
         }
-        @keyframes loaderSpin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        @keyframes loaderDotBounce {
-          0%,
-          80%,
-          100% {
-            opacity: 0.3;
-            transform: translateY(0);
-          }
-          40% {
-            opacity: 1;
-            transform: translateY(-1px);
-          }
-        }
-        .loader-ring {
-          animation: loaderSpin 0.9s linear infinite;
-        }
-        .loader-progress {
-          transition: width 0.35s ease;
-        }
-        .loader-dot {
-          animation: loaderDotBounce 1.1s ease-in-out infinite;
-        }
       `}</style>
 
     </>
@@ -1373,3 +1371,4 @@ export default function UpdateProfile() {
     </ProfileCompletionProvider>
   );
 }
+

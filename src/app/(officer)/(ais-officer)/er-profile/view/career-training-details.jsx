@@ -20,6 +20,7 @@ import axiosInstance from "@/utils/apiClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 import ConfirmModal from "@/app/components/confirmModal";
+import moment from "moment";
 
 export function CareerTrainingDetails({ profileData }) {
   
@@ -222,8 +223,12 @@ const calculateDuration = (from, to) => {
   const start = parseDate(from);
   const end = parseDate(to);
   
-  if (!start || !end || start >= end) {
-    return "N/A";
+  if (!start || !end) return "N/A";
+  if (start > end) return "N/A"; // invalid range
+
+  // Same day → exactly 1 day
+  if (start.toDateString() === end.toDateString()) {
+    return "1 day";
   }
   
   // Calculate months
@@ -246,6 +251,7 @@ const calculateDuration = (from, to) => {
     return days > 1 ? `${days} days` : `${days} day`;
   }
   
+  // Fallback (should rarely happen)
   return "Less than a day";
 };
 
@@ -1143,15 +1149,26 @@ const mapSparkDataToTrainingDetails = useCallback(
     );
   };
 
-  const getTrainingStatus = (from, to) => {
-    if (!from || !to) return "N/A";
-    const today = new Date();
-    const start = new Date(from);
-    const end = new Date(to);
-    if (today < start) return "Upcoming";
-    if (today > end) return "Past";
-    return "Current";
-  };
+const getTrainingStatus = (from, to) => {
+  if (!from || !to) return "N/A";
+  
+  // Parse with moment – it automatically handles many formats (YYYY-MM-DD, DD/MM/YYYY, etc.)
+  const start = moment(from, ['YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY/MM/DD'], true);
+  const end = moment(to, ['YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY/MM/DD'], true);
+  
+  if (!start.isValid() || !end.isValid()) return "N/A";
+
+  // Get today's date (start of day)
+  const today = moment().startOf('day');
+
+  // Normalize to start of day for accurate date-only comparison
+  start.startOf('day');
+  end.startOf('day');
+
+  if (today.isBefore(start)) return "Upcoming";
+  if (today.isAfter(end)) return "Past";
+  return "Current";
+};
 
   const renderSparkIndicator = (fieldKey, fieldSource) => {
     if (fieldSource !== "SPARK") return null;

@@ -156,7 +156,8 @@ const handleExportExcel = () => {
     alert('No data to export');
     return;
   }
-  exportToExcel(title, exportData, `${filter}-profiles.xlsx`);
+  // Use filter as sheet name (safe length)
+  exportToExcel(filter, exportData, `${filter}-profiles.xlsx`);
 };
 
   const hasData = filteredProfiles.length > 0;
@@ -248,7 +249,7 @@ const handleExportExcel = () => {
                   <tr className="bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/30 text-left text-xs font-bold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider">
                     <th className="px-6 py-4">Sl. No</th>
                     <th className="px-6 py-4">Name</th>
-                    <th className="px-6 py-4">PEN</th>
+                    <th className="px-6 py-4">PEN</th> 
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4 text-center">Actions</th>
                   </tr>

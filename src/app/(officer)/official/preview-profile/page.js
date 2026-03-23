@@ -265,6 +265,7 @@ const ProfilePreviewPage = () => {
           ministry: formatField(dep.ministry, "Ministry") || "N/A",
           office: formatField(dep.agency, "Agency") || "N/A",
           department: formatField(dep.administrative_department, "Administrative Department") || "N/A",
+          deputation_type: formatField(dep.deputation_type, "Deputation Type") || "N/A",
         }))
         : [],
       service_details: data.ais_service_history?.length
@@ -317,7 +318,7 @@ const ProfilePreviewPage = () => {
           disability_percentage: disability.disability_perc || "N/A",
           expiry_date: formatDate(disability.dis_valid_up_to),
           documentId: disability.disability_proof || null,
-          udid_number: formatField(disability.udid_number, "UDID Number") || "N/A",
+          udid_document_number: formatField(disability.udid_number, "UDID Document Number") || "N/A",
         }))
         : [],
       disciplinary_details: data.ais_suspension_info?.length
@@ -471,8 +472,14 @@ const ProfilePreviewPage = () => {
 
   const handleActionClick = (action) => {
     const trimmedRemark = remark.trim();
-    if (trimmedRemark.length < 5) { /* error */ return; }
-    if (trimmedRemark.length > 150) { /* error */ return; }
+    if (trimmedRemark.length < 5) {
+      setRemarkError('Remarks must be at least 5 characters long.');
+      return;
+    }
+    if (trimmedRemark.length > 150) {
+      setRemarkError('Remarks cannot exceed 150 characters.');
+      return;
+    }
     if (!validateRemarkChars(remark)) {  // ← NEW: Char validation
       setRemarkError('Remarks can only contain letters, numbers, spaces, and these characters: ( ) . , - /');
       return;
@@ -510,9 +517,9 @@ const ProfilePreviewPage = () => {
     } else {
       setShowConfirmationModal(false);
       await handleSubmitAction();
-      if(mobileNo){
-        toast.error("Mobile number is missing");
-      }
+      // if(mobileNo){ commetented  by nandana  foe bug fix https://cdipd.atlassian.net/browse/CGAESP-1344
+      //   toast.error("Mobile number is missing");
+      // }
     }
   };
 
@@ -524,6 +531,7 @@ const ProfilePreviewPage = () => {
         otp,
         actor: String(fullName),
       });
+      console.log("otp verification response===", response);
 
       if (response.data.success) {
         setShowOtpModal(false);
@@ -1281,8 +1289,8 @@ const ProfilePreviewPage = () => {
                 <span>
                   {remark.length}/150 characters
                 </span>
-                <span className={remark.length < 5 ? 'text-red-500' : remark.length > 150 ? 'text-red-500' : 'text-green-500'}>
-                  {remark.length < 5 ? 'Min 5 characters required' : remark.length > 150 ? 'Max exceeded' : 'Valid'}
+                <span className={remark.trim().length < 5 ? 'text-red-500' : remark.trim().length > 150 ? 'text-red-500' : 'text-green-500'}>
+                  {remark.trim().length < 5 ? 'Min 5 characters required' : remark.trim().length > 150 ? 'Max exceeded' : 'Valid'}
                 </span>
               </div>
               {remarkError && (
@@ -1351,6 +1359,7 @@ const ProfilePreviewPage = () => {
         isOpen={showOtpModal}
         onClose={() => { setShowOtpModal(false) }}
         onVerify={handleOtpVerfication}
+        onResend={handleConfirmAction}
         title="EVC OTP Verification"
         description='Enter OTP'
         isLoading={isOtpClicked}
@@ -1665,18 +1674,14 @@ const ModernTimeline = ({ title, data, formatDate }) => {
                       <span className="break-words">{status.remarks || 'N/A'}</span>
                     </p>
                     <p className="flex items-start gap-2">
-                      <span className="font-semibold text-slate-700 min-w-fit dark:text-gray-200">Role:</span>
+                      <span className="font-semibold text-slate-700 min-w-fit dark:text-gray-200">Submitted To:</span>
                       <span className="break-words">{status.assigned_to_role_name || 'N/A'}</span>
                     </p>
                   </div>
                   <div className="space-y-1.5">
                     <p className="flex items-start gap-2">
-                      <span className="font-semibold text-slate-700 min-w-fit dark:text-gray-200">From:</span>
-                      <span className="break-words">{status.from_activity_name || 'N/A'}</span>
-                    </p>
-                    <p className="flex items-start gap-2">
-                      <span className="font-semibold text-slate-700 min-w-fit dark:text-gray-200">To:</span>
-                      <span className="break-words">{status.to_activity_name || 'N/A'}</span>
+                      <span className="font-semibold text-slate-700 min-w-fit dark:text-gray-200">Flow:</span>
+                      <span className="break-words">{`${status.from_activity_name || 'N/A'} -> ${status.to_activity_name || 'N/A'}`}</span>
                     </p>
                   </div>
                 </div>

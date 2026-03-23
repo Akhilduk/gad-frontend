@@ -85,6 +85,7 @@ const LogIn = () => {
 
   // Shared post-login (tokens, RBAC, redirects)
   const finalizeLogin = async (payload) => {
+     console.log("response *****",payload)
     const {
       access_token: token,
       refresh_token,
@@ -227,6 +228,7 @@ const LogIn = () => {
       setLoading(true);
       toast.loading('Logging in...', { id: 'login-toast' });
       const response = await axiosInstance.post('/auth/login', { email, password });
+     
       toast.dismiss('login-toast');
       await finalizeLogin(response.data.data);
     } catch (err) {
@@ -300,38 +302,30 @@ const LogIn = () => {
     toast.dismiss('otp-verify-toast');
     await finalizeLogin(response.data.data);
 
-  } catch (err) {
-    toast.dismiss('otp-verify-toast');
-    const status = err?.response?.status;
-    let backendMessage = extractErrorMessage(err);
+      }  catch (err) {
+      toast.dismiss('otp-verify-toast');
+      const status = err?.response?.status;
+      let backendMessage;
 
-    // Only override if backend didn't send a clear message
-    if (!backendMessage) {
-      if (status === 400) {
-        backendMessage = 'OTP not found. Please request a new one.';
-      } else if (status === 410) {
-        backendMessage = 'OTP expired. Please request a new one.';
-      } else if (status === 401) {
-        backendMessage = 'Invalid OTP. Please try again.';
+      // Custom messages for OTP-related errors
+      if (status === 400 || status === 401 || status === 410) {
+        backendMessage = 'Invalid OTP. Please enter a valid OTP.';
       } else {
-        backendMessage = 'Verification failed. Please try again.';
+        backendMessage = extractErrorMessage(err) || 'Verification failed. Please try again.';
       }
+
+      const errorMsg = backendMessage;
+      toast.error(errorMsg);
+      setError(errorMsg);
+
+      // Clear OTP input on any OTP-related failure
+      if ([400, 401, 410].includes(status)) {
+        setOtpDigits(Array(OTP_LENGTH).fill(''));
+        // setOtpRequested(false); // allow re-request immediately
+      }
+    } finally {
+      setLoading(false);
     }
-
-    const errorMsg = backendMessage;
-    toast.error(errorMsg);
-    setError(errorMsg);
-
-    // Clear OTP input on any OTP-related failure
-    if ([400, 401, 410].includes(status)) {
-      setOtpDigits(Array(OTP_LENGTH).fill(''));
-      setOtpValue('');
-      setOtpRequested(false); // Optional: allow re-request immediately
-    }
-
-  } finally {
-    setLoading(false);
-  }
 };
 
   // OTP Inputs Handlers
@@ -733,6 +727,9 @@ const LogIn = () => {
                               />
                             ))}
                           </div>
+                          {error && (
+                              <p className="text-sm text-red-600 dark:text-red-400 mt-2">{error}</p>
+                            )}
                           <div className="mt-2 flex items-center justify-between">
                             <p className="text-xs text-gray-500 dark:text-gray-400">
                               Didn't receive it? Check spam or try resending.

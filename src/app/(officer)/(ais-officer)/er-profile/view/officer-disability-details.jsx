@@ -400,7 +400,7 @@ export function DisabilityDetails({ profileData }) {
         });
 
         if (hasDuplicate) {
-          toast.error("An entry with the same disability type, percentage, valid up to date and UDID number already exists.", {
+          toast.error("An entry with the same disability type, percentage, valid up to date and UDID document number already exists.", {
             className: "bg-red-500 text-white",
             progressClassName: "bg-red-200",
           });

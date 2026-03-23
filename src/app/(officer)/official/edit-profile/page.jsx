@@ -1296,7 +1296,7 @@ const CentralDeputation = ({ editedData, handleChange, errors = {}, searchTerm =
       ))}
       {editedData.ais_central_deputation.length === 0 && (
         <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 dark:bg-gray-800 dark:border-gray-700">
-          <p className="text-gray-500 dark:text-gray-300">No central deputation records available</p>
+          <p className="text-gray-500 dark:text-gray-300">No deputation records available</p>
         </div>
       )}
     </div>
@@ -1743,7 +1743,7 @@ const ProfileEditPage = () => {
     'Address Details': setAddressErrors,
     'Dependents Details': setDependentErrors,
     'Educational Qualifications': setEducationErrors,
-    'Central Deputation': setCentralDepErrors,
+    'Deputation Details': setCentralDepErrors,
     'Service Details': setServiceErrors,
     'Training Details': setTrainingErrors,
     'Awards and Publications': setRewardsErrors,
@@ -1757,7 +1757,7 @@ const ProfileEditPage = () => {
     'Address Details': addressErrors,
     'Dependents Details': dependentErrors,
     'Educational Qualifications': educationErrors,
-    'Central Deputation': centralDepErrors,
+    'Deputation Details': centralDepErrors,
     'Service Details': serviceErrors,
     'Training Details': trainingErrors,
     'Awards and Publications': rewardsErrors,
@@ -1874,7 +1874,7 @@ const ProfileEditPage = () => {
         const sectionChecks = [
           { key: 'family', title: 'Dependents Details' },
           { key: 'ais_edu_qualification', title: 'Educational Qualifications' },
-          { key: 'ais_central_deputation', title: 'Central Deputation' },
+          { key: 'ais_central_deputation', title: 'Deputation Details' },
           { key: 'ais_service_history', title: 'Service Details' },
           { key: 'ais_training_info', title: 'Training Details' },
           { key: 'ais_rewards', title: 'Awards and Publications' },
@@ -1918,7 +1918,7 @@ const ProfileEditPage = () => {
         const dobError = validateDate(dep.dob, userDob, dep.relation, 'Date of Birth');
         if (dobError) errors[`family_${index}_dob`] = dobError;
       });
-    } else if (sectionTitle === 'Central Deputation') {
+    } else if (sectionTitle === 'Deputation Details') {
       editedData.ais_central_deputation.forEach((dep, index) => {
         const rangeError = validateDateRange(dep.start_date, dep.end_date, 'Deputation');
         if (rangeError) errors[`cendep_${index}_end_date`] = rangeError;
@@ -2427,7 +2427,7 @@ const handleSaveSection = async (section, idKey, urlPrefix, sectionTitle) => {
       'Address Details',
       'Dependents Details',
       'Educational Qualifications',
-      'Central Deputation',
+      'Deputation Details',
       'Service Details',
       'Training Details',
       'Awards and Publications',
@@ -2585,10 +2585,10 @@ const handleSaveSection = async (section, idKey, urlPrefix, sectionTitle) => {
           </FormSection>
 
           <FormSection 
-            title="Central Deputation" 
-            onSave={() => handleSaveSection('ais_central_deputation', 'cen_dep_id', '/as-II/central-deputation', 'Central Deputation')} 
+            title="Deputation Details" 
+            onSave={() => handleSaveSection('ais_central_deputation', 'cen_dep_id', '/as-II/central-deputation', 'Deputation Details')} 
             hasData={editedData.ais_central_deputation.length > 0}
-            forceOpen={openSections.includes('Central Deputation') || !!searchTerm}
+            forceOpen={openSections.includes('Deputation Details') || !!searchTerm}
             searchTerm={searchTerm}
             sectionData={editedData.ais_central_deputation}
           >

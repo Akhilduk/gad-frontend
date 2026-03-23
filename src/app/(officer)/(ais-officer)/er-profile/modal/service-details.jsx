@@ -396,21 +396,26 @@ export function ModalServiceDetails({
       });
     }
     
-    // Update the form data
+   // Update the form data
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Clear error for the changed field
     setErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[name];
-      
-      // Special handling for start_date changes
+
+      // If the radio button for additional charge changed, also clear basic_pay error
+      // because its message depends on the current selection.
+      if (name === 'is_additional_charge') {
+        delete newErrors.basic_pay;
+      }
+
+      // Special handling for start_date changes (existing)
       if (name === 'start_date') {
         const newStartDt = value ? new Date(value) : null;
         const is2020OrLater = newStartDt && !isNaN(newStartDt.getTime()) && newStartDt >= new Date('2020-01-01');
-        
+
         if (!is2020OrLater) {
-          // If service is now pre-2020, clear mandatory errors for order_no and order_date
           if (newErrors.order_no === 'Order number is required for service periods from 2020 onwards') {
             delete newErrors.order_no;
           }
@@ -419,7 +424,7 @@ export function ModalServiceDetails({
           }
         }
       }
-      
+
       return newErrors;
     });
 
@@ -484,6 +489,7 @@ export function ModalServiceDetails({
 
   const validate = () => {
     const newErrors = {};
+    
 
     // Block everything if DOJ is missing
     if (showDojWarning) {
@@ -545,8 +551,22 @@ export function ModalServiceDetails({
       }
     }
 
+    // Get the display name for the basic pay field
+    const getBasicPayFieldName = () => {
+      return formData.is_additional_charge === 'yes' ? 'Scale of Pay' : 'Basic Pay';
+    };
+
     if (formData.basic_pay !== null && (isNaN(formData.basic_pay) || formData.basic_pay <= 0)) {
-      newErrors.basic_pay = 'Basic pay must be a positive number';
+    newErrors.basic_pay = `${getBasicPayFieldName()} must be a positive number`;
+    }
+
+    // Limit integer part to 7 digits
+    if (formData.basic_pay !== null && !isNaN(formData.basic_pay)) {
+      const numStr = formData.basic_pay.toString();
+      const integerPart = numStr.split('.')[0];
+      if (integerPart.length > 7) {
+        newErrors.basic_pay = `${getBasicPayFieldName()} cannot exceed 7 digits`;
+      }
     }
 
     if (formData.phone_no?.trim()) {
@@ -752,7 +772,7 @@ export function ModalServiceDetails({
                       {/* Dropdown Fields */}
                       {[
                         { label: 'Designation', id: 'designation_id', options: designations, nameKey: 'designation' },
-                        { label: 'Ministry', id: 'ministry_id', options: ministries, nameKey: 'ministry' },
+                        { label: 'Ministry/Department', id: 'ministry_id', options: ministries, nameKey: 'ministry' },
                         {
                           label: 'Department',
                           id: 'administrative_department_id',
@@ -993,7 +1013,7 @@ export function ModalServiceDetails({
                           disabled={showDojWarning || isDisabled('order_date')}
                           className={getFieldClassName('order_date')}
                           min={userDates.doj || ''}
-                          max={todayStr}
+                          max={formData.start_date || todayStr}
                         />
                         {errors.order_date && <p className="text-red-500 text-sm mt-1">{errors.order_date}</p>}
                       </div>

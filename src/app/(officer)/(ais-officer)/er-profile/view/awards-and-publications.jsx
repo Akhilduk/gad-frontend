@@ -22,7 +22,7 @@ import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 import ConfirmModal from "@/app/components/confirmModal";
 import moment from 'moment';
 
-// Helper function to safely format dates using moment.js
+// Helper function to safely format dates using moment.js – now in DD/MM/YYYY
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
   
@@ -30,7 +30,7 @@ const formatDate = (dateString) => {
   // Check if date is valid
   if (!date.isValid()) return 'N/A';
   
-  return date.format('MMMM D, YYYY');
+  return date.format('DD/MM/YYYY');
 };
 
 export function AwardsAndPublications({ profileData }) {
@@ -934,13 +934,13 @@ export function AwardsAndPublications({ profileData }) {
                       </p>
                       <p 
                         className={`text-sm font-bold text-gray-900 dark:text-white break-words line-clamp-5`}
-                        title={
-                          field.type === "file"
-                            ? renderDocumentButton(award[field.key], award.rew_name)
-                            : field.type === "date"
-                            ? field.getValue(award[field.key])
-                            : award[field.key] || "N/A"
-                        }
+                        // title={
+                        //   field.type === "file"
+                        //     ? renderDocumentButton(award[field.key], award.rew_name)
+                        //     : field.type === "date"
+                        //     ? field.getValue(award[field.key])
+                        //     : award[field.key] || "N/A"
+                        // }
                       >
                         {field.type === "file"
                           ? renderDocumentButton(award[field.key], award.rew_name)

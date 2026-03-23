@@ -935,7 +935,7 @@ const renderUserIndicator = (fieldKey) => {
                     <div className="flex items-center gap-3">
                       <ExclamationTriangleIcon className="w-6 h-6 text-red-600 dark:text-red-400 text-xs" />
                       <p className="text-xs text-red-600 dark:text-red-200">
-                        ⚠ Some information missing<br />
+                        Some information missing<br />
                         {filledCount} of {mandatoryFields.length} completed
                       </p>
                     </div>

@@ -334,6 +334,46 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
       }
     }
   }
+  // Allotment Year validation
+if (formData.allotment_year) {
+  const allotmentYear = Number(formData.allotment_year);
+  const currentYear = new Date().getFullYear();
+
+  if (!/^\d{4}$/.test(formData.allotment_year)) {
+    newErrors.allotment_year = 'Must be a valid 4-digit year';
+  }
+  else if (allotmentYear > currentYear) {
+    newErrors.allotment_year = 'Allotment year cannot be in the future';
+  }
+  else if (formData.dob) {
+    // Try to extract birth year reliably
+    let birthYear = null;
+
+    // Handle different date formats that might come from backend
+    const dobStr = String(formData.dob).trim();
+
+    // YYYY-MM-DD (most common after date input)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dobStr)) {
+      birthYear = Number(dobStr.split('-')[0]);
+    }
+    // DD-MM-YYYY or DD/MM/YYYY
+    else if (/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(dobStr)) {
+      const parts = dobStr.split(/[-/]/);
+      birthYear = Number(parts[2]); // year is last
+    }
+    // Other formats from SPARK (DD/MM/YYYY HH:mm:ss)
+    else if (dobStr.match(/^(\d{2})\/(\d{2})\/(\d{4})/)) {
+      birthYear = Number(dobStr.match(/^(\d{2})\/(\d{2})\/(\d{4})/)[3]);
+    }
+
+    if (birthYear && !isNaN(birthYear)) {
+      const minAllotmentYear = birthYear + 18;
+      if (allotmentYear < minAllotmentYear) {
+        newErrors.allotment_year = `Allotment year must be at least ${minAllotmentYear} (age 18 or older)`;
+      }
+    }
+  }
+}
 
     if (formData.email && !isValidEmail(formData.email)) {
       newErrors.email = 'Enter a valid email address';
@@ -463,6 +503,41 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
           error = 'PRAN must be exactly 12 numeric digits (0-9 only—no letters, spaces, or special characters).';
         }
         break;
+      case 'allotment_year':
+      const val = trimmedValue;
+      let error = '';
+
+       if (val && !/^\d{4}$/.test(val)) {
+        error = 'Must be a 4-digit year';
+      } else if (val) {
+      const yearNum = Number(val);
+      const currentYear = new Date().getFullYear();
+
+      if (yearNum > currentYear) {
+        error = 'Cannot be in the future';
+      }
+      else if (formData.dob) {
+      let birthYear = null;
+      const dobStr = String(formData.dob).trim();
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dobStr)) {
+        birthYear = Number(dobStr.split('-')[0]);
+      } else if (/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(dobStr)) {
+        birthYear = Number(dobStr.split(/[-/]/)[2]);
+      } else if (dobStr.match(/^(\d{2})\/(\d{2})\/(\d{4})/)) {
+        birthYear = Number(dobStr.match(/^(\d{2})\/(\d{2})\/(\d{4})/)[3]);
+      }
+
+      if (birthYear && !isNaN(birthYear)) {
+        if (yearNum < birthYear + 18) {
+          error = `Must be at least age 18 (${birthYear + 18})`;
+        }
+      }
+    }
+  }
+
+  setErrors((prev) => ({ ...prev, allotment_year: error }));
+  break;
       // case 'pf_number':
       //   if (trimmedValue && !/^\d{12}$/.test(trimmedValue)) {
       //     error = 'PF Account Number must be exactly 12 numeric digits (0-9 only, no letters, spaces, or special characters).';

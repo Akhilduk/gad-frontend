@@ -216,15 +216,16 @@ export function CentralDeputationDetails({ profileData }) {
     [masterData]
   );
 
-  const getDeputationStatus = useCallback((startDate, endDate) => {
+ const getDeputationStatus = useCallback((startDate, endDate) => {
     if (!startDate) return 'N/A';
-    const today = moment();
-    const start = moment(startDate);
-    const end = endDate ? moment(endDate) : null;
+    const today = moment().startOf('day');
+    const start = moment(startDate).startOf('day');
+    const end = endDate ? moment(endDate).startOf('day') : null;
+
     if (today.isBefore(start)) return 'Upcoming';
     if (end && today.isAfter(end)) return 'Past';
     return 'Current';
-  }, []);
+}, []);
 
   const mapDeputationData = useCallback(
     (sparkData, dbDeputations = []) => {
@@ -569,30 +570,43 @@ export function CentralDeputationDetails({ profileData }) {
   }, [isButtonDisabled, deputationDetails, deputationToDelete]);
 
 
-  const handleSave = useCallback(
-    async (updatedData) => {
-      try {
-        console.log('Incoming updatedData:', JSON.stringify(updatedData, null, 2));
+const handleSave = useCallback(
+  async (updatedData) => {
+    try {
+      console.log('Incoming updatedData:', JSON.stringify(updatedData, null, 2));
 
-        const isSparkEntry = selectedDeputation?.cen_dep_id?.startsWith('spark_');
-        const isUpdate = selectedDeputation?.cen_dep_id && !isSparkEntry;
-        const isNew = !selectedDeputation || !selectedDeputation.cen_dep_id;
+      // Convert empty strings to null for all user_data fields
+      const sanitizeUserData = (data) => {
+        if (!data) return null;
+        const sanitized = {};
+        Object.keys(data).forEach(key => {
+          const value = data[key];
+          sanitized[key] = value === '' ? null : value;
+        });
+        return sanitized;
+      };
 
-        const requestBody = {
-          spark_data: updatedData.spark_data || null,
-          user_data: updatedData.user_data || {
-            cen_designation: null,
-            phone_no: null,
-            state_id: null,
-            start_date: null,
-            end_date: null,
-            tenure_id: null,
-            cen_min_id: null,
-            cen_dept_id: null,
-            cen_org_id: null,
-            deputation_type: null,
-          },
-        };
+      const sanitizedUserData = sanitizeUserData(updatedData.user_data);
+
+      const isSparkEntry = selectedDeputation?.cen_dep_id?.startsWith('spark_');
+      const isUpdate = selectedDeputation?.cen_dep_id && !isSparkEntry;
+      const isNew = !selectedDeputation || !selectedDeputation.cen_dep_id;
+
+      const requestBody = {
+        spark_data: updatedData.spark_data || null,
+        user_data: sanitizedUserData || {
+          cen_designation: null,
+          phone_no: null,
+          state_id: null,
+          start_date: null,
+          end_date: null,
+          tenure_id: null,
+          cen_min_id: null,
+          cen_dept_id: null,
+          cen_org_id: null,
+          deputation_type: null,
+        },
+      };
 
         console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
@@ -799,16 +813,20 @@ export function CentralDeputationDetails({ profileData }) {
             progressClassName: 'bg-red-200',
           });
         }
-      } catch (err) {
-        console.error('Error saving  Deputation:', err);
-        toast.error('Error occurred while saving  Deputation', {
-          className: 'bg-red-500 text-white',
-          progressClassName: 'bg-red-200',
-        });
+        } catch (err) {
+      console.error('Error saving Deputation:', err);
+      if (err.response) {
+        console.error('Response data:', err.response.data);
+        console.error('Response status:', err.response.status);
       }
-    },
-    [selectedDeputation, getMasterValue, localProfileData]
-  );
+      toast.error('Error occurred while saving Deputation', {
+        className: 'bg-red-500 text-white',
+        progressClassName: 'bg-red-200',
+      });
+    }
+  },
+  [selectedDeputation, getMasterValue, localProfileData]
+);
 
   useEffect(() => {
     if (!loading && deputationDetails) {
@@ -1168,7 +1186,7 @@ return (
       isOpen={isDeleteModalOpen}
       setIsOpen={setIsDeleteModalOpen}
       onConfirm={handleDeleteConfirm}
-      title="Delete Central Deputation"
+      title="Delete Deputation Details"
       message={`Are you sure you want to delete "${
         deputationToDelete
           ? getMasterValue(deputationToDelete.cen_dept_id, 'cen_dept_id') || 'this deputation'

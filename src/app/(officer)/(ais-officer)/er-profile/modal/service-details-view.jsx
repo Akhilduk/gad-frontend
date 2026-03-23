@@ -56,7 +56,7 @@ export function ModalServiceDetailsView({
       },
       { label: 'Designation', key: 'designation_id', icon: BriefcaseIcon, getValue: (service) => (service ? getDesignationName(service.designation_id) : 'N/A') },
       { label: 'Department', key: 'administrative_department_id', icon: GlobeAltIcon, getValue: (service) => (service ? getDepartmentName(service.administrative_department_id) : 'N/A') },
-      { label: 'Ministry', key: 'ministry_id', icon: BuildingOffice2Icon, getValue: (service) => (service ? getMinistryName(service.ministry_id) : 'N/A') },
+      { label: 'Ministry/Department', key: 'ministry_id', icon: BuildingOffice2Icon, getValue: (service) => (service ? getMinistryName(service.ministry_id) : 'N/A') },
       { label: 'Office', key: 'agency_id', icon: BuildingOffice2Icon, getValue: (service) => (service ? getAgencyName(service.agency_id) : 'N/A') },
       { label: 'State', key: 'state_id', icon: MapPinIcon, getValue: (service) => (service ? getStateName(service.state_id) : 'N/A') },
       { label: 'District', key: 'district_id', icon: HomeIcon, getValue: (service) => (service ? getDistrictName(service.district_id) : 'N/A') },

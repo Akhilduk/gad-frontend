@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { BriefcaseIcon, ChartBarIcon, BuildingOffice2Icon, GlobeAltIcon, MapPinIcon, HomeIcon, PencilSquareIcon, PlusIcon, DocumentTextIcon, CalendarIcon, EyeIcon, TrashIcon} from '@heroicons/react/24/outline';
-import { BoltIcon, UserIcon, ExclamationCircleIcon, CheckCircleIcon, ArrowDownTrayIcon,ChevronDownIcon } from '@heroicons/react/24/solid';
+import { BoltIcon, UserIcon, ExclamationCircleIcon, CheckCircleIcon, ArrowDownTrayIcon,ChevronDownIcon, ListBulletIcon, ClockIcon, Squares2X2Icon } from '@heroicons/react/24/solid';
 import { ModalServiceDetails } from '../modal/service-details';
 import { ModalServiceDetailsView } from '../modal/service-details-view';
 import { toast } from 'react-toastify';
@@ -1450,44 +1450,74 @@ const renderEditButton = (service) => {
           </div>
         ) : (
           <>
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex space-x-2">
-                <button
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === 'main'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200'
-                  }`}
-                  onClick={() => setActiveTab('main')}
-                >
-                  Main Services
-                </button>
-                <button
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === 'additional'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200'
-                  }`}
-                  onClick={() => setActiveTab('additional')}
-                >
-                  Additional Charge
-                </button>
-                <button
-                  className={(viewMode === 'cards' || viewMode === 'list') ? activeViewButtonClass : inactiveViewButtonClass}
-                  onClick={() => setViewMode(viewMode === 'cards' ? 'list' : 'cards')}
-                >
-                  {viewMode === 'cards' ? 'List' : 'Cards'}
-                </button>
-                <button
-                  className={viewMode === 'timeline' ? activeViewButtonClass : inactiveViewButtonClass}
-                  onClick={() => setViewMode('timeline')}
-                >
-                  Timeline
-                </button>
-               
-              </div>
-              {renderAddButton()}
-            </div>
+<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
+  {/* Left group: service tabs + view mode */}
+  <div className="flex items-center space-x-4">
+    {/* Service type tabs */}
+    <div className="flex">
+      <button
+        className={`px-4 py-2 rounded-l-lg text-sm font-medium transition-colors ${
+          activeTab === 'main'
+            ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+            : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-600 dark:text-gray-200'
+        }`}
+        onClick={() => setActiveTab('main')}
+      >
+        Main Services
+      </button>
+      <button
+        className={`px-4 py-2 rounded-r-lg text-sm font-medium transition-colors ${
+          activeTab === 'additional'
+            ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+            : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-600 dark:text-gray-200'
+        }`}
+        onClick={() => setActiveTab('additional')}
+      >
+        Additional Charge
+      </button>
+    </div>
+
+    {/* View mode selector */}
+    <div className="flex">
+      <button
+        className={`px-3 py-2 rounded-l-lg text-sm font-medium transition-colors flex items-center gap-1 ${
+          viewMode === 'cards'
+            ? 'bg-cyan-300 hover:bg-cyan-400 text-gray-800 shadow-sm'
+            : 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500'
+        }`}
+        onClick={() => setViewMode('cards')}
+      >
+        <Squares2X2Icon className="w-4 h-4" />
+        Card View
+      </button>
+      <button
+        className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${
+          viewMode === 'list'
+            ? 'bg-cyan-300 hover:bg-cyan-400 text-gray-800 shadow-sm'
+            : 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500'
+        }`}
+        onClick={() => setViewMode('list')}
+      >
+        <ListBulletIcon className="w-4 h-4" />
+        List View
+      </button>
+      <button
+        className={`px-3 py-2 rounded-r-lg text-sm font-medium transition-colors flex items-center gap-1 ${
+          viewMode === 'timeline'
+            ? 'bg-cyan-300 hover:bg-cyan-400 text-gray-800 shadow-sm'
+            : 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500'
+        }`}
+        onClick={() => setViewMode('timeline')}
+      >
+        <ClockIcon className="w-4 h-4" />
+        Timeline View
+      </button>
+    </div>
+  </div>
+
+  {/* Add button (remains on the right) */}
+  {renderAddButton()}
+</div>
 
             <div className="mb-4 flex flex-wrap items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-800">
               <div className="flex items-center space-x-2 min-w-[120px]">

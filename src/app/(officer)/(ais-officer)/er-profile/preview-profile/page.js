@@ -123,6 +123,8 @@ const ProfilePreviewPage = () => {
   const transformOfficerData = useCallback((data) => {
     const officerInfo = data.ais_officer_info;
 
+    
+
     // Create a map of family members for parent lookup
     const familyMap = {};
     if (data.family) {
@@ -134,6 +136,7 @@ const ProfilePreviewPage = () => {
       });
     }
 
+    
     return {
       full_name: `${officerInfo.honorifics ? formatField(officerInfo.honorifics, "Honorifics") + " " : ""}${officerInfo.first_name || ""} ${officerInfo.last_name || ""}`.trim(),
       position: formatField(officerInfo.service_type_name, "Service Type") || "N/A",
@@ -287,41 +290,119 @@ const ProfilePreviewPage = () => {
           subject: formatField(edu.subject_name, "Subject Name") || "N/A",
         }))
         : [],
-      central_deputation: data.ais_central_deputation?.length
-        ? data.ais_central_deputation.map(dep => ({
-          designation: formatField(dep.cen_designation, "cen_designation") || "N/A",
-          phone: dep.phone_no || "N/A",
-          state: formatField(dep.state, "State") || "N/A",
-          start_date: formatDate(dep.start_date),
-          end_date: formatDate(dep.end_date),
-          tenure: formatField(dep.tenures, "Tenures") || "N/A",
-          ministry: formatField(dep.ministry, "Ministry") || "N/A",
-          office: formatField(dep.agency, "Agency") || "N/A",
-          department: formatField(dep.administrative_department, "Administrative Department") || "N/A",
-        }))
-        : [],
-      service_details: data.ais_service_history?.length
-        ? data.ais_service_history.map(service => ({
-          designation: formatField(service.designation, "designation") || "N/A",
-          ministry: formatField(service.ministry, "Ministry") || "N/A",
-          department: formatField(service.administrative_department, "Administrative Department") || "N/A",
-          office: formatField(service.agency, "Agency") || "N/A",
-          state: formatField(service.state, "State") || "N/A",
-          district: formatField(service.district, "District") || "N/A",
-          grade: formatField(service.grade, "Grade") || "N/A",
-          level: formatField(service.level, "Level") || "N/A",
-          posting_type: formatField(service.posting_types, "Posting Types") || "N/A",
-          additional_charge: service.is_additional_charge ? "Yes" : "No",
-          address: service.address || "N/A",
-          phone_no: service.phone_no || "N/A",
-          start_date: formatDate(service.start_date),
-          end_date: formatDate(service.end_date),
-          order_no: service.order_no || "N/A",
-          order_date: formatDate(service.order_date),
-          basic_pay: service.basic_pay || "N/A",
-          other_details: formatField(service.other_details, "Other Details") || "N/A",
-        }))
-        : [],
+        
+       central_deputation: data.ais_central_deputation?.length
+      ? data.ais_central_deputation
+          .map(dep => ({
+            raw_start: dep.start_date,
+            raw_end: dep.end_date,
+            designation: dep.cen_designation,
+            phone: dep.phone_no,
+            state: dep.state,
+            tenure: dep.tenures,
+            ministry: dep.ministry,
+            office: dep.agency,
+            department: dep.administrative_department,
+            deputation_type: dep.deputation_type,
+          }))
+          .sort((a, b) => {
+            const now = new Date();
+            const aStart = new Date(a.raw_start);
+            const bStart = new Date(b.raw_start);
+            const aEnd = a.raw_end ? new Date(a.raw_end) : null;
+            const bEnd = b.raw_end ? new Date(b.raw_end) : null;
+
+            // Active if no end date or end date is in the future
+            const aActive = !aEnd || aEnd > now;
+            const bActive = !bEnd || bEnd > now;
+
+            // Active first
+            if (aActive && !bActive) return -1;
+            if (!aActive && bActive) return 1;
+
+            // Within same group, sort by start_date descending
+            if (isNaN(aStart) && isNaN(bStart)) return 0;
+            if (isNaN(aStart)) return 1;  // invalid dates last
+            if (isNaN(bStart)) return -1;
+            return bStart - aStart; // descending
+          })
+          .map(dep => ({
+            designation: formatField(dep.designation, "cen_designation") || "N/A",
+            phone: dep.phone || "N/A",
+            state: formatField(dep.state, "State") || "N/A",
+            start_date: formatDate(dep.raw_start),
+            end_date: formatDate(dep.raw_end),
+            tenure: formatField(dep.tenure, "Tenures") || "N/A",
+            ministry: formatField(dep.ministry, "Ministry") || "N/A",
+            office: formatField(dep.office, "Agency") || "N/A",
+            department: formatField(dep.department, "Administrative Department") || "N/A",
+            deputation_type: formatField(dep.deputation_type, "Deputation Type") || "N/A",
+          }))
+      : [],
+
+    service_details: data.ais_service_history?.length
+      ? data.ais_service_history
+          .map(service => ({
+            raw_start: service.start_date,
+            raw_end: service.end_date,
+            designation: service.designation,
+            ministry: service.ministry,
+            department: service.administrative_department,
+            office: service.agency,
+            state: service.state,
+            district: service.district,
+            grade: service.grade,
+            level: service.level,
+            posting_type: service.posting_types,
+            additional_charge: service.is_additional_charge,
+            address: service.address,
+            phone_no: service.phone_no,
+            order_no: service.order_no,
+            order_date: service.order_date,
+            basic_pay: service.basic_pay,
+            other_details: service.other_details,
+          }))
+          .sort((a, b) => {
+            const now = new Date();
+            const aStart = new Date(a.raw_start);
+            const bStart = new Date(b.raw_start);
+            const aEnd = a.raw_end ? new Date(a.raw_end) : null;
+            const bEnd = b.raw_end ? new Date(b.raw_end) : null;
+
+            const aActive = !aEnd || aEnd > now;
+            const bActive = !bEnd || bEnd > now;
+
+            if (aActive && !bActive) return -1;
+            if (!aActive && bActive) return 1;
+
+            if (isNaN(aStart) && isNaN(bStart)) return 0;
+            if (isNaN(aStart)) return 1;
+            if (isNaN(bStart)) return -1;
+            return bStart - aStart;
+          })
+          .map(service => ({
+            designation: formatField(service.designation, "designation") || "N/A",
+            ministry: formatField(service.ministry, "Ministry") || "N/A",
+            department: formatField(service.department, "Administrative Department") || "N/A",
+            office: formatField(service.office, "Agency") || "N/A",
+            state: formatField(service.state, "State") || "N/A",
+            district: formatField(service.district, "District") || "N/A",
+            grade: formatField(service.grade, "Grade") || "N/A",
+            level: formatField(service.level, "Level") || "N/A",
+            posting_type: formatField(service.posting_type, "Posting Types") || "N/A",
+            additional_charge: service.additional_charge ? "Yes" : "No",
+            address: service.address || "N/A",
+            phone_no: service.phone_no || "N/A",
+            start_date: formatDate(service.raw_start),
+            end_date: formatDate(service.raw_end),
+            order_no: service.order_no || "N/A",
+            order_date: formatDate(service.order_date),
+            basic_pay: service.basic_pay || "N/A",
+            other_details: formatField(service.other_details, "Other Details") || "N/A",
+          }))
+      : [],
+
+        
       training_details: data.ais_training_info?.length
         ? data.ais_training_info.map(training => ({
           // training_name: formatField(training.training_name, "Training Name") || "N/A",
@@ -342,6 +423,7 @@ const ProfilePreviewPage = () => {
           received_date: formatDate(reward.received_on),
           description: formatField(reward.rew_description, "Reward Description") || "N/A",
           documentId: reward.reward_doc || null,
+          reward_type: formatField(reward.reward_type, "Reward Type") || "N/A",
         }))
         : [],
       disability_details: data.ais_officer_disability?.length
@@ -350,7 +432,7 @@ const ProfilePreviewPage = () => {
           disability_percentage: disability.disability_perc || "N/A",
           expiry_date: formatDate(disability.dis_valid_up_to),
           documentId: disability.disability_proof || null,
-          udid_number: formatField(disability.udid_number, "UDID Number") || "N/A",
+          udid_number: formatField(disability.udid_number, "UDID Document Number") || "N/A",
         }))
         : [],
       disciplinary_details: data.ais_suspension_info?.length
@@ -408,6 +490,7 @@ const ProfilePreviewPage = () => {
         });
         if (response.data.success) {
           const statusData = response.data.data.profile_status || [];
+          console.log("Fetched status timeline----********************:", statusData);
           setStatusTimeline(statusData);
           if (statusData.length > 0) {
             setIsConsentChecked(true);
@@ -588,6 +671,7 @@ const ProfilePreviewPage = () => {
         otp,
         actor: String(fullName),
       });
+      console.log("OTP verification response:", response);
 
       if (response.data.success) {
         setShowOtpModal(false);
@@ -597,8 +681,8 @@ const ProfilePreviewPage = () => {
         toast.error('OTP verification failed');
       }
     } catch (error) {
-      console.error(error);
-      toast.error('OTP verification error');
+      // console.error(error);
+      toast.error(error.response?.data?.detail || 'OTP verification failed');
     } finally {
       setIsOtpClicked(false);
     }
@@ -1134,6 +1218,7 @@ const ProfilePreviewPage = () => {
         isOpen={showOtpModal}
         onClose={() => setShowOtpModal(false)}
         onVerify={handleOtpVerfication}
+        onResend={handleConfirmAction}
         title="EVC OTP Verification"
         description='Enter OTP'
         isLoading={isOtpClicked}

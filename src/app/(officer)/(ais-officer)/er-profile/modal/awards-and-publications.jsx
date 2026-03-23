@@ -190,7 +190,7 @@ const isSparkField = (fieldKey) => {
           error = "Only letters, numbers, spaces, and & . , - are allowed.";
         } else if (value.length > MAX_REW_FROM) {
           updatedValue = value.slice(0, MAX_REW_FROM);
-          error = "Must be under 50 characters.";
+          error = "Must be under 100 characters.";
         }
         break;
 
@@ -288,7 +288,7 @@ const isSparkField = (fieldKey) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (selectedDate > today) {
-        newErrors.received_on = "Future dates are not allowed.";
+        newErrors.received_on = "Current and Future dates are not allowed.";
       }
     }
 

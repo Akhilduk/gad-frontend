@@ -6,6 +6,8 @@ import moment from "moment"; // Added for date formatting
 import axiosInstance from "@/utils/apiClient";
 import { ModalOfficialDetails } from "./modal/official-details";
 import Link from "next/link";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { useRouter } from "next/navigation";
 import {
   SearchBar,
   ExportButtons,
@@ -30,6 +32,7 @@ export default function OfficialManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
+  const router = useRouter();
 
   const fetchOfficers = async () => {
     setLoading(true);
@@ -156,11 +159,18 @@ export default function OfficialManagementPage() {
     <div className="bg-white p-3 pt-0 rounded-xl border mb-3 dark:bg-gray-800 dark:border-gray-900">
       <div className="border-b border-gray-200 bg-white px-4 py-5 sm:px-3 dark:bg-gray-800 dark:border-gray-900 flex justify-between items-center">
         <div>
-          <h3 className="text-base font-semibold text-indigo-700 dark:text-white uppercase">
+          <button
+            onClick={() => router.back()}
+            className="group flex items-center gap-2 bg-white border border-indigo-300 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+          >
+            <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" strokeWidth={2.5} />
+            Back
+          </button>
+          <h3 className="text-base font-semibold text-indigo-700 dark:text-white pt-5 uppercase">
             Officer List
           </h3>
           {/* Search */}
-          <div className="mt-5">
+          <div className="mt-5 w-full md:w-96 ">
             <SearchBar
               value={searchTerm}
               onChange={setSearchTerm}

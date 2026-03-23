@@ -4,21 +4,15 @@ export default function OTPModal({
   isOpen,
   onClose,
   onVerify,
+  onResend,
   title = "OTP Verification",
   description,
   isLoading = false,
 }) {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (!isOpen) {
-      setOtp("");
-      setError("");
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
+  const [resendTimer, setResendTimer] = useState(45);
+  const [canResend, setCanResend] = useState(false);
 
   const handleVerify = () => {
     if (otp.length !== 6) {
@@ -29,6 +23,46 @@ export default function OTPModal({
     onVerify(otp);
   };
 
+  const startTimer = () => {
+  setResendTimer(45);
+  setCanResend(false);
+
+  const interval = setInterval(() => {
+    setResendTimer((prev) => {
+      if (prev <= 1) {
+        clearInterval(interval);
+        setCanResend(true);
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return interval;
+};
+
+  const handleResend = () => {
+    if (!canResend) return;
+    onResend();
+    startTimer();
+    setCanResend(false);
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setOtp("");
+      setError("");
+    }
+    setResendTimer(45);
+    setCanResend(false);
+
+    const interval = startTimer();
+    return () => clearInterval(interval);
+
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-md rounded-lg bg-white shadow-lg">
@@ -37,7 +71,7 @@ export default function OTPModal({
           <h2 className="text-lg font-semibold">{title}</h2>
         </div>
 
-        {/* Body */} 
+        {/* Body */}
         <div className="px-6 py-5">
           {description && (
             <p className="mb-4 text-sm text-gray-600">{description}</p>
@@ -62,22 +96,38 @@ export default function OTPModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 border-t px-6 py-4">
-          <button
-            onClick={onClose}
-            disabled={isLoading}
-            className="rounded px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-          >
-            Cancel
-          </button>
+        <div className="flex justify-between gap-3 border-t px-6 py-4">
+          <div className="flex gap-3">
+            {canResend ? (
+              <button
+                onClick={handleResend}
+                className="rounded bg-green-600 px-5 py-2 text-sm font-medium text-white hover:bg-green-700"
+              >
+                Resend OTP
+              </button>
+            ) : (
+              <span className="text-gray-500 px-4 py-2 text-sm font-medium hover:underline">
+                Resend OTP in {resendTimer}s
+              </span>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              disabled={isLoading}
+              className="rounded px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+            >
+              Cancel
+            </button>
 
-          <button
-            onClick={handleVerify}
-            disabled={isLoading}
-            className="rounded bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {isLoading ? "Verifying..." : "Verify OTP"}
-          </button>
+            <button
+              onClick={handleVerify}
+              disabled={isLoading}
+              className="rounded bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {isLoading ? "Verifying..." : "Verify OTP"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
