@@ -6,6 +6,8 @@ const fallback = {
   serviceType: 'IFS',
   cadre: 'Chhattisgarh',
   designation: 'Deputy Conservator Of Forests (Snr Scale)',
+  grade: 'Senior Scale',
+  level: 'Level-11',
   basicPay: 59500,
   officeAddress: 'Aranyabhavan Forest complex, SH Mount, Kottayam, Kerala - 686006',
   residentialAddress: 'Aranyabhavan Forest complex, SH Mount, Kottayam, Kerala - 686006',
@@ -32,9 +34,13 @@ export const mapOfficerProfile = (response: any): OfficerProfileVM => {
   const serviceHistory = officerData?.ais_service_history || [];
   const family = officerData?.family || [];
 
-  const currentService = serviceHistory.find((item: any) => item?.is_active === true)
-    || [...serviceHistory].sort((a: any, b: any) => new Date(b?.start_date || 0).getTime() - new Date(a?.start_date || 0).getTime())[0]
-    || {};
+  const activeServices = serviceHistory.filter((item: any) => item?.is_active === true);
+  const sortByRecency = (a: any, b: any) => {
+    const aTime = new Date(a?.updated_on || a?.start_date || 0).getTime();
+    const bTime = new Date(b?.updated_on || b?.start_date || 0).getTime();
+    return bTime - aTime;
+  };
+  const currentService = (activeServices.length ? [...activeServices].sort(sortByRecency) : [...serviceHistory].sort(sortByRecency))[0] || {};
 
   const dependents: DependentVM[] = family
     .map((member: any) => ({
@@ -61,6 +67,8 @@ export const mapOfficerProfile = (response: any): OfficerProfileVM => {
     officeAddress: joinAddr(info?.address_line1_com, info?.address_line2_com, info?.district_com, info?.state_com, `- ${val(info?.pin_code_com, '')}`) || fallback.officeAddress,
     residentialAddress: joinAddr(info?.address_line1_per, info?.address_line2_per, info?.district_per, info?.state_per, `- ${val(info?.pin_code_per, '')}`) || fallback.residentialAddress,
     designation: val(currentService?.designation, fallback.designation),
+    grade: val(currentService?.grade ?? currentService?.grade_name, fallback.grade),
+    level: val(currentService?.level ?? currentService?.level_name, fallback.level),
     postingTypes: val(currentService?.posting_types, 'Field Posting'),
     administrativeDepartment: val(currentService?.administrative_department, 'Forest Department'),
     agency: val(currentService?.agency, 'Kerala Forest Force'),

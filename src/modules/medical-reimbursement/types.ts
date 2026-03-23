@@ -21,6 +21,8 @@ export type OfficerProfileVM = {
   officeAddress: string;
   residentialAddress: string;
   designation: string;
+  grade: string;
+  level: string;
   postingTypes: string;
   administrativeDepartment: string;
   agency: string;

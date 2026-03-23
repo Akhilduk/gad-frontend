@@ -66,7 +66,7 @@ export const seedCases = (officer: OfficerProfileVM): MRCase[] => statuses.map((
 export const loadCases = () => {
   if (typeof window === 'undefined') return [] as MRCase[];
   const raw = localStorage.getItem(KEY);
-  return raw ? JSON.parse(raw) : [];
+  return raw ? (JSON.parse(raw) as MRCase[]) : ([] as MRCase[]);
 };
 
 export const saveCases = (cases: MRCase[]) => {
