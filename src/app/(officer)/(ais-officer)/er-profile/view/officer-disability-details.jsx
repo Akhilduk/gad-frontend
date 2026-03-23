@@ -20,7 +20,6 @@ import ConfirmModal from "@/app/components/confirmModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 import moment from 'moment';
-import { isProfileEditDisabledByStatus } from "@/utils/profileStatusUtils";
 
 export function DisabilityDetails({ profileData }) {
   const { updateSectionProgress } = useProfileCompletion();
@@ -45,7 +44,7 @@ export function DisabilityDetails({ profileData }) {
   const [disabilityToDelete, setDisabilityToDelete] = useState(null);
 
   const profileStatus = sessionStorage.getItem('profile_status');
-  const isButtonDisabled = isProfileEditDisabledByStatus(profileStatus);
+  const isButtonDisabled = profileStatus === '2' || profileStatus === '3';
 
   const fields = [
     {

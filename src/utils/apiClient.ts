@@ -12,7 +12,7 @@ const baseURL =
 export const axiosInstance = axios.create({
   baseURL,
   headers: {
-    "Content-Type": "application/json",
+    "Content-Type": "application/json", 
   },
 });
 

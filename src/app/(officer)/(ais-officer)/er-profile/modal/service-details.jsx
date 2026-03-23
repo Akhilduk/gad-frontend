@@ -6,6 +6,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { BoltIcon } from '@heroicons/react/24/solid';
 import { handleStateDistrictChange } from '@/utils/mapping';
 import { parseDateFromDDMMYYYY, isValidDDMMYYYY } from '@/utils/dateFormat';
+import { SearchableSelect } from '@/app/components/searchable-select';
 
 export function ModalServiceDetails({
   open = false,
@@ -54,11 +55,18 @@ export function ModalServiceDetails({
   const [states, setStates] = useState([]);
   const [errors, setErrors] = useState({});
   const [userDates, setUserDates] = useState({ doj: null, retirementDate: null });
+  const [servicePeriod, setServicePeriod] = useState('past');
   const todayStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD, e.g., "2025-12-16"
 
   const allowedCharsRegex = /^[a-zA-Z0-9 ().,&/_\n-]+$/;
   const orderNoRegex = /^[a-zA-Z0-9.,&()-/ ]+$/;
   const showDojWarning = userDates.doj === null;
+  const isCurrentPeriod = servicePeriod === 'current';
+  const isSparkDateRangeLockedToPast =
+    service?.fieldSources?.start_date === 'SPARK' &&
+    service?.fieldSources?.end_date === 'SPARK' &&
+    Boolean(formData.start_date) &&
+    Boolean(formData.end_date);
 
   // Define required fields
   const requiredFields = [
@@ -72,7 +80,6 @@ export function ModalServiceDetails({
     'grade_id',
     'posting_type_id',
     'start_date',
-    'end_date',
     'address',
     'is_additional_charge',
   ];
@@ -148,6 +155,23 @@ export function ModalServiceDetails({
   // Initialize form data when modal opens
   useEffect(() => {
     if (open && service !== null) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const start = service.start_date ? new Date(service.start_date) : null;
+      const end = service.end_date ? new Date(service.end_date) : null;
+      const isActive = Boolean(
+        start &&
+        !isNaN(start.getTime()) &&
+        (!end || !isNaN(end.getTime())) &&
+        start <= today &&
+        (!end || end >= today)
+      );
+      const isSparkDateRange = Boolean(
+        service?.fieldSources?.start_date === 'SPARK' &&
+        service?.fieldSources?.end_date === 'SPARK' &&
+        service?.start_date &&
+        service?.end_date
+      );
       setFormData({
         designation_id: service.designation_id || '',
         level_id: service.level_id || '',
@@ -170,6 +194,7 @@ export function ModalServiceDetails({
         order_no: service.order_no ? service.order_no.trim() : '',
         order_date: service.order_date || null,
       });
+      setServicePeriod(isSparkDateRange ? 'past' : (isActive ? 'current' : 'past'));
       setFilteredDistricts(
         service.state_id
           ? districtRes.filter((district) => district.state_id === parseInt(service.state_id, 10))
@@ -197,10 +222,21 @@ export function ModalServiceDetails({
         order_no: '',
         order_date: null,
       });
+      setServicePeriod('past');
       setFilteredDistricts([]);
       setErrors({});
     }
   }, [service, open, districtRes]);
+
+  useEffect(() => {
+    if (servicePeriod === 'current') {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.end_date;
+        return newErrors;
+      });
+    }
+  }, [servicePeriod]);
 
   const isDisabled = (key) => {
     return (
@@ -338,6 +374,15 @@ export function ModalServiceDetails({
       });
       return;
     }
+
+    if (name === 'service_period') {
+      if (isSparkDateRangeLockedToPast) {
+        setServicePeriod('past');
+        return;
+      }
+      setServicePeriod(value);
+      return;
+    }
     
     // State → District cascading
     if (name === 'state_id' || name === 'district_id') {
@@ -445,7 +490,9 @@ export function ModalServiceDetails({
       newErrors.general = 'Please save Personal Details first (Date of Joining is required)';
       if (formData.start_date || formData.end_date || formData.order_date) {
         newErrors.start_date = 'Cannot set dates without Date of Joining';
-        newErrors.end_date = 'Cannot set dates without Date of Joining';
+        if (!isCurrentPeriod || formData.end_date) {
+          newErrors.end_date = 'Cannot set dates without Date of Joining';
+        }
         newErrors.order_date = 'Cannot set dates without Date of Joining';
       }
       setErrors(newErrors);
@@ -464,6 +511,10 @@ export function ModalServiceDetails({
         newErrors[field] = 'This field is required';
       }
     });
+
+    if (!isCurrentPeriod && !formData.end_date) {
+      newErrors.end_date = 'This field is required';
+    }
 
     if (formData.state_id && !formData.district_id) {
       newErrors.district_id = 'This field is required';
@@ -600,6 +651,7 @@ export function ModalServiceDetails({
     const submitData = {
       ...formData,
       address: formData.address ? formData.address.trim() : '',
+      end_date: formData.end_date || null,
       order_no: formData.order_no ? formData.order_no.trim() : '', // Keep as empty string if cleared
       order_date: formData.order_date || null, // Keep as empty string if cleared
       other_details: formData.other_details ? formData.other_details.trim() : '',
@@ -728,21 +780,19 @@ export function ModalServiceDetails({
                           </label>
                           {renderSparkIndicator(field.id)}
                           {renderGadOfficerIndicator(field.id)}
-                          <select
+                          <SearchableSelect
                             id={field.id}
                             name={field.id}
                             value={formData[field.id] || ''}
                             onChange={handleChange}
                             disabled={isDisabled(field.id)}
+                            placeholder={`Select ${field.label}`}
+                            options={field.options || []}
+                            getOptionLabel={(item) => item[field.nameKey] || 'Unnamed'}
+                            getOptionValue={(item) => item[field.id]}
                             className={getFieldClassName(field.id)}
-                          >
-                            <option value="">Select {field.label}</option>
-                            {field.options.map((item) => (
-                              <option key={item[field.id]} value={item[field.id]}>
-                                {item[field.nameKey] || 'Unnamed'}
-                              </option>
-                            ))}
-                          </select>
+                            searchPlaceholder={`Search ${field.label.toLowerCase()}...`}
+                          />
                           {errors[field.id] && <p className="text-red-500 text-sm mt-1">{errors[field.id]}</p>}
                         </div>
                       ))}
@@ -838,6 +888,31 @@ export function ModalServiceDetails({
                       {/* Start Date */}
                       <div className="mb-4 relative">
                         <label className="block text-sm font-medium text-gray-700 dark:text-white">
+                          Service Status
+                        </label>
+                        <div className="flex items-center space-x-4 mt-1">
+                          {[
+                            { id: 'current', name: 'Current' },
+                            { id: 'past', name: 'Past' },
+                          ].map((item) => (
+                            <label key={item.id} className="inline-flex items-center">
+                              <input
+                                type="radio"
+                                id={`service_period_${item.id}`}
+                                name="service_period"
+                                value={item.id}
+                                checked={servicePeriod === item.id}
+                                onChange={handleChange}
+                                disabled={isSparkDateRangeLockedToPast}
+                                className="form-radio text-indigo-600"
+                              />
+                              <span className="ml-2 text-gray-900 dark:text-white">{item.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mb-4 relative">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-white">
                           Start Date
                           <span className="text-red-500 font-semibold"> *</span>
                         </label>
@@ -859,7 +934,8 @@ export function ModalServiceDetails({
                       {/* End Date */}
                       <div className="mb-4 relative">
                         <label className="block text-sm font-medium text-gray-700 dark:text-white">
-                          End Date <span className="text-red-500 font-semibold"> *</span>
+                          End Date
+                          {!isCurrentPeriod && <span className="text-red-500 font-semibold"> *</span>}
                         </label>
                         {renderSparkIndicator('end_date')}
                         {renderGadOfficerIndicator('end_date')}

@@ -11,6 +11,7 @@ import { BoltIcon, XMarkIcon, DocumentIcon } from "@heroicons/react/24/solid";
 import { motion, AnimatePresence } from "framer-motion";
 import { validateFile } from "../../../../../utils/fileValidator";
 import axiosInstance from "@/utils/apiClient";
+import { SearchableSelect } from '@/app/components/searchable-select';
 
 export function ModalAwardsAndPublications({
   open = false,
@@ -559,19 +560,18 @@ const isSparkField = (fieldKey) => {
                         </label>
                         {renderSparkIndicator("reward_type")}
                         {renderGadOfficerIndicator("reward_type")}
-                        <select
+                        <SearchableSelect
                           name="reward_type"
                           value={formData.reward_type}
                           onChange={handleChange}
                           disabled={isFieldDisabled("reward_type")}
+                          placeholder="Select Reward Type"
+                          options={awardCategoryOptions}
+                          getOptionLabel={(option) => option.label}
+                          getOptionValue={(option) => option.value}
                           className={getFieldClassName("reward_type")}
-                        >
-                          {awardCategoryOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
+                          searchPlaceholder="Search reward type..."
+                        />
                         {errors.reward_type && (
                           <p className="mt-1 text-sm text-red-600">{errors.reward_type}</p>
                         )}

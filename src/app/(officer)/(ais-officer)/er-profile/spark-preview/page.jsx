@@ -6,14 +6,19 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   UserCircleIcon,
-  ArrowDownTrayIcon,
+  PrinterIcon,
   ExclamationCircleIcon,
   DocumentTextIcon,
+  InformationCircleIcon ,
+  ClipboardDocumentListIcon ,
+  CheckCircleIcon ,
+  UserGroupIcon ,
+  HeartIcon ,
+  UserIcon ,
+
 } from "@heroicons/react/24/outline";
 import axiosInstance from "@/utils/apiClient";
 import { toast } from "react-toastify";
-import {jsPDF} from "jspdf";
-import html2canvas from "html2canvas";
 
 const SparkPreviewPage = () => {
   const [loading, setLoading] = useState(true);
@@ -33,7 +38,6 @@ const SparkPreviewPage = () => {
   const [awardsList, setAwardsList] = useState([]);
   const [disabilityList, setDisabilityList] = useState([]);
   const [suspensionList, setSuspensionList] = useState([]);
-  const [isDownloading, setIsDownloading] = useState(false);
   const router = useRouter();
   const contentRef = useRef(null);
 
@@ -47,7 +51,7 @@ const SparkPreviewPage = () => {
   ];
 
   const mandatoryDependentFields = [
-    'relation_id', 'first_name', 'gender_id', 'date_of_birth'
+    'relation_id', 'first_name', 'gender_id', 
   ];
 
   const mandatoryEducationFields = [
@@ -523,73 +527,118 @@ const mandatoryDeputationFields = [
     }
   }, [sparkData, masterData]);
 
-  const handleDownloadPDF = async () => {
-    if (!contentRef.current) return;
-    setIsDownloading(true);
-
-    try {
-      // Ensure layout is stable
-      window.scrollTo(0, 0);
-      await new Promise((r) => setTimeout(r, 250));
-
-      const element = contentRef.current;
-
-      const canvas = await html2canvas(element, {
-        scale: 1.5,                 // ✔ balanced quality
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        scrollX: 0,
-        scrollY: -window.scrollY,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-        logging: false,
-        ignoreElements: (el) =>
-          el?.hasAttribute?.("data-html2canvas-ignore"),
-        onclone: (doc) => {
-          const overlay = doc.querySelector("[data-pdf-overlay]");
-          if (overlay) overlay.style.display = "none";
-        },
-      });
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.9);
-
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-
-      // Image dimensions in PDF
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let remainingHeight = imgHeight;
-      let yPosition = 0;
-
-      // First page
-      pdf.addImage(imgData, "JPEG", 0, yPosition, imgWidth, imgHeight);
-      remainingHeight -= pdfHeight;
-
-      // Additional pages
-      while (remainingHeight > 0) {
-        yPosition = remainingHeight - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, yPosition, imgWidth, imgHeight);
-        remainingHeight -= pdfHeight;
-      }
-
-      pdf.save(
-        `SPARK_Preview_${personalDetails.pen_number || "Officer"}_${
-          new Date().toISOString().split("T")[0]
-        }.pdf`
-      );
-
-      toast.success("PDF downloaded successfully!");
-    } catch (err) {
-      console.error("PDF generation error:", err);
-      toast.error("Failed to generate PDF");
-    } finally {
-      setIsDownloading(false);
+  const handlePrint = useCallback(() => {
+    const contentNode = contentRef.current;
+    if (!contentNode) {
+      toast.error("Nothing to print");
+      return;
     }
-  };
+
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.setAttribute("aria-hidden", "true");
+    document.body.appendChild(iframe);
+
+    const printDoc = iframe.contentWindow?.document;
+    if (!printDoc) {
+      document.body.removeChild(iframe);
+      toast.error("Print initialization failed");
+      return;
+    }
+
+    const styles = Array.from(
+      document.querySelectorAll("style, link[rel='stylesheet']")
+    )
+      .map((node) => node.outerHTML)
+      .join("\n");
+
+    printDoc.open();
+    printDoc.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>SPARK Data Preview</title>
+          ${styles}
+          <style>
+            @page { size: A4 portrait; margin: 2mm 4mm; }
+            * { box-sizing: border-box; }
+            html, body {
+              width: 100%;
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #fff !important;
+            }
+            body {
+              display: block;
+            }
+            .print-header {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 4px 6px 6px 6px;
+              margin: 0 0 6px 0;
+              border-bottom: 1px solid #d1d5db;
+            }
+            .print-title {
+              margin: 0;
+              padding: 0;
+              font-size: 20px;
+              font-weight: 700;
+              color: #111827;
+              text-align: center;
+            }
+            .print-root {
+              width: 100%;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            .print-root > * {
+              width: 100% !important;
+              margin: 0 !important;
+              border: 0 !important;
+              border-radius: 0 !important;
+              box-shadow: none !important;
+              overflow: visible !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-header">
+            <h1 class="print-title">SPARK Data Preview</h1>
+          </div>
+          <div class="print-root">${contentNode.outerHTML}</div>
+        </body>
+      </html>
+    `);
+    printDoc.close();
+
+    const cleanup = () => {
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      }, 0);
+    };
+
+    const printWindow = iframe.contentWindow;
+    if (!printWindow) {
+      cleanup();
+      toast.error("Print window unavailable");
+      return;
+    }
+
+    printWindow.onafterprint = cleanup;
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 250);
+  }, []);
 
   const formatFieldName = (key) => {
   // Special handling for specific field labels
@@ -662,31 +711,133 @@ const mandatoryDeputationFields = [
     );
   }
 
+const FamilyInstructions = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 dark:text-gray-100">
-      {isDownloading && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          data-pdf-overlay
-          data-html2canvas-ignore="true"
-        >
-          <div className="bg-white rounded-xl p-8 shadow-2xl max-w-sm w-full mx-4">
-            <div className="flex flex-col items-center">
-              <div className="relative mb-6">
-                <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <DocumentTextIcon className="w-8 h-8 text-indigo-600" />
-                </div>
+    <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6 shadow-sm">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-4">
+        <InformationCircleIcon className="w-6 h-6 text-blue-700" />
+        <h3 className="font-bold text-blue-800 text-lg">Family Member Entry Guidelines</h3>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column: Field Requirements (condensed) */}
+        <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
+          <div className="flex items-center gap-2 mb-3">
+            <ClipboardDocumentListIcon className="w-5 h-5 text-blue-600" />
+            <p className="font-semibold text-blue-700">Field Requirements</p>
+          </div>
+          <ul className="space-y-2 text-sm text-gray-700">
+            <li className="flex items-start gap-2">
+              <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <span><span className="font-medium">Always required:</span> First Name, Relationship Type.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <span><span className="font-medium">Date of Birth</span> – required for spouse & child if alive. For others, provide if known.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <span><span className="font-medium">Email & Mobile</span> – required if alive and (not a divorced/deceased spouse).</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <span><span className="font-medium">Occupation Category</span> – required if govt servant and not divorced/deceased spouse.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <span><span className="font-medium">Institution Name</span> – required for govt servants (except Occupation category "Others") or if "Other Institution" selected.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <span><span className="font-medium">Child Type & Parent</span> – required for any child entry.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <span><span className="font-medium">Death Details</span> – if deceased, both Date of Death and Death Certificate required.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <span><span className="font-medium">Divorce Details</span> – for divorced spouse, both Divorce Date and Divorce Document required.</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* Right Column: Relationship Cards (unchanged) */}
+        <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
+          <div className="flex items-center gap-2 mb-3">
+            <UserGroupIcon className="w-5 h-5 text-blue-600" />
+            <p className="font-semibold text-blue-700">Relationship‑Specific Notes</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Spouse Card */}
+            <div className="border border-blue-100 rounded-lg p-3 bg-blue-50/50">
+              <div className="flex items-center gap-1 mb-2">
+                <HeartIcon className="w-4 h-4 text-pink-500" />
+                <p className="font-medium text-blue-800">Spouse</p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Generating PDF</h3>
-              <p className="text-gray-600 text-center mb-6">Please wait while we prepare your document...</p>
+              <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                <li>Only <strong>one current spouse</strong> allowed.</li>
+                <li>Current Spouse: provide DOB, Email, Mobile.</li>
+                <li>Divorced: provide Divorce Date & Divorce Document (other fields optional).</li>
+                <li>Deceased: provide Death Date & Death Certificate.</li>
+              </ul>
+            </div>
+
+            {/* Child Card */}
+            <div className="border border-blue-100 rounded-lg p-3 bg-blue-50/50">
+              <div className="flex items-center gap-1 mb-2">
+                <UserIcon className="w-4 h-4 text-green-600" />
+                <p className="font-medium text-blue-800">Child</p>
+              </div>
+              <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                <li><strong>Child Type</strong> & <strong>Parent Name</strong> mandatory.</li>
+                <li>Alive: provide DOB, Email, Mobile.</li>
+                <li>Deceased: provide Death Date & Death Certificate.</li>
+                <li>Must have a spouse as parent to add children.</li>
+              </ul>
+            </div>
+
+            {/* Father Card */}
+            <div className="border border-blue-100 rounded-lg p-3 bg-blue-50/50">
+              <div className="flex items-center gap-1 mb-2">
+                <UserIcon className="w-4 h-4 text-blue-700" />
+                <p className="font-medium text-blue-800">Father</p>
+              </div>
+              <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                <li>Alive: provide DOB, Email, Mobile if available.</li>
+                <li>Deceased: provide Death Date & Death Certificate.</li>
+              </ul>
+            </div>
+
+            {/* Mother Card */}
+            <div className="border border-blue-100 rounded-lg p-3 bg-blue-50/50">
+              <div className="flex items-center gap-1 mb-2">
+                <UserIcon className="w-4 h-4 text-purple-600" />
+                <p className="font-medium text-blue-800">Mother</p>
+              </div>
+              <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                <li>Alive: provide DOB, Email, Mobile if available.</li>
+                <li>Deceased: provide Death Date & Death Certificate.</li>
+              </ul>
             </div>
           </div>
         </div>
-      )}
+      </div>
+
+      <p className="text-xs text-blue-600 mt-4 italic flex items-center gap-1">
+        <InformationCircleIcon className="w-4 h-4" />
+        These guidelines help ensure data consistency. Mandatory fields are marked with * in the form.
+      </p>
+    </div>
+  );
+};
+  return (
+
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 dark:text-gray-100 print:bg-white">
       <div className="mx-auto p-4 sm:p-6 lg:p-8">
         {/* Header Actions */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 print:hidden">
           <button
             onClick={() => router.back()}
             className="group flex items-center gap-2 bg-white border border-indigo-300 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 dark:hover:bg-gray-700"
@@ -696,32 +847,11 @@ const mandatoryDeputationFields = [
           </button>
 
           <button
-            onClick={handleDownloadPDF}
-            disabled={isDownloading}
-            className={`flex items-center gap-2 border text-sm font-medium px-4 py-2.5 rounded-lg transition-all shadow-sm ${
-              isDownloading
-                ? "bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400"
-                : "bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-gray-800 dark:border-gray-700 dark:text-indigo-300 dark:hover:bg-gray-700"
-            }`}
+            onClick={handlePrint}
+            className="flex items-center gap-2 border text-sm font-medium px-4 py-2.5 rounded-lg transition-all shadow-sm bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-700"
           >
-            {isDownloading ? (
-              <>
-                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Generating...
-              </>
-            ) : (
-              <>
-                <ArrowDownTrayIcon className="w-4 h-4" strokeWidth={2.5} />
-                Download PDF
-              </>
-            )}
+            <PrinterIcon className="w-4 h-4" strokeWidth={2.5} />
+            Print / Download PDF
           </button>
         </div>
 
@@ -764,7 +894,7 @@ const mandatoryDeputationFields = [
         </div>
 
         {/* Main Content */}
-        <div ref={contentRef} className="bg-white shadow-xl rounded-2xl overflow-hidden border border-indigo-300 dark:bg-gray-800 dark:border-gray-700">
+        <div ref={contentRef} className="bg-white shadow-xl rounded-2xl overflow-hidden border border-indigo-300 dark:bg-gray-800 dark:border-gray-700 print:shadow-none print:rounded-none print:border-0">
           {/* Header */}
           <div className="relative bg-gradient-to-r from-indigo-900 via-indigo-500 to-indigo-900 text-white overflow-hidden">
             <div className="absolute inset-0 opacity-10">
@@ -785,9 +915,7 @@ const mandatoryDeputationFields = [
                 <div className="flex-1 text-center lg:text-left">
                   <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
                     <h1 className="text-2xl font-bold drop-shadow-lg">SPARK Data Preview</h1>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-300 ml-2">
-                      SPARK
-                    </span>
+                   
                   </div>
                   <p className="text-indigo-100 text-sm mb-3 drop-shadow">Imported data from SPARK system</p>
                   <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
@@ -815,18 +943,49 @@ const mandatoryDeputationFields = [
               isFieldMandatory={(field) => isFieldMandatory("personal", field)}
             />
 
-            <TwoColumnDetailSection
-              title="FAMILY MEMBERS"
-              data={familyList}
-              fields={["name", "relation_id", "date_of_birth", "gender_id", "category_id", "institution_name", "email_id", "mobile_number"]}
-              getMasterName={getMasterName}
-              formatDate={formatDate}
-              formatFieldName={formatFieldName}
-              getRelationDisplay={getRelationDisplay}
-              isFieldMandatory={(field) => isFieldMandatory("dependents", field)}
-              icon="👨‍👩‍👧‍👦"
-              showEmptyStructure={true}
-            />
+
+
+
+            
+
+        <TwoColumnDetailSection
+          instruction={<FamilyInstructions />}   // 👈 embedded instruction        
+          title="FAMILY MEMBERS"
+          data={familyList}
+          fields={[
+            "name",
+            "relation_id",
+            "is_alive",
+            "is_ais_officer",
+            "karmasri_id",
+            "is_govt_servant",
+            "occupation_category_id",
+            "institution_name",
+            "date_of_birth",
+            "gender_id",
+            "email_id",
+            "mobile_number",
+            "is_current_spouse",
+            "marriage_certificate",
+            "is_divorced",
+            "divorce_date",
+            "divorce_document",
+            "is_deceased",
+            "date_of_death",
+            "death_certificate",       
+            "child_type",
+            "parent_id"
+          ]}
+          getMasterName={getMasterName}
+          formatDate={formatDate}
+          formatFieldName={formatFieldName}
+          getRelationDisplay={getRelationDisplay}
+          isFieldMandatory={(field) => isFieldMandatory("dependents", field)}
+          icon="👨‍👩‍👧‍👦"
+          showEmptyStructure={true}
+          fieldLabelOverrides={{ karmasri_id: "Karmasri ID/PEN" , is_ais_officer: "Is AIS Officer" }} // 👈 overrides only for this section
+        
+        />
 
             <TwoColumnDetailSection
               title="EDUCATIONAL QUALIFICATIONS"
@@ -1080,9 +1239,17 @@ const TwoColumnDetailSection = ({
   icon,
   showEmptyStructure = false,
   customDisplayHandlers = {},
-  specialIndicators = {}, // Add this new prop
+  specialIndicators = {},
+  instruction,
+  fieldLabelOverrides = {}, // 👈 new prop
 }) => {
   const hasData = data.length > 0;
+
+   // Helper to get the field label, using override if available
+  const getFieldLabel = (key) => {
+    if (fieldLabelOverrides[key]) return fieldLabelOverrides[key];
+    return formatFieldName(key);
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-indigo-300 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
@@ -1094,28 +1261,28 @@ const TwoColumnDetailSection = ({
         </span>
       </div>
 
+      {/* Instruction card (if provided) */}
+      {instruction && <div className="p-4 pb-0">{instruction}</div>}
+
       <div className="p-4">
         {hasData ? (
           data.map((item, index) => {
             const isLast = index === data.length - 1;
 
             let entryTitle = `Entry ${index + 1}`;
-            
+
             // Determine title based on section
             if (title.includes("FAMILY")) {
               entryTitle = getRelationDisplay?.(item.relation_id) || item.name || `Member ${index + 1}`;
             } else if (title.includes("SERVICE")) {
-              entryTitle = getMasterName(item.designation_id, "designation_id") || 
-                          getMasterName(item.designation_id, "designation") || 
+              entryTitle = getMasterName(item.designation_id, "designation_id") ||
+                          getMasterName(item.designation_id, "designation") ||
                           `Service ${index + 1}`;
-              // Add date range to title for service entries
               const startDate = formatDate ? formatDate(item.start_date) : item.start_date;
               const endDate = formatDate ? formatDate(item.end_date) : item.end_date;
               if (startDate) {
                 entryTitle += ` (${startDate}${endDate ? ` - ${endDate}` : ' - Ongoing'})`;
               }
-              
-              // Add special note for 2020+ services
               if (item.start_date) {
                 const startYear = new Date(item.start_date).getFullYear();
                 if (startYear >= 2020) {
@@ -1137,22 +1304,44 @@ const TwoColumnDetailSection = ({
                 <h3 className="text-sm font-semibold text-indigo-800 mb-3 dark:text-indigo-300">{entryTitle}</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   {fields.map((key) => {
+                    // --- Conditional field visibility for FAMILY section ---
+                    if (title.includes("FAMILY") && item) {
+                      const rawRelation = item.relation_id?.toString().toUpperCase() || '';
+                      let relationType = 'child';
+                      if (['FATHER', 'MOTHER'].includes(rawRelation)) relationType = 'parent';
+                      else if (rawRelation === 'SPOUSE') relationType = 'spouse';
+                      else {
+                        const relationName = getMasterName(item.relation_id, 'relation_id')?.toLowerCase() || '';
+                        if (['father', 'mother'].includes(relationName)) relationType = 'parent';
+                        else if (relationName === 'spouse') relationType = 'spouse';
+                        else relationType = 'child';
+                      }
+
+                      const parentHidden = ['is_current_spouse', 'marriage_certificate', 'is_divorced', 'divorce_date', 'divorce_document', 'child_type', 'parent_id'];
+                      const spouseHidden = ['child_type', 'parent_id'];
+                      const childHidden = ['is_current_spouse', 'marriage_certificate', 'is_divorced', 'divorce_date', 'divorce_document'];
+
+                      if (relationType === 'parent' && parentHidden.includes(key)) return null;
+                      if (relationType === 'spouse' && spouseHidden.includes(key)) return null;
+                      if (relationType === 'child' && childHidden.includes(key)) return null;
+                    }
+
                     let value = item[key] || "";
 
-                    // Apply custom display handlers if they exist
+                    // Apply custom display handlers
                     if (customDisplayHandlers && customDisplayHandlers[key]) {
                       value = customDisplayHandlers[key](item[key]);
                     }
                     // Special handling for relation_id
                     else if (key === "relation_id" && getRelationDisplay) {
                       value = getRelationDisplay(item[key]);
-                    } 
+                    }
                     // Handle date fields
-                    else if ((key.includes("date") || key.includes("from") || key.includes("to") || 
-                             key.includes("period") || key === "start_date" || key === "end_date" || 
+                    else if ((key.includes("date") || key.includes("from") || key.includes("to") ||
+                             key.includes("period") || key === "start_date" || key === "end_date" ||
                              key === "order_date" || key === "training_from" || key === "training_to") && formatDate) {
                       value = formatDate(item[key]);
-                    } 
+                    }
                     // Handle master data fields
                     else if (getMasterName && (key.includes("_id") || key === "state_id" || key === "district_id")) {
                       value = getMasterName(item[key], key) || value;
@@ -1166,7 +1355,6 @@ const TwoColumnDetailSection = ({
                       value = `₹${item[key]}`;
                     }
 
-                    // Check for special indicators
                     const specialIndicator = specialIndicators[key];
                     const isSpecialField = !!specialIndicator;
 
@@ -1174,14 +1362,14 @@ const TwoColumnDetailSection = ({
                       <div
                         key={key}
                         className={`flex border rounded-lg overflow-hidden hover:shadow-sm transition-shadow ${
-                          isSpecialField 
-                            ? 'border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700' 
+                          isSpecialField
+                            ? 'border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700'
                             : 'border-indigo-300 dark:border-gray-700'
                         }`}
                       >
                         <div className={`w-2/5 p-2.5 font-semibold text-sm border-r flex items-center ${
-                          isSpecialField 
-                            ? 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700' 
+                          isSpecialField
+                            ? 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700'
                             : 'bg-indigo-50 text-slate-700 border-indigo-300 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600'
                         }`}>
                           <div className="flex items-center">
@@ -1190,13 +1378,13 @@ const TwoColumnDetailSection = ({
                                 {specialIndicator.indicator}
                               </span>
                             )}
-                            {formatFieldName(key)}
+                            {getFieldLabel(key)} 
                             {isFieldMandatory?.(key) && <span className="text-red-600 font-bold ml-1">*</span>}
                           </div>
                         </div>
                         <div className={`w-3/5 p-2.5 text-sm break-words ${
-                          isSpecialField 
-                            ? 'bg-yellow-50 text-yellow-900 dark:bg-yellow-900/10 dark:text-yellow-100' 
+                          isSpecialField
+                            ? 'bg-yellow-50 text-yellow-900 dark:bg-yellow-900/10 dark:text-yellow-100'
                             : 'bg-white text-slate-600 dark:bg-gray-800 dark:text-gray-100'
                         }`}>
                           {value || ""}
@@ -1213,19 +1401,19 @@ const TwoColumnDetailSection = ({
             {fields.map((key) => {
               const specialIndicator = specialIndicators[key];
               const isSpecialField = !!specialIndicator;
-              
+
               return (
                 <div
                   key={key}
                   className={`flex border rounded-lg overflow-hidden hover:shadow-sm transition-shadow ${
-                    isSpecialField 
-                      ? 'border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700' 
+                    isSpecialField
+                      ? 'border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700'
                       : 'border-indigo-300 dark:border-gray-700'
                   }`}
                 >
                   <div className={`w-2/5 p-2.5 font-semibold text-sm border-r flex items-center ${
-                    isSpecialField 
-                      ? 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700' 
+                    isSpecialField
+                      ? 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700'
                       : 'bg-indigo-50 text-slate-700 border-indigo-300 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600'
                   }`}>
                     <div className="flex items-center">
@@ -1234,17 +1422,17 @@ const TwoColumnDetailSection = ({
                           {specialIndicator.indicator}
                         </span>
                       )}
-                      {formatFieldName(key)}
+                       {getFieldLabel(key)} 
                       {isFieldMandatory?.(key) && <span className="text-red-600 font-bold ml-1">*</span>}
                     </div>
                   </div>
                   <div className={`w-3/5 p-2.5 text-sm break-words ${
-  isSpecialField 
-    ? 'bg-yellow-50 text-yellow-900 dark:bg-yellow-900/10 dark:text-yellow-100' 
-    : 'bg-white text-slate-600 dark:bg-gray-800 dark:text-gray-100'
-}`}>
-  
-</div>
+                    isSpecialField
+                      ? 'bg-yellow-50 text-yellow-900 dark:bg-yellow-900/10 dark:text-yellow-100'
+                      : 'bg-white text-slate-600 dark:bg-gray-800 dark:text-gray-100'
+                  }`}>
+                    
+                  </div>
                 </div>
               );
             })}
@@ -1260,3 +1448,7 @@ const TwoColumnDetailSection = ({
 };
 
 export default SparkPreviewPage;
+
+
+
+

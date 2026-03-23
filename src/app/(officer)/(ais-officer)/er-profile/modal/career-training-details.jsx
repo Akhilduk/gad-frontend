@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { BoltIcon, XMarkIcon, PaperClipIcon, TrashIcon, EyeIcon, ArrowUpTrayIcon, CloudArrowUpIcon, ExclamationCircleIcon } from "@heroicons/react/24/solid";
 import { toast } from "react-toastify";
 import axiosInstance from "@/utils/apiClient";
+import { SearchableSelect } from '@/app/components/searchable-select';
 
 import {
   Dialog,
@@ -817,20 +818,18 @@ export function ModalCareerTrainingDetails({
                       </label>
                       {renderSparkIndicator("training_type_id")}
                       {renderGadOfficerIndicator("training_type_id")}
-                      <select
+                      <SearchableSelect
                         name="training_type_id"
                         value={formData.training_type_id}
                         onChange={handleChange}
                         disabled={isFieldDisabled("training_type_id")}
+                        placeholder="Select Training Type"
+                        options={masterData.training_types || []}
+                        getOptionLabel={(option) => option.training_type}
+                        getOptionValue={(option) => option.training_type_id}
                         className={getFieldClassName("training_type_id")}
-                      >
-                        <option value="">Select Training Type</option>
-                        {masterData.training_types.map((type) => (
-                          <option key={type.training_type_id} value={type.training_type_id}>
-                            {type.training_type}
-                          </option>
-                        ))}
-                      </select>
+                        searchPlaceholder="Search training type..."
+                      />
                       {errors.training_type_id && <p className="mt-1 text-sm text-red-600">{errors.training_type_id}</p>}
                     </div>
                     <div className="sm:col-span-3 relative">
@@ -839,20 +838,18 @@ export function ModalCareerTrainingDetails({
                       </label>
                       {renderSparkIndicator("country_id")}
                       {renderGadOfficerIndicator("country_id")}
-                      <select
+                      <SearchableSelect
                         name="country_id"
                         value={formData.country_id}
                         onChange={handleChange}
                         disabled={isFieldDisabled("country_id")}
+                        placeholder="Select Country"
+                        options={masterData.countries || []}
+                        getOptionLabel={(option) => option.country}
+                        getOptionValue={(option) => option.country_id}
                         className={getFieldClassName("country_id")}
-                      >
-                        <option value="">Select Country</option>
-                        {masterData.countries.map((country) => (
-                          <option key={country.country_id} value={country.country_id}>
-                            {country.country}
-                          </option>
-                        ))}
-                      </select>
+                        searchPlaceholder="Search country..."
+                      />
                       {errors.country_id && <p className="mt-1 text-sm text-red-600">{errors.country_id}</p>}
                     </div>
                     <div className="sm:col-span-3 relative">

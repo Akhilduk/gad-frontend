@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { SearchableSelect } from '@/app/components/searchable-select';
 
 const initialFormData = {
   name: '',
@@ -103,23 +104,13 @@ export function ModalChildrenDetails({ open, setOpen, childrenDetails, onSave, m
      
   };
   
-  const renderSelectOptions = (field) => {
+  const getSelectOptions = (field) => {
     const keyMap = {
       gender_id: "gender",
     };
-  
-    const masterKey = keyMap[field.key]; 
-    const options = masterData?.[masterKey] || [];  // Ensure masterData exists
-  
-    return options.length > 0 ? (
-      options.map(option => (
-        <option key={option.id} value={option.id}>
-          {option.gender}
-        </option>
-      ))
-    ) : (
-      <option disabled>No options available</option>
-    );
+
+    const masterKey = keyMap[field.key];
+    return masterData?.[masterKey] || [];
   };
   
 
@@ -167,19 +158,20 @@ export function ModalChildrenDetails({ open, setOpen, childrenDetails, onSave, m
                           {requiredFields.includes(field.key) && <span className="text-red-500 font-semibold"> *</span>}
                           </label>
                           {masterFields.includes(field.key) ? (
-                            // Render a select input for master fields
-                            <select
+                            <SearchableSelect
                               id={field.key}
                               name={field.key}
                               value={formData[field.key] || ''}
                               onChange={handleChange}
                               disabled={disabledFields.includes(field.key)}
+                              placeholder="Select"
+                              options={getSelectOptions(field)}
+                              getOptionLabel={(option) => option.gender}
+                              getOptionValue={(option) => option.id}
                               className={`mt-1 block w-full rounded-md border-gray-300 sm:text-sm 
                                 ${disabledFields.includes(field.key) ? "bg-gray-200 cursor-not-allowed text-black" : "focus:border-indigo-500 focus:ring-indigo-500"}`}
-                            >
-                              <option value="">Select</option>
-                              {renderSelectOptions(field)}
-                            </select>
+                              searchPlaceholder="Search..."
+                            />
                           ) : field.key === 'dob' ? (
                             // Render date input for dob field
                             <input

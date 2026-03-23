@@ -4,12 +4,17 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useState } from 'react';
 import { toast } from 'react-toastify';
 import axiosInstance from '@/utils/apiClient';
+import { SearchableSelect } from '@/app/components/searchable-select';
 
 export function ModalRemoveSpouse({ open, setOpen, spouseData, onRemoved }) {
   const [relationStatus, setRelationStatus] = useState('');
   const [documentFile, setDocumentFile] = useState(null);
   const [expiryDate, setExpiryDate] = useState('');
   const [loading, setLoading] = useState(false);
+  const relationStatusOptions = [
+    { value: '1', label: 'Divorced' },
+    { value: '2', label: 'Widow/Widower' },
+  ];
 
   const handleFileChange = (e) => {
     setDocumentFile(e.target.files[0]);
@@ -90,15 +95,17 @@ export function ModalRemoveSpouse({ open, setOpen, spouseData, onRemoved }) {
                 <form onSubmit={handleSubmit} className="mt-4 space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Relation Status</label>
-                    <select
+                    <SearchableSelect
+                      name="relation_status"
                       value={relationStatus}
                       onChange={(e) => setRelationStatus(e.target.value)}
+                      placeholder="Select Status"
+                      options={relationStatusOptions}
+                      getOptionLabel={(option) => option.label}
+                      getOptionValue={(option) => option.value}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    >
-                      <option value="">Select Status</option>
-                      <option value="1">Divorced</option>
-                      <option value="2">Widow/Widower</option>
-                    </select>
+                      searchPlaceholder="Search status..."
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Upload Document</label>

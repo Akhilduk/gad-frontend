@@ -7,6 +7,7 @@ import { ChevronDownIcon, BoltIcon } from '@heroicons/react/24/solid';
 import { getServiceTypeName } from '@/utils/serviceTypeUtils';
 import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 import { handleStateDistrictChange } from '@/utils/mapping';
+import { SearchableSelect } from '@/app/components/searchable-select';
 
 const fields = [
   { label: 'Honorifics', key: 'honorifics', isSelect: true },
@@ -565,7 +566,16 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
     setUserUpdatedFields(new Set());
   };
 
-  const renderSelectOptions = (field) => {
+  const getSelectOptions = (field) => {
+    if (field.key === 'honorifics') {
+      return [
+        { value: 'Mr.', label: 'Mr.' },
+        { value: 'Ms.', label: 'Ms.' },
+        { value: 'Mrs.', label: 'Mrs.' },
+        { value: 'Dr.', label: 'Dr.' },
+      ];
+    }
+
     const keyMap = {
       source_of_recruitment_id: 'recruitment',
       cadre_id: 'cadre',
@@ -582,24 +592,24 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
     };
 
     const masterKey = keyMap[field.key] || 'bloodGroup';
-    let options = masterData[masterKey] || [];
+    const options = masterData[masterKey] || [];
 
-    if (field.key === 'honorifics') {
-      return (
-        <>
-          <option value="Mr.">Mr.</option>
-          <option value="Ms.">Ms.</option>
-          <option value="Mrs.">Mrs.</option>
-          <option value="Dr.">Dr.</option>
-        </>
-      );
-    }
-
-    return options.map((option) => (
-      <option key={option[field.idForSelect]} value={option[field.idForSelect]}>
-        {option[masterKey] || option.recruitment || option.cadre || option.state || option.gender || option.district || option.language || option.retirement || option.category || option.motherTongue || option.blood_group || 'N/A'}
-      </option>
-    ));
+    return options.map((option) => ({
+      value: option[field.idForSelect],
+      label:
+        option[masterKey] ||
+        option.recruitment ||
+        option.cadre ||
+        option.state ||
+        option.gender ||
+        option.district ||
+        option.language ||
+        option.retirement ||
+        option.category ||
+        option.motherTongue ||
+        option.blood_group ||
+        'N/A',
+    }));
   };
 
   const handleClose = () => {
@@ -723,17 +733,18 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
                           
                           {renderSparkIndicator('honorifics')}
                           {renderGadOfficerIndicator('honorifics')}
-                          <select
+                          <SearchableSelect
                             name="honorifics"
                             value={formData.honorifics || ''}
                             onChange={handleChange}
-                            // required={requiredFields.includes('honorifics')}
                             disabled={isFieldDisabled('honorifics')}
+                            placeholder="Select Honorifics"
+                            options={getSelectOptions({ key: 'honorifics', idForSelect: 'honorifics' })}
+                            getOptionLabel={(option) => option.label}
+                            getOptionValue={(option) => option.value}
                             className={getFieldClassName('honorifics')}
-                          >
-                            <option value="">Select Honorifics</option>
-                            {renderSelectOptions({ key: 'honorifics', idForSelect: 'honorifics' })}
-                          </select>
+                            searchPlaceholder="Search honorifics..."
+                          />
                           {errors.honorifics && <p className="text-red-500 text-sm mt-1">{errors.honorifics}</p>}
                         </div>
                         <div className="relative">
@@ -812,17 +823,18 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
                           </label>
                           {renderSparkIndicator('gender_id')}
                           {renderGadOfficerIndicator('gender_id')}
-                          <select
+                          <SearchableSelect
                             name="gender_id"
                             value={formData.gender_id || ''}
                             onChange={handleChange}
-                            // required={requiredFields.includes('gender_id')}
                             disabled={isFieldDisabled('gender_id')}
+                            placeholder="Select Gender"
+                            options={getSelectOptions({ key: 'gender_id', idForSelect: 'gender_id' })}
+                            getOptionLabel={(option) => option.label}
+                            getOptionValue={(option) => option.value}
                             className={getFieldClassName('gender_id')}
-                          >
-                            <option value="">Select Gender</option>
-                            {renderSelectOptions({ key: 'gender_id', idForSelect: 'gender_id' })}
-                          </select>
+                            searchPlaceholder="Search gender..."
+                          />
                           {errors.gender_id && <p className="text-red-500 text-sm mt-1">{errors.gender_id}</p>}
                         </div>
                         <div className="relative">
@@ -832,17 +844,18 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
                           </label>
                           {renderSparkIndicator('blood_group_id')}
                           {renderGadOfficerIndicator('blood_group_id')}
-                          <select
+                          <SearchableSelect
                             name="blood_group_id"
                             value={formData.blood_group_id || ''}
                             onChange={handleChange}
-                            // required={requiredFields.includes('blood_group_id')}
                             disabled={isFieldDisabled('blood_group_id')}
+                            placeholder="Select Blood Group"
+                            options={getSelectOptions({ key: 'blood_group_id', idForSelect: 'blood_group_id' })}
+                            getOptionLabel={(option) => option.label}
+                            getOptionValue={(option) => option.value}
                             className={getFieldClassName('blood_group_id')}
-                          >
-                            <option value="">Select Blood Group</option>
-                            {renderSelectOptions({ key: 'blood_group_id', idForSelect: 'blood_group_id' })}
-                          </select>
+                            searchPlaceholder="Search blood group..."
+                          />
                           {errors.blood_group_id && <p className="text-red-500 text-sm mt-1">{errors.blood_group_id}</p>}
                         </div>
                       
@@ -1024,17 +1037,18 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
                       </label>
                       {renderSparkIndicator('source_of_recruitment_id')}
                       {renderGadOfficerIndicator('source_of_recruitment_id')}
-                      <select
+                      <SearchableSelect
                         name="source_of_recruitment_id"
                         value={formData.source_of_recruitment_id || ''}
                         onChange={handleChange}
-                        // required={requiredFields.includes('source_of_recruitment_id')}
                         disabled={isFieldDisabled('source_of_recruitment_id')}
+                        placeholder="Select Source"
+                        options={getSelectOptions({ key: 'source_of_recruitment_id', idForSelect: 'recruitment_id' })}
+                        getOptionLabel={(option) => option.label}
+                        getOptionValue={(option) => option.value}
                         className={getFieldClassName('source_of_recruitment_id')}
-                      >
-                        <option value="">Select Source</option>
-                        {renderSelectOptions({ key: 'source_of_recruitment_id', idForSelect: 'recruitment_id' })}
-                      </select>
+                        searchPlaceholder="Search source..."
+                      />
                       {errors.source_of_recruitment_id && <p className="text-red-500 text-sm mt-1">{errors.source_of_recruitment_id}</p>}
                     </div>
                     <div className="relative">
@@ -1044,17 +1058,18 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
                       </label>
                       {renderSparkIndicator('cadre_id')}
                       {renderGadOfficerIndicator('cadre_id')}
-                      <select
+                      <SearchableSelect
                         name="cadre_id"
                         value={formData.cadre_id || ''}
                         onChange={handleChange}
-                        // required={requiredFields.includes('cadre_id')}
                         disabled={isFieldDisabled('cadre_id')}
+                        placeholder="Select Cadre"
+                        options={getSelectOptions({ key: 'cadre_id', idForSelect: 'cadre_id' })}
+                        getOptionLabel={(option) => option.label}
+                        getOptionValue={(option) => option.value}
                         className={getFieldClassName('cadre_id')}
-                      >
-                        <option value="">Select Cadre</option>
-                        {renderSelectOptions({ key: 'cadre_id', idForSelect: 'cadre_id' })}
-                      </select>
+                        searchPlaceholder="Search cadre..."
+                      />
                       {errors.cadre_id && <p className="text-red-500 text-sm mt-1">{errors.cadre_id}</p>}
                     </div>
                     <div className="relative">
@@ -1077,16 +1092,18 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
                       </label>
                       {renderSparkIndicator('retirement_id')}
                       {renderGadOfficerIndicator('retirement_id')}
-                      <select
+                      <SearchableSelect
                         name="retirement_id"
                         value={formData.retirement_id || ''}
                         onChange={handleChange}
                         disabled={isFieldDisabled('retirement_id')}
+                        placeholder="Select Mode"
+                        options={getSelectOptions({ key: 'retirement_id', idForSelect: 'retirement_id' })}
+                        getOptionLabel={(option) => option.label}
+                        getOptionValue={(option) => option.value}
                         className={getFieldClassName('retirement_id')}
-                      >
-                        <option value="">Select Mode</option>
-                        {renderSelectOptions({ key: 'retirement_id', idForSelect: 'retirement_id' })}
-                      </select>
+                        searchPlaceholder="Search retirement mode..."
+                      />
                     </div>
                     <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 dark:text-white">
@@ -1193,17 +1210,18 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
                     </label>
                     {renderSparkIndicator('mother_tongue_id')}
                     {renderGadOfficerIndicator('mother_tongue_id')}
-                    <select
+                    <SearchableSelect
                       name="mother_tongue_id"
                       value={formData.mother_tongue_id || ''}
                       onChange={handleChange}
-                      // required={requiredFields.includes('mother_tongue_id')}
                       disabled={isFieldDisabled('mother_tongue_id')}
+                      placeholder="Select Mother Tongue"
+                      options={getSelectOptions({ key: 'mother_tongue_id', idForSelect: 'language_id' })}
+                      getOptionLabel={(option) => option.label}
+                      getOptionValue={(option) => option.value}
                       className={getFieldClassName('mother_tongue_id')}
-                    >
-                      <option value="">Select Mother Tongue</option>
-                      {renderSelectOptions({ key: 'mother_tongue_id', idForSelect: 'language_id' })}
-                    </select>
+                      searchPlaceholder="Search mother tongue..."
+                    />
                     {errors.mother_tongue_id && <p className="text-red-500 text-sm mt-1">{errors.mother_tongue_id}</p>}
                   </div>
                   <div className="relative">
@@ -1213,17 +1231,18 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
                     </label>
                     {renderSparkIndicator('category_id')}
                     {renderGadOfficerIndicator('category_id')}
-                    <select
+                    <SearchableSelect
                       name="category_id"
                       value={formData.category_id || ''}
                       onChange={handleChange}
-                      // required={requiredFields.includes('category_id')}
                       disabled={isFieldDisabled('category_id')}
+                      placeholder="Select Category"
+                      options={getSelectOptions({ key: 'category_id', idForSelect: 'category_id' })}
+                      getOptionLabel={(option) => option.label}
+                      getOptionValue={(option) => option.value}
                       className={getFieldClassName('category_id')}
-                    >
-                      <option value="">Select Category</option>
-                      {renderSelectOptions({ key: 'category_id', idForSelect: 'category_id' })}
-                    </select>
+                      searchPlaceholder="Search category..."
+                    />
                     {errors.category_id && <p className="text-red-500 text-sm mt-1">{errors.category_id}</p>}
                   </div>
 
@@ -1349,21 +1368,18 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
                       </label>
                       {renderSparkIndicator('state_id_com')}
                       {renderGadOfficerIndicator('state_id_com')}
-                      <select
+                      <SearchableSelect
                         name="state_id_com"
                         value={formData.state_id_com || ''}
                         onChange={handleChange}
-                        // required={requiredFields.includes('state_id_com')}
                         disabled={isFieldDisabled('state_id_com')}
+                        placeholder="Select State"
+                        options={masterData.state || []}
+                        getOptionLabel={(state) => state.state}
+                        getOptionValue={(state) => state.state_id}
                         className={getFieldClassName('state_id_com')}
-                      >
-                        <option value="">Select State</option>
-                        {masterData.state?.map((state) => (
-                          <option key={state.state_id} value={state.state_id}>
-                            {state.state}
-                          </option>
-                        ))}
-                      </select>
+                        searchPlaceholder="Search state..."
+                      />
                       {errors.state_id_com && <p className="text-red-500 text-sm mt-1">{errors.state_id_com}</p>}
                     </div>
                     <div className="relative">
@@ -1373,20 +1389,18 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
                       </label>
                       {renderSparkIndicator('district_id_com')}
                       {renderGadOfficerIndicator('district_id_com')}
-                      <select
+                      <SearchableSelect
                         name="district_id_com"
                         value={formData.district_id_com || ''}
                         onChange={handleChange}
                         disabled={isFieldDisabled('district_id_com')}
+                        placeholder="Select District"
+                        options={filteredDistrictsCom || []}
+                        getOptionLabel={(district) => district.district}
+                        getOptionValue={(district) => district.district_id}
                         className={getFieldClassName('district_id_com')}
-                      >
-                        <option value="">Select District</option>
-                        {filteredDistrictsCom.map((district) => (
-                          <option key={district.district_id} value={district.district_id}>
-                            {district.district}
-                          </option>
-                        ))}
-                      </select>
+                        searchPlaceholder="Search district..."
+                      />
                       {errors.district_id_com && <p className="text-red-500 text-sm mt-1">{errors.district_id_com}</p>}
                     </div>
                     <div className="relative">
@@ -1459,21 +1473,18 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
                       </label>
                       {renderSparkIndicator('state_id_per')}
                       {renderGadOfficerIndicator('state_id_per')}
-                      <select
+                      <SearchableSelect
                         name="state_id_per"
                         value={formData.state_id_per || ''}
                         onChange={handleChange}
-                        // required={requiredFields.includes('state_id_per')}
                         disabled={isFieldDisabled('state_id_per')}
+                        placeholder="Select State"
+                        options={masterData.state || []}
+                        getOptionLabel={(state) => state.state}
+                        getOptionValue={(state) => state.state_id}
                         className={getFieldClassName('state_id_per')}
-                      >
-                        <option value="">Select State</option>
-                        {masterData.state?.map((state) => (
-                          <option key={state.state_id} value={state.state_id}>
-                            {state.state}
-                          </option>
-                        ))}
-                      </select>
+                        searchPlaceholder="Search state..."
+                      />
                       {errors.state_id_per && <p className="text-red-500 text-sm mt-1">{errors.state_id_per}</p>}
                     </div>
                     <div className="relative">
@@ -1483,20 +1494,18 @@ export function ModalPersonalDetails({ open, setOpen, personalDetails, onSave, m
                       </label>
                       {renderSparkIndicator('district_id_per')}
                       {renderGadOfficerIndicator('district_id_per')}
-                      <select
+                      <SearchableSelect
                         name="district_id_per"
                         value={formData.district_id_per || ''}
                         onChange={handleChange}
                         disabled={isFieldDisabled('district_id_per')}
+                        placeholder="Select District"
+                        options={filteredDistrictsPer || []}
+                        getOptionLabel={(district) => district.district}
+                        getOptionValue={(district) => district.district_id}
                         className={getFieldClassName('district_id_per')}
-                      >
-                        <option value="">Select District</option>
-                        {filteredDistrictsPer.map((district) => (
-                          <option key={district.district_id} value={district.district_id}>
-                            {district.district}
-                          </option>
-                        ))}
-                      </select>
+                        searchPlaceholder="Search district..."
+                      />
                       {errors.district_id_per && <p className="text-red-500 text-sm mt-1">{errors.district_id_per}</p>}
                     </div>
                     <div className="relative">

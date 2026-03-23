@@ -6,10 +6,15 @@ import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 import axiosInstance from '@/utils/apiClient'
+import { SearchableSelect } from '@/app/components/searchable-select'
 
 export function ModalPdfDownload({ open = false, setOpen, userDetails }) {
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [isDownloading, setIsDownloading] = useState(false);
+  const languageOptions = [
+    { value: 'en', label: 'English' },
+    { value: 'ml', label: 'മലയാളം' },
+  ];
 
   const handleLanguageChange = (e) => {
     setSelectedLanguage(e.target.value);
@@ -91,14 +96,17 @@ export function ModalPdfDownload({ open = false, setOpen, userDetails }) {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Choose Language:
             </label>
-            <select
+            <SearchableSelect
+              name="pdf_language"
               value={selectedLanguage}
               onChange={handleLanguageChange}
+              placeholder="Select language"
+              options={languageOptions}
+              getOptionLabel={(option) => option.label}
+              getOptionValue={(option) => option.value}
               className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-indigo-300"
-            >
-              <option value="en">English</option>
-              <option value="ml">മലയാളം</option>
-            </select>
+              searchPlaceholder="Search language..."
+            />
           </div>
 
           {isDownloading ? (

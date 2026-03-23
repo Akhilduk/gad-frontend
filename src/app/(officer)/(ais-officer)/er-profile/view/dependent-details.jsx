@@ -11,7 +11,6 @@ import { Tree, TreeNode } from 'react-organizational-chart';
 import { motion, AnimatePresence } from 'framer-motion';
 import 'react-tooltip/dist/react-tooltip.css';
 import { viewDocument } from '@/utils/documentUpload';
-import { isProfileEditDisabledByStatus } from '@/utils/profileStatusUtils';
 
 export function DependentDetails({ profileData }) {
   console.log('Rendering DependentDetails with profileData:', profileData);
@@ -77,7 +76,11 @@ export function DependentDetails({ profileData }) {
   useEffect(() => {
     const status = sessionStorage.getItem('profile_status');
     setProfileStatus(status);
-    setButtonDisable(isProfileEditDisabledByStatus(status) || status === '4');
+    if (status === '2' || status === '3' || status === '4') {
+      setButtonDisable(true);
+    } else {
+      setButtonDisable(false);
+    }
   }, [profileData]);
 
   // Function to fetch fresh profile data from API

@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { BoltIcon } from "@heroicons/react/24/solid";
+import { SearchableSelect } from '@/app/components/searchable-select';
 
 const initialFormData = {
   qualification_id: "",
@@ -189,23 +190,13 @@ export function ModalEducationalQualifications({
     setOpen(false);
   };
 
-  const renderSelectOptions = (field) => {
+  const getSelectOptions = (field) => {
     const keyMap = {
       qualification_id: "qualification",
     };
 
     const masterKey = keyMap[field.key];
-    const options = masterData?.[masterKey] || [];
-
-    return options.length > 0 ? (
-      options.map((option) => (
-        <option key={option[field.idForSelect]} value={option[field.idForSelect]}>
-          {option[masterKey] || 'N/A'}
-        </option>
-      ))
-    ) : (
-      <option disabled>No options available</option>
-    );
+    return masterData?.[masterKey] || [];
   };
 
   const getFieldClassName = (fieldKey) => {
@@ -327,19 +318,21 @@ export function ModalEducationalQualifications({
                           </label>
                           {renderSparkIndicator(field.key)}
                           {renderGadOfficerIndicator(field.key)}
-                          {field.isSelect ? (
-                            <select
-                              id={field.key}
-                              name={field.key}
-                              value={formData[field.key] || ""}
-                              onChange={handleChange}
-                              disabled={isFieldDisabled(field.key)}
-                              className={getFieldClassName(field.key)}
-                            >
-                              <option value="">Select</option>
-                              {renderSelectOptions(field)}
-                            </select>
-                          ) : (
+            {field.isSelect ? (
+              <SearchableSelect
+                id={field.key}
+                name={field.key}
+                value={formData[field.key] || ""}
+                onChange={handleChange}
+                disabled={isFieldDisabled(field.key)}
+                placeholder="Select"
+                options={getSelectOptions(field)}
+                getOptionLabel={(option) => option.qualification || 'N/A'}
+                getOptionValue={(option) => option[field.idForSelect]}
+                className={getFieldClassName(field.key)}
+                searchPlaceholder="Search..."
+              />
+            ) : (
                             <div className="relative">
                               <input
                                 type="text"

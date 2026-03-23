@@ -709,7 +709,7 @@ const fetchProfileImage = async (officerDataParam = null) => {
               <div className="flex items-center justify-between p-1 border-b border-white/20 dark:border-white/10">
                 <div className="flex items-center space-x-1">
                   <IdentificationIcon className="w-3 h-3 text-cyan-400 dark:text-cyan-300" />
-                  <span className={`text-indigo-100 pr-3 dark:text-indigo-200 ${compactMode ? 'text-xs' : 'text-xs'}`}>PEN Number</span>
+                  <span className={`text-indigo-100 pr-3 dark:text-indigo-200 ${compactMode ? 'text-xs' : 'text-xs'}`}>PEN</span>
                 </div>
                 <span className={`${compactMode ? 'text-xs' : 'text-xs'} ${isDataLoading ? 'opacity-50' : ''}`}>
                   {isDataLoading ? (

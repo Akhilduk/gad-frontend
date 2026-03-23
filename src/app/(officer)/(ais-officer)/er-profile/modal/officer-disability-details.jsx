@@ -7,6 +7,7 @@ import { BoltIcon, XMarkIcon, DocumentIcon } from "@heroicons/react/24/solid";
 import { motion, AnimatePresence } from "framer-motion";
 import { validateFile } from "../../../../../utils/fileValidator";
 import axiosInstance from "@/utils/apiClient";
+import { SearchableSelect } from '@/app/components/searchable-select';
 
 const initialFormData = {
   disability_type_id: "",
@@ -405,23 +406,18 @@ export function ModalDisabilityDetails({
                           {renderSparkIndicator(field.key)}
                           {renderGadOfficerIndicator(field.key)}
                           {field.type === "select" ? (
-                            <select
+                            <SearchableSelect
                               name={field.key}
                               value={formData[field.key] || ""}
                               onChange={handleChange}
                               disabled={isFieldDisabled(actualKey)}
+                              placeholder={`Select ${field.label}`}
+                              options={masterData || []}
+                              getOptionLabel={(option) => option.disability}
+                              getOptionValue={(option) => option.disability_id}
                               className={getFieldClassName(field.key)}
-                            >
-                              <option value="">Select {field.label}</option>
-                              {masterData.map((option) => (
-                                <option
-                                  key={option.disability_id}
-                                  value={option.disability_id}
-                                >
-                                  {option.disability}
-                                </option>
-                              ))}
-                            </select>
+                              searchPlaceholder="Search..."
+                            />
                           ): field.type === "file" ? (
   <div className="relative">
     <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1.5">

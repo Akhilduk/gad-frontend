@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { SearchableSelect } from '@/app/components/searchable-select';
 
 const initialFormData = {
   name: '',
@@ -82,23 +83,13 @@ export function ModalSpouseDetails({ open, setOpen, spouseDetails, onSave, maste
   };
   
 
-  const renderSelectOptions = (field) => {
+  const getSelectOptions = (field) => {
     const keyMap = {
       gender_id: "gender",
     };
-  
-    const masterKey = keyMap[field.key]; 
-    const options = masterData?.[masterKey] || [];  // Ensure masterData exists
-  
-    return options.length > 0 ? (
-      options.map(option => (
-        <option key={option.id} value={option.id}>
-          {option.gender}
-        </option>
-      ))
-    ) : (
-      <option disabled>No options available</option>
-    );
+
+    const masterKey = keyMap[field.key];
+    return masterData?.[masterKey] || [];
   };
 
   // Reset form when closing the modal
@@ -141,18 +132,19 @@ export function ModalSpouseDetails({ open, setOpen, spouseDetails, onSave, maste
                             {field.label}
                           {requiredFields.includes(field.key) && <span className="text-red-500 font-semibold"> *</span>}</label>
                           {masterFields.includes(field.key) ? (
-                            // Render a select input for master fields
-                            <select
+                            <SearchableSelect
                               id={field.key}
                               name={field.key}
                               value={formData[field.key] || ''}
                               onChange={handleChange}
                               disabled={disabledFields.includes(field.key)}
+                              placeholder="Select"
+                              options={getSelectOptions(field)}
+                              getOptionLabel={(option) => option.gender}
+                              getOptionValue={(option) => option.id}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                            >
-                              <option value="">Select</option>
-                              {renderSelectOptions(field)}
-                            </select>
+                              searchPlaceholder="Search..."
+                            />
                           ) : field.key === 'dob' ? (
                             // Render date input for dob field
                             <input

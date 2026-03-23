@@ -8,6 +8,7 @@ import axiosInstance from '@/utils/apiClient';
 import { toast } from 'react-toastify';
 import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 import { uploadDocument, viewDocument } from '@/utils/documentUpload';
+import { SearchableSelect } from '@/app/components/searchable-select';
 
 const initialFormData = {
   relation_id: '',
@@ -91,6 +92,12 @@ export function ModalDependentDetails({
   dependentDetailsList,
   userDob,
 }) {
+  const showToastOnce = (type, message, toastId) => {
+    if (!toast.isActive(toastId)) {
+      toast[type](message, { toastId });
+    }
+  };
+
   const [formData, setFormData] = useState(initialFormData);
   const [childrenCount, setChildrenCount] = useState(0);
   const [isVerified, setIsVerified] = useState(false);
@@ -111,6 +118,16 @@ export function ModalDependentDetails({
   const marriageCertInputRef = useRef(null);
   const divorceDocInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadFailures, setUploadFailures] = useState({
+    death_certificate: false,
+    sup_doc_for_remv: false,
+    marriage_certificate_proof: false,
+  });
+  const [uploadFailureMessages, setUploadFailureMessages] = useState({
+    death_certificate: '',
+    sup_doc_for_remv: '',
+    marriage_certificate_proof: '',
+  });
   const [existingDeathCertificateId, setExistingDeathCertificateId] = useState(null);
   const [existingMarriageCertificateId, setExistingMarriageCertificateId] = useState(null);
   const [existingDivorceDocumentId, setExistingDivorceDocumentId] = useState(null);
@@ -524,6 +541,16 @@ export function ModalDependentDetails({
       setMarriageCertificateFile(null);
       setDivorceDocumentFile(null);
       setIsUploading(false);
+      setUploadFailures({
+        death_certificate: false,
+        sup_doc_for_remv: false,
+        marriage_certificate_proof: false,
+      });
+      setUploadFailureMessages({
+        death_certificate: '',
+        sup_doc_for_remv: '',
+        marriage_certificate_proof: '',
+      });
       setExistingCurrentSpouse(null);
       
       // Reset existing document IDs
@@ -857,11 +884,13 @@ if (dependentDetails && isSpouse === false && relationId === masterData.relation
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size should be less than 5MB');
+      showToastOnce('error', 'Max file size is 5MB.', 'dep-max-file-5mb');
       return;
     }
 
     setDeathCertificateFile(file);
+    setUploadFailures(prev => ({ ...prev, death_certificate: false }));
+    setUploadFailureMessages(prev => ({ ...prev, death_certificate: '' }));
     setIsUploading(true);
     try {
       const userId = sessionStorage.getItem('user_id');
@@ -886,8 +915,14 @@ if (dependentDetails && isSpouse === false && relationId === masterData.relation
       toast.success('Death certificate uploaded successfully');
     } catch (error) {
       console.error('Death cert upload error:', error);
-      toast.error('Failed to upload death certificate');
+      showToastOnce('error', 'Failed to upload death certificate', 'dep-death-upload-failed');
       setDeathCertificateFile(null);
+      setUploadFailures(prev => ({ ...prev, death_certificate: true }));
+      setUploadFailureMessages(prev => ({ ...prev, death_certificate: 'Upload failed. Please re-upload to continue.' }));
+      setFormData(prev => ({ ...prev, death_certificate: null }));
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } finally {
       setIsUploading(false);
     }
@@ -898,11 +933,13 @@ if (dependentDetails && isSpouse === false && relationId === masterData.relation
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size should be less than 5MB');
+      showToastOnce('error', 'Max file size is 5MB.', 'dep-max-file-5mb');
       return;
     }
 
     setDivorceDocumentFile(file);
+    setUploadFailures(prev => ({ ...prev, sup_doc_for_remv: false }));
+    setUploadFailureMessages(prev => ({ ...prev, sup_doc_for_remv: '' }));
     setIsUploading(true);
     try {
       const userId = sessionStorage.getItem('user_id');
@@ -927,8 +964,14 @@ if (dependentDetails && isSpouse === false && relationId === masterData.relation
       toast.success('Divorce document uploaded successfully');
     } catch (error) {
       console.error('Divorce doc upload error:', error);
-      toast.error('Failed to upload divorce document');
+      showToastOnce('error', 'Failed to upload divorce document', 'dep-divorce-upload-failed');
       setDivorceDocumentFile(null);
+      setUploadFailures(prev => ({ ...prev, sup_doc_for_remv: true }));
+      setUploadFailureMessages(prev => ({ ...prev, sup_doc_for_remv: 'Upload failed. Please re-upload to continue.' }));
+      setFormData(prev => ({ ...prev, sup_doc_for_remv: null }));
+      if (divorceDocInputRef.current) {
+        divorceDocInputRef.current.value = '';
+      }
     } finally {
       setIsUploading(false);
     }
@@ -939,11 +982,13 @@ if (dependentDetails && isSpouse === false && relationId === masterData.relation
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size should be less than 5MB');
+      showToastOnce('error', 'Max file size is 5MB.', 'dep-max-file-5mb');
       return;
     }
 
     setMarriageCertificateFile(file);
+    setUploadFailures(prev => ({ ...prev, marriage_certificate_proof: false }));
+    setUploadFailureMessages(prev => ({ ...prev, marriage_certificate_proof: '' }));
     setIsUploading(true);
     try {
       const userId = sessionStorage.getItem('user_id');
@@ -961,8 +1006,14 @@ if (dependentDetails && isSpouse === false && relationId === masterData.relation
       toast.success('Marriage certificate uploaded successfully');
     } catch (error) {
       console.error('Marriage cert upload error:', error);
-      toast.error('Failed to upload marriage certificate');
+      showToastOnce('error', 'Failed to upload marriage certificate', 'dep-marriage-upload-failed');
       setMarriageCertificateFile(null);
+      setUploadFailures(prev => ({ ...prev, marriage_certificate_proof: true }));
+      setUploadFailureMessages(prev => ({ ...prev, marriage_certificate_proof: 'Upload failed. Please re-upload to continue.' }));
+      setFormData(prev => ({ ...prev, marriage_certificate_proof: null }));
+      if (marriageCertInputRef.current) {
+        marriageCertInputRef.current.value = '';
+      }
     } finally {
       setIsUploading(false);
     }
@@ -1010,6 +1061,15 @@ if (dependentDetails && isSpouse === false && relationId === masterData.relation
       if (isRestricted) {
         toast.error('Cannot change relation type for an existing dependent. Please remove this and add as new.');
         return;
+      }
+      const isNewDependent = !dependentDetails?.ais_fam_id && !formData?.ais_fam_id;
+      const hasUnsavedSparkInSameRelation = isNewDependent && dependentDetailsList.some((dep) => {
+        const depId = dep?.ais_fam_id?.toString?.() || '';
+        const depRelationId = dep?.relation_id?.toString?.() || '';
+        return depId.startsWith('spark_') && depRelationId === (value?.toString?.() || '');
+      });
+      if (hasUnsavedSparkInSameRelation) {
+        showToastOnce('warn', 'Please save the SPARK details first, otherwise details may be overwritten and mismatched.', 'dep-spark-save-first');
       }
       setIsRelationChangeRestricted(false);
     }
@@ -1158,6 +1218,8 @@ if (dependentDetails && isSpouse === false && relationId === masterData.relation
           updatedData.category_id = '';
           updatedData.institution_id = '';
           updatedData.institution_name = '';
+          setUploadFailures(prev => ({ ...prev, death_certificate: false }));
+          setUploadFailureMessages(prev => ({ ...prev, death_certificate: '' }));
         } else if (value === 'deceased') {
           updatedData.is_alive = false;
           updatedData.removing_reason = '2';
@@ -1170,6 +1232,8 @@ if (dependentDetails && isSpouse === false && relationId === masterData.relation
           updatedData.category_id = '';
           updatedData.institution_id = '';
           updatedData.institution_name = '';
+          setUploadFailures(prev => ({ ...prev, sup_doc_for_remv: false }));
+          setUploadFailureMessages(prev => ({ ...prev, sup_doc_for_remv: '' }));
         } else {
           updatedData.is_alive = true;
           updatedData.removing_reason = '0';
@@ -1179,6 +1243,16 @@ if (dependentDetails && isSpouse === false && relationId === masterData.relation
           updatedData.death_certificate = null;
           setDeathCertificateFile(null);
           setDivorceDocumentFile(null);
+          setUploadFailures(prev => ({
+            ...prev,
+            death_certificate: false,
+            sup_doc_for_remv: false,
+          }));
+          setUploadFailureMessages(prev => ({
+            ...prev,
+            death_certificate: '',
+            sup_doc_for_remv: '',
+          }));
         }
       }
 
@@ -1552,7 +1626,23 @@ if (name === 'institution_name') {
   e.preventDefault();
 
   if (isUploading) {
-    toast.warn('Please wait for document upload to complete');
+    showToastOnce('warn', 'Please wait for document upload to complete', 'dep-upload-in-progress');
+    return;
+  }
+
+  if (Object.values(uploadFailures).some(Boolean)) {
+    showToastOnce('error', 'Save is blocked because one or more document uploads failed. Please re-upload failed file(s).', 'dep-upload-failure-block-save');
+    return;
+  }
+
+  const isNewDependent = !dependentDetails?.ais_fam_id && !formData?.ais_fam_id;
+  const hasUnsavedSparkInSameRelation = isNewDependent && dependentDetailsList.some((dep) => {
+    const depId = dep?.ais_fam_id?.toString?.() || '';
+    const depRelationId = dep?.relation_id?.toString?.() || '';
+    return depId.startsWith('spark_') && depRelationId === (formData?.relation_id?.toString?.() || '');
+  });
+  if (hasUnsavedSparkInSameRelation) {
+    showToastOnce('warn', 'Please save the SPARK details first, otherwise details may be overwritten and mismatched.', 'dep-spark-save-first');
     return;
   }
   
@@ -1591,6 +1681,77 @@ if (name === 'institution_name') {
   if (hasErrors) {
       console.log('Current errors found:', errors);
     toast.error('Please fix the errors before saving.');
+    return;
+  }
+
+  const normalizeNamePart = (value) =>
+    (value || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
+  const normalizeDob = (value) => (value || '').toString().trim();
+  const normalizeGender = (value) => {
+    const raw = (value || '').toString().trim().toLowerCase();
+    if (!raw) return '';
+    if (raw === '1' || raw === 'male') return '1';
+    if (raw === '2' || raw === 'female') return '2';
+    if (raw === '3' || raw === 'transgender' || raw === 'other') return '3';
+    return raw;
+  };
+  const normalizeRelation = (dep) => {
+    const id = dep?.relation_id?.toString?.().trim?.() || '';
+    if (id) return id;
+    const relationLabel = (dep?.relation || '').toString().trim().toLowerCase();
+    if (!relationLabel) return '';
+    if (relationLabel.includes('spouse')) {
+      const spouse = masterData.relationship?.find(r => r.rel_status_name === 'Spouse');
+      return spouse?.rel_status_id?.toString?.() || '';
+    }
+    const direct = masterData.relationship?.find(
+      r => (r.rel_status_name || '').toString().trim().toLowerCase() === relationLabel
+    );
+    return direct?.rel_status_id?.toString?.() || '';
+  };
+  const normalizedFullName = (firstName, lastName, fallbackFullName) => {
+    const first = normalizeNamePart(firstName);
+    const last = normalizeNamePart(lastName);
+    const combined = [first, last].filter(Boolean).join(' ').trim();
+    if (combined) return combined;
+    return normalizeNamePart(fallbackFullName);
+  };
+
+  const currentRelationId = (formData?.relation_id || '').toString();
+  const currentName = normalizedFullName(formData?.first_name, formData?.last_name, '');
+  const currentGenderId = normalizeGender(formData?.gender_id);
+  const currentDob = normalizeDob(formData?.dob);
+  const currentAisFamId = (formData?.ais_fam_id || dependentDetails?.ais_fam_id || '').toString();
+
+  const duplicateDependent = dependentDetailsList.find((dep) => {
+    const depAisFamId = dep?.ais_fam_id?.toString?.() || '';
+    if (currentAisFamId && depAisFamId === currentAisFamId) {
+      return false;
+    }
+
+    const depRelationId = normalizeRelation(dep);
+    if (!depRelationId || depRelationId !== currentRelationId) {
+      return false;
+    }
+
+    const depName = normalizedFullName(dep?.first_name, dep?.last_name, dep?.full_name || dep?.name);
+    const depGenderId = normalizeGender(dep?.gender_id || dep?.gender);
+    const depDob = normalizeDob(dep?.dob);
+
+    const sameName = depName && currentName && depName === currentName;
+    const sameGender = depGenderId && currentGenderId && depGenderId === currentGenderId;
+    if (!(sameName && sameGender)) {
+      return false;
+    }
+
+    if (!currentDob || !depDob) {
+      return true;
+    }
+    return currentDob === depDob;
+  });
+
+  if (duplicateDependent) {
+    showToastOnce('error', 'Duplicate dependent detected for the same relation with matching name, gender, and DOB details.', 'dep-duplicate-detected');
     return;
   }
 
@@ -2108,21 +2269,18 @@ useEffect(() => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-white">
                     <LabelWithAsterisk>Relationship</LabelWithAsterisk>
                   </label>
-                  <select
+                  <SearchableSelect
                     name="relation_id"
                     value={formData.relation_id || ''}
                     onChange={handleChange}
                     disabled={isFieldDisabled('relation_id') || (dependentDetails?.ais_fam_id && !dependentDetails.ais_fam_id.toString().startsWith('spark_'))}
-                    required
+                    placeholder="Select Relationship"
+                    options={masterData.relationship || []}
+                    getOptionLabel={(rel) => rel.rel_status_name}
+                    getOptionValue={(rel) => rel.rel_status_id}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-600 disabled:bg-gray-200 dark:disabled:bg-gray-500"
-                  >
-                    <option value="">Select Relationship</option>
-                    {masterData.relationship?.map(rel => (
-                      <option key={rel.rel_status_id} value={rel.rel_status_id}>
-                        {rel.rel_status_name}
-                      </option>
-                    ))}
-                  </select>
+                    searchPlaceholder="Search relationship..."
+                  />
                   {errors.relation_id && <p className="text-red-500 text-sm mt-1">{errors.relation_id}</p>}
                   {dependentDetails?.ais_fam_id && !dependentDetails.ais_fam_id.toString().startsWith('spark_') && (
                     <p className="text-sm text-gray-500 mt-1 italic">
@@ -2241,6 +2399,7 @@ useEffect(() => {
                       <label className="block text-sm font-medium text-gray-700 dark:text-white">
                         <LabelWithAsterisk>Death Certificate</LabelWithAsterisk>
                       </label>
+                      <p className="text-xs text-gray-500 mt-1">Max file: 5MB</p>
                       <div className="mt-1 flex items-center gap-2">
                         <input
                           type="file"
@@ -2263,6 +2422,9 @@ useEffect(() => {
                         )}
                       </div>
                       {errors.death_certificate && <p className="text-red-500 text-sm mt-1">{errors.death_certificate}</p>}
+                      {uploadFailureMessages.death_certificate && (
+                        <p className="text-red-500 text-sm mt-1">{uploadFailureMessages.death_certificate}</p>
+                      )}
                       {deathCertificateFile && (
                         <p className="text-sm text-gray-500 mt-1">Selected: {deathCertificateFile.name}</p>
                       )}
@@ -2298,6 +2460,7 @@ useEffect(() => {
                       <label className="block text-sm font-medium text-gray-700 dark:text-white">
                         <LabelWithAsterisk>Divorce Document</LabelWithAsterisk>
                       </label>
+                      <p className="text-xs text-gray-500 mt-1">Max file: 5MB</p>
                       <div className="mt-1 flex items-center gap-2">
                         <input
                           type="file"
@@ -2320,6 +2483,9 @@ useEffect(() => {
                         )}
                       </div>
                       {errors.sup_doc_for_remv && <p className="text-red-500 text-sm mt-1">{errors.sup_doc_for_remv}</p>}
+                      {uploadFailureMessages.sup_doc_for_remv && (
+                        <p className="text-red-500 text-sm mt-1">{uploadFailureMessages.sup_doc_for_remv}</p>
+                      )}
                       {divorceDocumentFile && (
                         <p className="text-sm text-gray-500 mt-1">Selected: {divorceDocumentFile.name}</p>
                       )}
@@ -2337,6 +2503,7 @@ useEffect(() => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-white">
                       Marriage Certificate (Optional)
                     </label>
+                    <p className="text-xs text-gray-500 mt-1">Max file: 5MB</p>
                     <div className="mt-1 flex items-center gap-2">
                       <input
                         type="file"
@@ -2361,6 +2528,9 @@ useEffect(() => {
                     {marriageCertificateFile && (
                       <p className="text-sm text-gray-500 mt-1">Selected: {marriageCertificateFile.name}</p>
                     )}
+                    {uploadFailureMessages.marriage_certificate_proof && (
+                      <p className="text-red-500 text-sm mt-1">{uploadFailureMessages.marriage_certificate_proof}</p>
+                    )}
                     {(formData.marriage_certificate_proof || existingMarriageCertificateId) && !marriageCertificateFile && (
                       <p className="text-sm text-green-500 mt-1">Existing document attached</p>
                     )}
@@ -2374,19 +2544,22 @@ useEffect(() => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-white">
                       <LabelWithAsterisk>Child Type</LabelWithAsterisk>
                     </label>
-                    <select
+                    <SearchableSelect
                       name="child_type"
                       value={formData.child_type || ''}
                       onChange={handleChange}
-                      required={formData.relation_id === '2'}
+                      placeholder="Select Child Type"
+                      options={[
+                        { value: '1', label: 'Son' },
+                        { value: '2', label: 'Daughter' },
+                        { value: '3', label: 'Step Son' },
+                        { value: '4', label: 'Step Daughter' },
+                      ]}
+                      getOptionLabel={(option) => option.label}
+                      getOptionValue={(option) => option.value}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-600"
-                    >
-                      <option value="">Select Child Type</option>
-                      <option value="1">Son</option>
-                      <option value="2">Daughter</option>
-                      <option value="3">Step Son</option>
-                      <option value="4">Step Daughter</option>
-                    </select>
+                      searchPlaceholder="Search child type..."
+                    />
                     {errors.child_type && <p className="text-red-500 text-sm mt-1">{errors.child_type}</p>}
                     {formData.child_type && (
                       <p className="text-sm text-gray-500 mt-1">
@@ -2405,39 +2578,36 @@ useEffect(() => {
     <label className="block text-sm font-medium text-gray-700 dark:text-white">
       <LabelWithAsterisk>Select Parent (Spouse)</LabelWithAsterisk>
     </label>
-    <select
-  name="spouse_id"
-  value={formData.spouse_id || ''}
-  onChange={handleChange}
-  required={formData.relation_id === '2'}
-  disabled={availableSpouses.length === 0}
-  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-600 disabled:bg-gray-200"
->
-  <option value="">Select Parent</option>
-  {availableSpouses
-    .filter(spouse => {
-      const spouseRelName = getMasterValue(spouse.relation_id, 'relation_id');
-      return spouseRelName === 'Spouse';
-    })
-    .map(spouse => {
-      // Determine spouse status for display
-      let status = '';
-      
-      if (spouse.removing_reason === '1') {
-        status = ' (Divorced)';
-      } else if (spouse.is_alive === false) {
-        status = ' (Deceased)';
-      } else {
-        status = ' (Current)';
-      }
-      
-      return (
-        <option key={spouse.ais_fam_id} value={spouse.ais_fam_id}>
-          {spouse.first_name} {spouse.last_name}{status}
-        </option>
-      );
-    })}
-</select>
+    <SearchableSelect
+      name="spouse_id"
+      value={formData.spouse_id || ''}
+      onChange={handleChange}
+      placeholder="Select Parent"
+      disabled={availableSpouses.length === 0}
+      options={availableSpouses
+        .filter((spouse) => {
+          const spouseRelName = getMasterValue(spouse.relation_id, 'relation_id');
+          return spouseRelName === 'Spouse';
+        })
+        .map((spouse) => {
+          let status = '';
+          if (spouse.removing_reason === '1') {
+            status = ' (Divorced)';
+          } else if (spouse.is_alive === false) {
+            status = ' (Deceased)';
+          } else {
+            status = ' (Current)';
+          }
+          return {
+            value: spouse.ais_fam_id,
+            label: `${spouse.first_name} ${spouse.last_name}${status}`,
+          };
+        })}
+      getOptionLabel={(option) => option.label}
+      getOptionValue={(option) => option.value}
+      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-600 disabled:bg-gray-200"
+      searchPlaceholder="Search parent..."
+    />
     {errors.spouse_id && <p className="text-red-500 text-sm mt-1">{errors.spouse_id}</p>}
     {availableSpouses.length === 0 && (
       <p className="text-sm text-red-500 mt-1">Please add a spouse first before adding child.</p>
@@ -2541,18 +2711,17 @@ useEffect(() => {
                       <label className="block text-sm font-medium text-gray-700 dark:text-white">
                         <LabelWithAsterisk>Occupation Category</LabelWithAsterisk>
                       </label>
-                      <select
+                      <SearchableSelect
                         name="category_id"
                         value={formData.category_id || ''}
                         onChange={handleChange}
-                        required
+                        placeholder="Select Category"
+                        options={masterData.occupationCategory || []}
+                        getOptionLabel={(cat) => cat.category_name}
+                        getOptionValue={(cat) => cat.category_id}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-600"
-                      >
-                        <option value="">Select Category</option>
-                        {masterData.occupationCategory?.map(cat => (
-                          <option key={cat.category_id} value={cat.category_id}>{cat.category_name}</option>
-                        ))}
-                      </select>
+                        searchPlaceholder="Search category..."
+                      />
                       {errors.category_id && <p className="text-red-500 text-sm mt-1">{errors.category_id}</p>}
                     </div>
 
@@ -2564,22 +2733,26 @@ useEffect(() => {
                             <label htmlFor="institution_id" className="block text-sm font-medium text-gray-700 dark:text-white">
                               <LabelWithAsterisk>Institution</LabelWithAsterisk>
                             </label>
-                            <select
+                            <SearchableSelect
                               id="institution_id"
                               name="institution_id"
                               value={formData.institution_id || ''}
                               onChange={handleChange}
-                              required
+                              placeholder="Select Institution"
+                              options={[
+                                ...(masterData.institution || [])
+                                  .filter((i) => i.category_id === parseInt(formData.category_id))
+                                  .map((inst) => ({
+                                    value: inst.institution_id,
+                                    label: inst.institution_name,
+                                  })),
+                                { value: '0', label: 'Other' },
+                              ]}
+                              getOptionLabel={(option) => option.label}
+                              getOptionValue={(option) => option.value}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-600"
-                            >
-                              <option value="">Select Institution</option>
-                              {masterData.institution
-                                .filter(i => i.category_id === parseInt(formData.category_id))
-                                .map(inst => (
-                                  <option key={inst.institution_id} value={inst.institution_id}>{inst.institution_name}</option>
-                                ))}
-                              <option value="0">Other</option>
-                            </select>
+                              searchPlaceholder="Search institution..."
+                            />
                             {errors.institution_id && <p className="text-red-500 text-sm mt-1">{errors.institution_id}</p>}
                           </div>
                         ) : (
@@ -2666,20 +2839,19 @@ useEffect(() => {
                       <label htmlFor="gender_id" className="block text-sm font-medium text-gray-700 dark:text-white">
                         <LabelWithAsterisk>Gender</LabelWithAsterisk>
                       </label>
-                      <select
+                      <SearchableSelect
                         id="gender_id"
                         name="gender_id"
                         value={formData.gender_id || ''}
-                        disabled={isFieldDisabled('gender_id') || (formData.relation_id === '2' && formData.child_type)}
                         onChange={handleChange}
-                        required
+                        disabled={isFieldDisabled('gender_id') || (formData.relation_id === '2' && formData.child_type)}
+                        placeholder="Select Gender"
+                        options={masterData.gender || []}
+                        getOptionLabel={(g) => g.gender}
+                        getOptionValue={(g) => g.gender_id}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-600 disabled:bg-gray-200 dark:disabled:bg-gray-500"
-                      >
-                        <option value="">Select Gender</option>
-                        {masterData.gender?.map(g => (
-                          <option key={g.gender_id} value={g.gender_id}>{g.gender}</option>
-                        ))}
-                      </select>
+                        searchPlaceholder="Search gender..."
+                      />
                       {errors.gender_id && <p className="text-red-500 text-sm mt-1">{errors.gender_id}</p>}
                       {formData.relation_id === '2' && formData.child_type && (
                         <p className="text-sm text-gray-500 mt-1">Gender is automatically set based on child type</p>
@@ -2768,7 +2940,11 @@ useEffect(() => {
                   <button
                     type="submit"
                     className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={isUploading || Object.values(errors).some(err => err && err !== '')}
+                    disabled={
+                      isUploading ||
+                      Object.values(uploadFailures).some(Boolean) ||
+                      Object.values(errors).some(err => err && err !== '')
+                    }
                   >
                     {isUploading ? 'Uploading...' : 'Save'}
                   </button>

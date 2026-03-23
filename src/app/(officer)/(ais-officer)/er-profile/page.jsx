@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Breadcrumb } from '@/app/components/breadcrumb';
 import { ProfileSection } from '@/app/components/AISDashboardComponents/ProfileSection';
 import { CompactProfileSection } from '@/app/components/AISDashboardComponents/CompactProfileSection';
@@ -8,7 +8,7 @@ import { Accordion } from '@/app/components/accordion';
 import { ProfileCompletionProvider, useProfileCompletion } from '@/contexts/Profile-completion-context';
 import { ProfileAccordion } from './profile-accordion';
 import axiosInstance from '@/utils/apiClient';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, QuestionMarkCircleIcon, AcademicCapIcon, ClockIcon } from '@heroicons/react/24/outline';
 
 // Create a mapping between section titles and indices
 const SECTION_MAPPING = {
@@ -58,6 +58,53 @@ const GUIDED_SECTION_ORDER = [
   'Disability Details',
 ];
 
+const formatSparkFetchedTime = (rawTimestamp) => {
+  if (!rawTimestamp) return null;
+  const raw = String(rawTimestamp).trim();
+  if (!raw) return null;
+
+  // Handles backend format like: 2026-02-24T09:07:19.632912
+  const parts = raw.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
+  if (parts) {
+    const [, year, month, day, hour, minute, second] = parts;
+    const localDate = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second)
+    );
+    if (!Number.isNaN(localDate.getTime())) {
+      return new Intl.DateTimeFormat('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+      }).format(localDate);
+    }
+  }
+
+  // Fallback for other valid date strings
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) {
+    return new Intl.DateTimeFormat('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    }).format(parsed);
+  }
+
+  return raw;
+};
+
 function ProfileContent() {
   const [openIndices, setOpenIndices] = useState(new Set([]));
   const [profileData, setProfileData] = useState(null);
@@ -72,7 +119,6 @@ function ProfileContent() {
   const [modalOpen, setModalOpen] = useState(false);
   const [showHelpPanel, setShowHelpPanel] = useState(false);
   const [showHelpBadge, setShowHelpBadge] = useState(false);
-  const [profileStatus, setProfileStatus] = useState('1');
   const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
   const [manualButtonHighlight, setManualButtonHighlight] = useState({
     help: false,
@@ -288,6 +334,7 @@ function ProfileContent() {
 
         const response = await axiosInstance.get('/officer/officer');
         const responseData = response.data.data;
+        console.log('Fetched profile data:*************************', responseData);
         setProfileData(responseData);
         sessionStorage.setItem('profileData', JSON.stringify(responseData));
 
@@ -353,21 +400,6 @@ function ProfileContent() {
     fetchProfileData();
   }, []);
 
-  useEffect(() => {
-    const syncProfileStatus = () => {
-      const storedStatus = sessionStorage.getItem('profile_status');
-      if (storedStatus) {
-        setProfileStatus(String(storedStatus));
-      }
-    };
-
-    syncProfileStatus();
-    window.addEventListener('storage', syncProfileStatus);
-    return () => {
-      window.removeEventListener('storage', syncProfileStatus);
-    };
-  }, []);
-
   const getCurrentGuidedIndex = () => {
     const index = GUIDED_SECTION_ORDER.indexOf(activeSection);
     return index === -1 ? 0 : index;
@@ -415,6 +447,7 @@ function ProfileContent() {
   };
 
   const pendingSection = getNextPendingSection();
+  const formattedSparkFetchedTime = formatSparkFetchedTime(profileData?.spark_inserted_at);
   const activeSectionIsZeroInfo = isZeroInfoSection(activeSection);
   const activeSectionProgress = getProgressBySectionTitle(activeSection);
   const isActiveSectionCompleted = activeSectionProgress.total > 0 && activeSectionProgress.completed === activeSectionProgress.total;
@@ -438,30 +471,6 @@ function ProfileContent() {
     'Disability Details': 'This section has 0/0 right now. Add disability details only if applicable, complete required fields, and save.',
   };
   const activeZeroInfoTip = zeroInfoTipBySection[activeSection] || 'This section has 0/0 right now. Add at least one record, complete mandatory fields, and save.';
-
-  const profileCompletionPercent = useMemo(() => {
-    const totals = ALL_REQUIRED_SECTIONS.reduce(
-      (acc, sectionKey) => {
-        const section = sectionProgress[sectionKey];
-        if (
-          section &&
-          typeof section.completed === 'number' &&
-          typeof section.total === 'number'
-        ) {
-          acc.completed += section.completed;
-          acc.total += section.total;
-        }
-        return acc;
-      },
-      { completed: 0, total: 0 }
-    );
-
-    if (totals.total === 0) return 0;
-    return Math.round((totals.completed / totals.total) * 100);
-  }, [sectionProgress]);
-
-  const shouldShowApprovedIncompleteAlert =
-    initialLoadComplete && profileStatus === '3' && profileCompletionPercent < 100;
 
   const coachPrimaryMessage = shouldHighlightSparkButton
     ? 'Start with Spark Profile and review the preview data before editing.'
@@ -725,32 +734,56 @@ function ProfileContent() {
 
   return (
     <>
-      <Breadcrumb
-        rightContent={(
-          <div className="flex flex-wrap items-center justify-end gap-2">
+      {/* Breadcrumb without rightContent */}
+      <Breadcrumb />
+
+      <div className="bg-white rounded-md px-1 py-3 dark:bg-gray-800/50">
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+          {/* Timestamp on the left */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 text-xs text-gray-600 dark:bg-gray-900 dark:text-gray-300">
+            <ClockIcon className="h-4 w-4" />
+            <span>
+              Last fetched from SPARK: <span className='text-amber-600 font-semibold'>{formattedSparkFetchedTime || 'Not available'}</span> 
+            </span>
+          </div>
+
+          {/* Buttons on the right */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <button
               type="button"
               onClick={handleOpenHelp}
-              className={`inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-50 dark:border-red-700 dark:bg-gray-800 dark:text-red-300 dark:hover:bg-red-950/30 ${shouldPulseHelpButton ? 'help-attention-button' : ''}`}
+              className={`inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-700 shadow-sm transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-gray-900 dark:text-red-300 dark:hover:bg-red-950/30 ${
+                shouldPulseHelpButton ? 'help-attention-button' : ''
+              }`}
             >
+              <QuestionMarkCircleIcon className="h-4 w-4" />
               Help: How to complete profile?
-              {showHelpBadge && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] text-white">New</span>}
+              {showHelpBadge && (
+                <span className="ml-1 rounded-full bg-indigo-600 px-1.5 py-0.5 text-[10px] text-white">
+                  New
+                </span>
+              )}
             </button>
 
             <button
               type="button"
               onClick={toggleGuidedMode}
-              className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold shadow-sm transition-colors ${shouldPulseGuidedButton ? 'guided-attention-button' : ''} ${guidedModeEnabled
-                ? 'border-emerald-400 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-200'
-                : 'border-emerald-400 bg-white text-emerald-700 hover:bg-emerald-50 dark:border-emerald-600 dark:bg-gray-800 dark:text-emerald-300 dark:hover:bg-emerald-950/30'
-                }`}
+              className={`inline-flex items-center gap-2 rounded-lg border ml-1 px-3 py-1.5 text-sm font-medium shadow-sm transition-colors ${
+                shouldPulseGuidedButton ? 'guided-attention-button' : ''
+              } ${
+                guidedModeEnabled
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200'
+                  : 'border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:bg-gray-900 dark:text-emerald-300 dark:hover:bg-emerald-950/30'
+              }`}
             >
+              <AcademicCapIcon className="h-4 w-4" />
               {guidedModeEnabled ? 'Guided Mode: On' : 'Start Guided Mode'}
             </button>
           </div>
-        )}
-      />
+        </div>
+      </div>
 
+      {/* Guided Mode Banner */}
       {guidedModeEnabled && (
         <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 sm:px-4 dark:border-emerald-700 dark:bg-emerald-950/30">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -840,11 +873,6 @@ function ProfileContent() {
       )}
 
       {/* Main Content Grid */}
-      {shouldShowApprovedIncompleteAlert && (
-        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
-          New details updated in your profile. Kindly view, edit and save details, and submit again for approval to reflect that in your profile.
-        </div>
-      )}
       <div 
         ref={contentContainerRef}
         className={`profile-layout-container relative isolate z-0 ${layoutTransition ? 'transition-all duration-300 ease-in-out' : ''} ${modalOpen ? 'overflow-hidden' : ''}`}

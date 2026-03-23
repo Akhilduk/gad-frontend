@@ -7,6 +7,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { BoltIcon, UserIcon } from "@heroicons/react/24/solid";
 import { useProfileCompletion } from "@/contexts/Profile-completion-context";
 import { toast } from 'react-toastify';
+import { SearchableSelect } from '@/app/components/searchable-select';
 import { 
   formatDateToDDMMYYYY, 
 } from "@/utils/dateFormat";
@@ -701,18 +702,14 @@ const handleDesignationChange = (e) => {
     setOpen(false);
   };
 
-  const renderSelectOptions = (field) => {
+  const getSelectOptions = (field) => {
     const options = masterData?.[field.masterKey] || [];
-    if (!options || options.length === 0) {
-      return <option disabled>No {field.label} options available</option>;
-    }
     return options
       .filter((option) => option[field.idKey] && option[field.masterKey])
-      .map((option) => (
-        <option key={String(option[field.idKey])} value={String(option[field.idKey])}>
-          {option[field.masterKey] || "N/A"}
-        </option>
-      ));
+      .map((option) => ({
+        value: String(option[field.idKey]),
+        label: option[field.masterKey] || "N/A",
+      }));
   };
 
   const getFieldClassName = (fieldKey) => {
@@ -882,19 +879,21 @@ const handleDesignationChange = (e) => {
                         {renderSparkIndicator(field.key)}
                         {renderGadOfficerIndicator(field.key)}
                         
-                        {field.isSelect ? (
-                          <select
-                            id={field.key}
-                            name={field.key}
-                            value={formData[field.key] || ""}
-                            onChange={handleChange}
-                            disabled={isFieldDisabled(field.key)}
-                            className={getFieldClassName(field.key)}
-                          >
-                            <option value="">Select {field.label}</option>
-                            {renderSelectOptions(field)}
-                          </select>
-                        ) : field.type === "date" ? (
+          {field.isSelect ? (
+            <SearchableSelect
+              id={field.key}
+              name={field.key}
+              value={formData[field.key] || ""}
+              onChange={handleChange}
+              disabled={isFieldDisabled(field.key)}
+              placeholder={`Select ${field.label}`}
+              options={getSelectOptions(field)}
+              getOptionLabel={(option) => option.label}
+              getOptionValue={(option) => option.value}
+              className={getFieldClassName(field.key)}
+              searchPlaceholder={`Search ${field.label.toLowerCase()}...`}
+            />
+          ) : field.type === "date" ? (
                           <input
                             type="date"
                             name={field.key}

@@ -9,7 +9,6 @@ import axiosInstance from '@/utils/apiClient';
 import { useProfileCompletion } from '@/contexts/Profile-completion-context';
 import ConfirmModal from '@/app/components/confirmModal';
 import moment from 'moment';
-import { isProfileEditDisabledByStatus } from '@/utils/profileStatusUtils';
 // import { ExportButtons, exportToCSV, exportToPDF, exportToExcel } from '@/components/dataTableControls'; // Adjust import path as needed
 import { ExportButtons, exportToCSV, exportToPDF, exportToExcel } from '@/app/components/dataTableControls'; // Adjust import path as needed
 import { jsPDF } from 'jspdf';
@@ -48,7 +47,7 @@ export function ServiceDetails({ masterData, profileData }) {
  
   // Get profile status from sessionStorage
   const profileStatus = sessionStorage.getItem('profile_status');
-  const isButtonDisabled = isProfileEditDisabledByStatus(profileStatus);
+  const isButtonDisabled = profileStatus === '2' || profileStatus === '3'; // Disable for submitted or approved
   const normalize = (str) => str?.toString().trim().toLowerCase() || '';
   const getDesignationName = useCallback((id) => designations.find((item) => item.designation_id === id)?.designation || ' ', [designations]);
   const getLevelName = useCallback((id) => levels.find((item) => item.level_id === id)?.level || ' ', [levels]);

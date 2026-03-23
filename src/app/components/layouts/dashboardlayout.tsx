@@ -186,11 +186,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <>
-      <div className="min-h-screen flex flex-col relative overflow-x-hidden">
+      <div className="min-h-screen flex flex-col relative">
         {/* ==== TOP BAR – KARMASRI ONLY ==== */}
-        <Disclosure as="nav" className="relative z-[110] overflow-hidden border-b border-neutral-200 bg-gradient-to-r from-indigo-900 via-indigo-500 to-indigo-900 text-white dark:border-neutral-900 dark:bg-none dark:bg-neutral-800">
-          <div className="pointer-events-none absolute -right-12 -top-10 h-24 w-24 rounded-full bg-white/10 blur-2xl dark:hidden" />
-          <div className="pointer-events-none absolute -bottom-10 -left-10 h-24 w-24 rounded-full bg-indigo-200/30 blur-2xl dark:hidden" />
+        <Disclosure as="nav" className="border-b border-neutral-200 bg-primary-500 text-white dark:bg-neutral-800 dark:border-neutral-900 relative z-50">
           <div className="mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex h-12 items-center justify-between">
               <div className="flex-1 flex justify-center sm:justify-start">
@@ -220,9 +218,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </Disclosure>
 
         {/* ==== MAIN NAVIGATION BAR ==== */}
-        <Disclosure as="nav" className="relative z-[110] overflow-visible bg-gradient-to-r from-indigo-50 via-indigo-100/70 to-indigo-50 xl:border-b border-neutral-300 dark:border-neutral-800 dark:bg-none dark:bg-neutral-700">
-          <div className="pointer-events-none absolute -right-12 -top-10 h-24 w-24 rounded-full bg-indigo-200/30 blur-2xl dark:hidden" />
-          <div className="pointer-events-none absolute -bottom-10 -left-10 h-24 w-24 rounded-full bg-white/50 blur-2xl dark:hidden" />
+        <Disclosure as="nav" className="bg-white dark:bg-neutral-700 xl:border-b border-neutral-300 dark:border-neutral-800 relative z-100">
           <div className="mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 items-center justify-between">
               {/* Logo */}
@@ -267,11 +263,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   )}
                 </button>
                 <ThemeToggle />
-                <Menu as="div" className="relative z-[120]">
+                <Menu as="div" className="relative">
                   <MenuButton className="flex items-center rounded-full bg-gray-200 p-1 focus:outline-none focus:ring-2 focus:ring-primary-500">
                     <Image src="/images/user.png" alt="User" width={32} height={32} className="rounded-full" />
                   </MenuButton>
-                  <MenuItems className="absolute right-0 z-[130] mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5">
+                  <MenuItems className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5">
                     {filteredNavigation.map((item) =>
                       item.action ? (
                         <MenuItem key={item.name}>
@@ -304,7 +300,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
 
             {/* Mobile Menu Panel */}
-            <DisclosurePanel className="xl:hidden bg-white rounded-b-2xl dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-lg absolute top-full left-0 right-0 z-[120]">
+            <DisclosurePanel className="xl:hidden bg-white rounded-b-2xl dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-lg absolute top-full left-0 right-0 z-50">
               <div className="px-4 pt-4 pb-3 space-y-4">
               
 
@@ -412,7 +408,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </Disclosure>
 
         {/* ==== MAIN CONTENT ==== */}
-        <main className="relative z-0 flex-1 overflow-x-hidden bg-gradient-to-br from-white via-indigo-50/40 to-white dark:bg-none dark:bg-neutral-900">
+        <main className="flex-1 bg-neutral-50 dark:bg-neutral-900 relative z-10">
           <div className="mx-auto px-4 sm:px-6 lg:px-8">
             {children}
           </div>
