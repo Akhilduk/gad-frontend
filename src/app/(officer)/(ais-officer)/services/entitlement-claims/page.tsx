@@ -149,7 +149,7 @@ const EntitlementClaims = () => {
         title="REIMBURSEMENT"
         imageSrc="/images/services/reimbursement.svg"
         links={[
-          { label: 'Medical Reimbursement', url: '#' },
+          { label: 'Medical Reimbursement', url: '/reimbursement/medical' },
           { label: 'Travel Reimbursement', url: '#' },
           { label: 'Miscellaneous Reimbursement', url: '#' },
         ]}
