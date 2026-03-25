@@ -228,6 +228,60 @@ export default function FinalPreviewClient() {
           )}
         </div>
 
+        {/* --- Appended Document Previews (Simulating a Merged PDF) --- */}
+        <div className="mt-8 space-y-8 print:mt-0 print:space-y-0">
+          {c.bills.map((b, index) => (
+            <div key={`bill-${b.id}`} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-none print:m-0 break-before-page">
+              <div className="border-b border-slate-200 p-4 bg-slate-50 flex justify-between items-center print:bg-white print:border-b-2 print:border-slate-800">
+                <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-indigo-600" /> Bill Annexure {index + 1}
+                </h3>
+                <span className="text-sm font-medium text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 print:border-none">
+                  {b.fileName}
+                </span>
+              </div>
+              <div className="p-8 min-h-[500px] flex flex-col items-center justify-center bg-slate-50/50 print:bg-white border-2 border-dashed border-slate-200 m-8 rounded-lg">
+                <FileCheck2 className="w-16 h-16 text-slate-300 mb-4" />
+                <p className="text-slate-500 font-medium text-lg">Document Content Preview</p>
+                <div className="mt-4 grid grid-cols-2 gap-x-12 gap-y-2 text-sm text-left bg-white p-6 rounded shadow-sm border border-slate-100 min-w-[300px]">
+                  <div className="text-slate-500 uppercase text-xs">Invoice No</div><div className="font-medium">{b.invoiceNo}</div>
+                  <div className="text-slate-500 uppercase text-xs">Date</div><div className="font-medium">{formatDMY(b.billDate)}</div>
+                  <div className="text-slate-500 uppercase text-xs">Hospital/Vendor</div><div className="font-medium">{b.hospitalName}</div>
+                  <div className="text-slate-500 uppercase text-xs">Amount</div><div className="font-medium">{rupee(b.totalAmount)}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {c.docs.map((d, index) => (
+            <div key={`doc-${d.id}`} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-none print:m-0 break-before-page">
+              <div className="border-b border-slate-200 p-4 bg-slate-50 flex justify-between items-center print:bg-white print:border-b-2 print:border-slate-800">
+                <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-indigo-600" /> Document Annexure: {d.type.replace('_', ' ')}
+                </h3>
+                <span className="text-sm font-medium text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 print:border-none">
+                  {d.fileName}
+                </span>
+              </div>
+              <div className="p-8 min-h-[500px] flex flex-col items-center justify-center bg-slate-50/50 print:bg-white border-2 border-dashed border-slate-200 m-8 rounded-lg">
+                <FileCheck2 className="w-16 h-16 text-slate-300 mb-4" />
+                <p className="text-slate-500 font-medium text-lg">Document Content Preview</p>
+                <p className="text-slate-400 text-sm mt-2">{d.fileName}</p>
+                <div className="mt-4 text-sm text-left bg-white p-6 rounded shadow-sm border border-slate-100 min-w-[300px]">
+                  <div className="flex justify-between border-b border-slate-100 pb-2 mb-2">
+                    <span className="text-slate-500 uppercase text-xs">Document Type</span>
+                    <span className="font-medium">{d.type.replace('_', ' ')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 uppercase text-xs">Uploaded At</span>
+                    <span className="font-medium">{new Date(d.uploadedAt).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
       </div>
 
       {/* --- Modals --- */}
