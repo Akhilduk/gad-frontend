@@ -88,18 +88,15 @@ export default function FinalPreviewClient() {
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-none print:m-0">
 
           {/* Formal Header */}
-          <div className="border-b border-indigo-200 p-10 text-center bg-gradient-to-r from-indigo-900 via-indigo-700 to-indigo-900 text-white print:bg-white print:text-slate-900 print:border-b-4 print:border-slate-800">
-            <div className="w-16 h-16 mx-auto mb-4 opacity-90 print:hidden">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M8 11h8" /><path d="M12 7v8" /></svg>
-            </div>
-            <h2 className="text-3xl font-bold uppercase tracking-widest mb-1 text-indigo-50 print:text-slate-900">Medical Reimbursement Claim</h2>
-            <p className="text-indigo-200 font-medium tracking-wide uppercase text-sm print:text-slate-600">Government of Kerala</p>
-            <div className="mt-6 inline-flex items-center gap-2 bg-indigo-950/50 backdrop-blur-sm px-5 py-2 rounded-full border border-indigo-500/30 text-sm font-bold text-indigo-100 tracking-wider print:border-slate-300 print:text-slate-800 print:bg-white">
+          <div className="border-b border-indigo-200 p-6 text-center bg-gradient-to-r from-indigo-900 via-indigo-700 to-indigo-900 text-white print:bg-white print:text-slate-900 print:border-b-2 print:border-slate-800">
+            <h2 className="text-2xl font-bold uppercase tracking-widest mb-0.5 text-indigo-50 print:text-slate-900">Medical Reimbursement Claim</h2>
+            <p className="text-indigo-200 font-bold tracking-widest uppercase text-xs print:text-slate-600">Government of Kerala</p>
+            <div className="mt-3 inline-flex items-center gap-2 bg-indigo-950/50 backdrop-blur-sm px-4 py-1.5 rounded-full border border-indigo-500/30 text-[11px] font-bold text-indigo-100 tracking-widest print:border-slate-300 print:text-slate-800 print:bg-white">
               REFERENCE NO: {c.mrNo}
             </div>
           </div>
 
-          <div className="p-8 space-y-8">
+          <div className="p-6 space-y-6">
 
             {/* 1. Officer Details */}
             <section>
@@ -248,13 +245,13 @@ export default function FinalPreviewClient() {
                   {b.fileName}
                 </span>
               </div>
-              <div className="p-10 min-h-[600px] flex flex-col items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] print:bg-white print:[background-image:none] border-2 border-dashed border-indigo-200 m-8 rounded-xl bg-white">
+              <div className="p-8 min-h-[380px] flex flex-col items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] print:bg-white print:[background-image:none] border-2 border-dashed border-indigo-200 m-6 rounded-xl bg-white">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 mb-6">
                   <FileCheck2 className="w-16 h-16 text-indigo-300" />
                 </div>
                 <p className="text-indigo-900 font-bold text-xl mb-1">Document Scanned Preview</p>
-                <p className="text-indigo-400 font-medium text-sm mb-8">This page simulates the original uploaded bill</p>
-                <div className="grid grid-cols-2 gap-x-16 gap-y-6 text-sm text-left bg-white p-8 rounded-xl shadow-lg border border-indigo-50 min-w-[400px]">
+                <p className="text-indigo-400 font-medium text-sm mb-5">This page simulates the original uploaded bill</p>
+                <div className="grid grid-cols-2 gap-x-12 gap-y-4 text-sm text-left bg-white p-8 rounded-xl shadow-lg border border-indigo-50 min-w-[400px]">
                   <div>
                     <div className="text-indigo-900/50 font-bold uppercase text-[10px] tracking-widest mb-1">Invoice No</div>
                     <div className="font-semibold text-slate-900 text-base">{b.invoiceNo}</div>
@@ -287,12 +284,12 @@ export default function FinalPreviewClient() {
                   {d.fileName}
                 </span>
               </div>
-              <div className="p-10 min-h-[600px] flex flex-col items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] print:bg-white print:[background-image:none] border-2 border-dashed border-indigo-200 m-8 rounded-xl bg-white">
+              <div className="p-8 min-h-[380px] flex flex-col items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] print:bg-white print:[background-image:none] border-2 border-dashed border-indigo-200 m-6 rounded-xl bg-white">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 mb-6">
                   <FileCheck2 className="w-16 h-16 text-indigo-300" />
                 </div>
                 <p className="text-indigo-900 font-bold text-xl mb-1">Document Scanned Preview</p>
-                <p className="text-indigo-400 font-medium text-sm mb-8">{d.fileName}</p>
+                <p className="text-indigo-400 font-medium text-sm mb-5">{d.fileName}</p>
                 <div className="flex flex-col gap-4 text-sm text-left bg-white p-8 rounded-xl shadow-lg border border-indigo-50 min-w-[400px]">
                   <div className="flex justify-between items-center border-b border-indigo-50 pb-4">
                     <span className="text-indigo-900/50 font-bold uppercase text-[10px] tracking-widest">Document Type</span>

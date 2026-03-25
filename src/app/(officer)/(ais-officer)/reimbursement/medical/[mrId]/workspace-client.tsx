@@ -477,7 +477,7 @@ export default function MRCaseWorkspaceClient() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 p-4 mb-6 bg-white border border-slate-200 rounded-lg shadow-sm sticky top-0 z-10">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 mb-4 bg-white border border-slate-200 rounded-lg shadow-sm sticky top-0 z-10">
           <div className="flex gap-3">
             <button className={`${styles.btnSecondary} !bg-white hover:!bg-slate-50`} onClick={() => setActive('ANNEXURES')}>Add Bill/Doc</button>
             <button className={`${styles.btnSecondary} !bg-white hover:!bg-slate-50`} onClick={() => setActive('ADVANCE NOTES')}>Request Advance</button>
@@ -492,7 +492,7 @@ export default function MRCaseWorkspaceClient() {
 
         <div className="flex flex-col md:flex-row gap-6">
           {/* Vertical Sidebar Navigation */}
-          <div className="md:w-64 flex-shrink-0">
+          <div className="md:w-56 flex-shrink-0">
             <div className="flex flex-col gap-1 bg-white p-3 rounded-lg border border-slate-200 shadow-sm sticky top-4">
               {tabs.map((t) => {
                 let Icon = Activity;
@@ -507,7 +507,7 @@ export default function MRCaseWorkspaceClient() {
                 return (
                   <button
                     key={t}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[13px] font-medium transition-colors ${
                       active === t
                         ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600'
                         : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-l-4 border-transparent'
@@ -616,7 +616,7 @@ export default function MRCaseWorkspaceClient() {
                   <button className={`${styles.btnPill} ${treatmentDraft.hospitalised ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, hospitalised: true }))}>Hospitalised</button>
                   <button className={`${styles.btnPill} ${!treatmentDraft.hospitalised ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, hospitalised: false, hospitalName: '', hospitalAddress: '' }))}>Not Hospitalised</button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                   <div>
                     <label className={styles.formLabel}>Place of Illness</label>
                     <input className={styles.field} value={treatmentDraft.placeOfIllness} onChange={(e) => setTreatmentDraft((p) => ({ ...p, placeOfIllness: e.target.value }))} />
@@ -630,7 +630,7 @@ export default function MRCaseWorkspaceClient() {
                   </div>
                 </div>
                 {treatmentDraft.hospitalised && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                     <div>
                       <label className={styles.formLabel}>Hospital Type</label>
                       <div className={styles.toggleRow}>
@@ -687,7 +687,7 @@ export default function MRCaseWorkspaceClient() {
                 )}
               </div>
               <div className={styles.sectionCard}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                   <div>
                     <label className={styles.formLabel}>Start Date</label>
                     <input type="date" className={styles.field} value={treatmentDraft.fromDate} onChange={(e) => setTreatmentDraft((p) => ({ ...p, fromDate: e.target.value }))} />
@@ -770,14 +770,13 @@ export default function MRCaseWorkspaceClient() {
                           {billEditId === b.id && billDraft ? (
                             <tr>
                               <td colSpan={9} className="p-4 bg-slate-50 border-y border-slate-200">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">File Name</label><input className={styles.field} value={billDraft.fileName} onChange={(e) => setBillDraft({ ...billDraft, fileName: e.target.value })} /></div>
-                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">Invoice No</label><input className={styles.field} value={billDraft.invoiceNo} onChange={(e) => setBillDraft({ ...billDraft, invoiceNo: e.target.value })} /></div>
-                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">GST No</label><input className={styles.field} value={billDraft.gstNo} onChange={(e) => setBillDraft({ ...billDraft, gstNo: e.target.value })} /></div>
-                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">Bill Date</label><input type="date" className={styles.field} value={billDraft.billDate} onChange={(e) => setBillDraft({ ...billDraft, billDate: e.target.value })} /></div>
-                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">Hospital / Vendor</label><input className={styles.field} value={billDraft.hospitalName} onChange={(e) => setBillDraft({ ...billDraft, hospitalName: e.target.value })} /></div>
-                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">Total Amount (₹)</label><input className={styles.field} value={String(billDraft.totalAmount)} onChange={(e) => setBillDraft({ ...billDraft, totalAmount: parseAmount(e.target.value) })} /></div>
-                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">Tax Amount (₹)</label><input className={styles.field} value={String(billDraft.taxAmount)} onChange={(e) => setBillDraft({ ...billDraft, taxAmount: parseAmount(e.target.value) })} /></div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                  <div className="md:col-span-2"><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">File Name</label><input className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.fileName} onChange={(e) => setBillDraft({ ...billDraft, fileName: e.target.value })} /></div>
+                                  <div className="md:col-span-2"><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Hospital / Vendor</label><input className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.hospitalName} onChange={(e) => setBillDraft({ ...billDraft, hospitalName: e.target.value })} /></div>
+                                  <div><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Invoice No</label><input className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.invoiceNo} onChange={(e) => setBillDraft({ ...billDraft, invoiceNo: e.target.value })} /></div>
+                                  <div><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">GST No</label><input className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.gstNo} onChange={(e) => setBillDraft({ ...billDraft, gstNo: e.target.value })} /></div>
+                                  <div><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Bill Date</label><input type="date" className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.billDate} onChange={(e) => setBillDraft({ ...billDraft, billDate: e.target.value })} /></div>
+                                  <div><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Amount (₹)</label><input className={`${styles.field} !py-1.5 !text-sm font-semibold`} value={String(billDraft.totalAmount)} onChange={(e) => setBillDraft({ ...billDraft, totalAmount: parseAmount(e.target.value) })} /></div>
                                 </div>
                                 <div className="flex gap-3 justify-end mt-4">
                                   <button className={`${styles.btnSecondary} !py-1 !px-4`} onClick={() => { setBillEditId(''); setBillDraft(null); }}>Cancel</button>
@@ -918,7 +917,7 @@ export default function MRCaseWorkspaceClient() {
             <div className={styles.sectionGrid2}>
               <div className={styles.sectionCard}>
                 <div className={styles.summaryHead}>Certificate Details</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                   <div>
                     <label className={styles.formLabel}>Authorized Medical Attendant</label>
                     <input className={styles.field} value={ecMeta.amaName} onChange={(e) => setEcMeta((p) => ({ ...p, amaName: e.target.value }))} />
