@@ -88,11 +88,14 @@ export default function FinalPreviewClient() {
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-none print:m-0">
 
           {/* Formal Header */}
-          <div className="border-b border-slate-200 p-8 text-center bg-slate-50 print:bg-white">
-            <h2 className="text-2xl font-bold text-slate-900 uppercase tracking-wide">Medical Reimbursement Claim</h2>
-            <p className="text-slate-600 mt-2 font-medium">Government of Kerala</p>
-            <div className="mt-4 inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm text-sm font-semibold text-slate-700">
-              Reference No: {c.mrNo}
+          <div className="border-b border-indigo-200 p-10 text-center bg-gradient-to-r from-indigo-900 via-indigo-700 to-indigo-900 text-white print:bg-white print:text-slate-900 print:border-b-4 print:border-slate-800">
+            <div className="w-16 h-16 mx-auto mb-4 opacity-90 print:hidden">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M8 11h8" /><path d="M12 7v8" /></svg>
+            </div>
+            <h2 className="text-3xl font-bold uppercase tracking-widest mb-1 text-indigo-50 print:text-slate-900">Medical Reimbursement Claim</h2>
+            <p className="text-indigo-200 font-medium tracking-wide uppercase text-sm print:text-slate-600">Government of Kerala</p>
+            <div className="mt-6 inline-flex items-center gap-2 bg-indigo-950/50 backdrop-blur-sm px-5 py-2 rounded-full border border-indigo-500/30 text-sm font-bold text-indigo-100 tracking-wider print:border-slate-300 print:text-slate-800 print:bg-white">
+              REFERENCE NO: {c.mrNo}
             </div>
           </div>
 
@@ -100,42 +103,45 @@ export default function FinalPreviewClient() {
 
             {/* 1. Officer Details */}
             <section>
-              <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-4 border-b border-slate-200 pb-2">
-                <UserCircle2 className="w-5 h-5 text-indigo-600" /> 1. Officer Details
+              <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-5 pb-2 border-b-2 border-indigo-100 tracking-wide uppercase print:border-slate-300 print:text-slate-900">
+                <UserCircle2 className="w-5 h-5 text-indigo-600 print:text-slate-600" /> 1. Officer Details
+
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                <div><span className="text-slate-500 block text-xs uppercase tracking-wider">Name of Officer</span><span className="font-medium text-slate-900">{c.officer.fullName}</span></div>
-                <div><span className="text-slate-500 block text-xs uppercase tracking-wider">Designation</span><span className="font-medium text-slate-900">{c.officer.designation}</span></div>
-                <div><span className="text-slate-500 block text-xs uppercase tracking-wider">Service / Cadre</span><span className="font-medium text-slate-900">{c.officer.serviceType} / {c.officer.cadre}</span></div>
-                <div><span className="text-slate-500 block text-xs uppercase tracking-wider">PEN Number</span><span className="font-medium text-slate-900">{c.officer.penNumber}</span></div>
-                <div><span className="text-slate-500 block text-xs uppercase tracking-wider">Basic Pay</span><span className="font-medium text-slate-900">{rupee(c.officer.basicPay)}</span></div>
-                <div><span className="text-slate-500 block text-xs uppercase tracking-wider">Department</span><span className="font-medium text-slate-900">{c.officer.administrativeDepartment}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Name of Officer</span><span className="font-medium text-slate-900">{c.officer.fullName}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Designation</span><span className="font-medium text-slate-900">{c.officer.designation}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Service / Cadre</span><span className="font-medium text-slate-900">{c.officer.serviceType} / {c.officer.cadre}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">PEN Number</span><span className="font-medium text-slate-900">{c.officer.penNumber}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Basic Pay</span><span className="font-medium text-slate-900">{rupee(c.officer.basicPay)}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Department</span><span className="font-medium text-slate-900">{c.officer.administrativeDepartment}</span></div>
               </div>
             </section>
 
             {/* 2. Patient & Treatment Details */}
             <section>
-              <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-4 border-b border-slate-200 pb-2">
-                <Building2 className="w-5 h-5 text-indigo-600" /> 2. Patient & Treatment Details
+              <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-5 pb-2 border-b-2 border-indigo-100 tracking-wide uppercase print:border-slate-300 print:text-slate-900">
+                <Building2 className="w-5 h-5 text-indigo-600 print:text-slate-600" /> 2. Patient & Treatment Details
+
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm mb-6 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                <div><span className="text-slate-500 block text-xs uppercase tracking-wider">Claimed For</span><span className="font-medium text-slate-900">{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</span></div>
-                <div><span className="text-slate-500 block text-xs uppercase tracking-wider">Patient Name</span><span className="font-medium text-slate-900">{c.patient.name} ({c.patient.relation})</span></div>
-                <div className="md:col-span-2"><span className="text-slate-500 block text-xs uppercase tracking-wider">Diagnosis & System</span><span className="font-medium text-slate-900">{c.treatment.diagnosis || 'Not specified'}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Claimed For</span><span className="font-medium text-slate-900">{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Patient Name</span><span className="font-medium text-slate-900">{c.patient.name} ({c.patient.relation})</span></div>
+                <div className="md:col-span-2"><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Diagnosis & System</span><span className="font-medium text-slate-900">{c.treatment.diagnosis || 'Not specified'}</span></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm pl-4 border-l-2 border-slate-200">
-                <div><span className="text-slate-500 block text-xs uppercase tracking-wider">Hospital Name</span><span className="font-medium text-slate-900">{c.treatment.hospitalName || '-'}</span></div>
-                <div><span className="text-slate-500 block text-xs uppercase tracking-wider">Hospital Type</span><span className="font-medium text-slate-900">{c.treatment.hospitalType} ({c.treatment.withinState ? 'Within State' : 'Outside State'})</span></div>
-                <div><span className="text-slate-500 block text-xs uppercase tracking-wider">Treatment Period</span><span className="font-medium text-slate-900">{formatDMY(c.treatment.fromDate)} to {formatDMY(c.treatment.toDate)}</span></div>
-                <div><span className="text-slate-500 block text-xs uppercase tracking-wider">Hospitalisation</span><span className="font-medium text-slate-900">{c.treatment.hospitalised ? 'Required Hospitalisation' : 'Outpatient / Not Hospitalised'}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Hospital Name</span><span className="font-medium text-slate-900">{c.treatment.hospitalName || '-'}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Hospital Type</span><span className="font-medium text-slate-900">{c.treatment.hospitalType} ({c.treatment.withinState ? 'Within State' : 'Outside State'})</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Treatment Period</span><span className="font-medium text-slate-900">{formatDMY(c.treatment.fromDate)} to {formatDMY(c.treatment.toDate)}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Hospitalisation</span><span className="font-medium text-slate-900">{c.treatment.hospitalised ? 'Required Hospitalisation' : 'Outpatient / Not Hospitalised'}</span></div>
               </div>
             </section>
 
             {/* 3. Expenditure & Bills */}
             <section>
-              <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-4 border-b border-slate-200 pb-2">
-                <ClipboardList className="w-5 h-5 text-indigo-600" /> 3. Expenditure & Bills
+              <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-5 pb-2 border-b-2 border-indigo-100 tracking-wide uppercase print:border-slate-300 print:text-slate-900">
+                <ClipboardList className="w-5 h-5 text-indigo-600 print:text-slate-600" /> 3. Expenditure & Bills
+
               </h3>
 
               <div className="overflow-x-auto rounded-lg border border-slate-200 mb-6">
@@ -182,8 +188,9 @@ export default function FinalPreviewClient() {
 
             {/* 4. Document Check & Declarations */}
             <section>
-              <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-4 border-b border-slate-200 pb-2">
-                <FileCheck2 className="w-5 h-5 text-indigo-600" /> 4. Annexures & Declarations
+              <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-5 pb-2 border-b-2 border-indigo-100 tracking-wide uppercase print:border-slate-300 print:text-slate-900">
+                <FileCheck2 className="w-5 h-5 text-indigo-600 print:text-slate-600" /> 4. Annexures & Declarations
+
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -226,6 +233,79 @@ export default function FinalPreviewClient() {
               </button>
             </div>
           )}
+        </div>
+
+        {/* --- Appended Document Previews (Simulating a Merged PDF) --- */}
+        <div className="mt-8 space-y-12 print:mt-0 print:space-y-0">
+          {c.bills.map((b, index) => (
+            <div key={`bill-${b.id}`} className="bg-white rounded-xl shadow-lg border border-indigo-100 overflow-hidden print:shadow-none print:border-none print:m-0 break-before-page relative">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-600 print:hidden"></div>
+              <div className="border-b border-indigo-100 p-5 bg-indigo-50/50 flex justify-between items-center print:bg-white print:border-b-2 print:border-slate-800 pl-8">
+                <h3 className="font-bold text-indigo-900 flex items-center gap-2 uppercase tracking-wide">
+                  <FileText className="w-5 h-5 text-indigo-600" /> Bill Annexure {index + 1}
+                </h3>
+                <span className="text-xs font-bold text-indigo-700 bg-white px-4 py-1.5 rounded-full border border-indigo-200 shadow-sm print:border-none uppercase tracking-wider">
+                  {b.fileName}
+                </span>
+              </div>
+              <div className="p-10 min-h-[600px] flex flex-col items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] print:bg-white print:[background-image:none] border-2 border-dashed border-indigo-200 m-8 rounded-xl bg-white">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 mb-6">
+                  <FileCheck2 className="w-16 h-16 text-indigo-300" />
+                </div>
+                <p className="text-indigo-900 font-bold text-xl mb-1">Document Scanned Preview</p>
+                <p className="text-indigo-400 font-medium text-sm mb-8">This page simulates the original uploaded bill</p>
+                <div className="grid grid-cols-2 gap-x-16 gap-y-6 text-sm text-left bg-white p-8 rounded-xl shadow-lg border border-indigo-50 min-w-[400px]">
+                  <div>
+                    <div className="text-indigo-900/50 font-bold uppercase text-[10px] tracking-widest mb-1">Invoice No</div>
+                    <div className="font-semibold text-slate-900 text-base">{b.invoiceNo}</div>
+                  </div>
+                  <div>
+                    <div className="text-indigo-900/50 font-bold uppercase text-[10px] tracking-widest mb-1">Date</div>
+                    <div className="font-semibold text-slate-900 text-base">{formatDMY(b.billDate)}</div>
+                  </div>
+                  <div>
+                    <div className="text-indigo-900/50 font-bold uppercase text-[10px] tracking-widest mb-1">Hospital / Vendor</div>
+                    <div className="font-semibold text-slate-900 text-base">{b.hospitalName}</div>
+                  </div>
+                  <div>
+                    <div className="text-indigo-900/50 font-bold uppercase text-[10px] tracking-widest mb-1">Total Amount</div>
+                    <div className="font-bold text-indigo-700 text-lg">{rupee(b.totalAmount)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {c.docs.map((d, index) => (
+            <div key={`doc-${d.id}`} className="bg-white rounded-xl shadow-lg border border-indigo-100 overflow-hidden print:shadow-none print:border-none print:m-0 break-before-page relative">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-600 print:hidden"></div>
+              <div className="border-b border-indigo-100 p-5 bg-indigo-50/50 flex justify-between items-center print:bg-white print:border-b-2 print:border-slate-800 pl-8">
+                <h3 className="font-bold text-indigo-900 flex items-center gap-2 uppercase tracking-wide">
+                  <FileText className="w-5 h-5 text-indigo-600" /> Document Annexure: {d.type.replace('_', ' ')}
+                </h3>
+                <span className="text-xs font-bold text-indigo-700 bg-white px-4 py-1.5 rounded-full border border-indigo-200 shadow-sm print:border-none uppercase tracking-wider">
+                  {d.fileName}
+                </span>
+              </div>
+              <div className="p-10 min-h-[600px] flex flex-col items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] print:bg-white print:[background-image:none] border-2 border-dashed border-indigo-200 m-8 rounded-xl bg-white">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 mb-6">
+                  <FileCheck2 className="w-16 h-16 text-indigo-300" />
+                </div>
+                <p className="text-indigo-900 font-bold text-xl mb-1">Document Scanned Preview</p>
+                <p className="text-indigo-400 font-medium text-sm mb-8">{d.fileName}</p>
+                <div className="flex flex-col gap-4 text-sm text-left bg-white p-8 rounded-xl shadow-lg border border-indigo-50 min-w-[400px]">
+                  <div className="flex justify-between items-center border-b border-indigo-50 pb-4">
+                    <span className="text-indigo-900/50 font-bold uppercase text-[10px] tracking-widest">Document Type</span>
+                    <span className="font-bold text-slate-900">{d.type.replace('_', ' ')}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="text-indigo-900/50 font-bold uppercase text-[10px] tracking-widest">Uploaded At</span>
+                    <span className="font-semibold text-slate-900">{new Date(d.uploadedAt).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
       </div>
