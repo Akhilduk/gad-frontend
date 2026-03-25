@@ -2,7 +2,7 @@
 
 import { type ChangeEvent, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Activity, Briefcase, ClipboardCheck, UserCircle2 } from 'lucide-react';
+import { Activity, Briefcase, ClipboardCheck, UserCircle2, Stethoscope, FileText, IndianRupee, Pill } from 'lucide-react';
 import styles from '@/modules/medical-reimbursement/mr.module.css';
 import { loadCases, saveCases } from '@/modules/medical-reimbursement/mockStore';
 import type { Bill, DocType } from '@/modules/medical-reimbursement/types';
@@ -474,20 +474,53 @@ export default function MRCaseWorkspaceClient() {
           </div>
         </div>
 
-        <div className={`${styles.commandBar} flex gap-2 flex-wrap mb-3`}>
-          <button className={styles.btnSecondary} onClick={() => setActive('ANNEXURES')}>Add Bill/Doc</button>
-          <button className={styles.btnSecondary} onClick={() => setActive('ADVANCE NOTES')}>Request Advance</button>
-          <button disabled={checks.length > 0} className={styles.btnPrimary} title={checks.join(', ')} onClick={openFinalPreview}>Submit Final Claim</button>
-          <button className={styles.btnSecondary} onClick={() => window.print()}>Download Preview</button>
+        <div className="flex flex-wrap items-center justify-between gap-4 p-4 mb-6 bg-white border border-slate-200 rounded-lg shadow-sm sticky top-0 z-10">
+          <div className="flex gap-3">
+            <button className={`${styles.btnSecondary} !bg-white hover:!bg-slate-50`} onClick={() => setActive('ANNEXURES')}>Add Bill/Doc</button>
+            <button className={`${styles.btnSecondary} !bg-white hover:!bg-slate-50`} onClick={() => setActive('ADVANCE NOTES')}>Request Advance</button>
+            <button className={`${styles.btnSecondary} !bg-white hover:!bg-slate-50`} onClick={() => window.print()}>Print Preview</button>
+          </div>
+          <div>
+            <button disabled={checks.length > 0} className={`${styles.btnPrimary} shadow-sm`} title={checks.join(', ')} onClick={openFinalPreview}>
+              {checks.length > 0 ? 'Fix issues to Submit' : 'Submit Final Claim'}
+            </button>
+          </div>
         </div>
 
-        <div className={`${styles.tabs} mb-2`}>
-          {tabs.map((t) => (
-            <button key={t} className={`${styles.tab} ${active === t ? styles.activeTab : ''}`} onClick={() => setActive(t)}>
-              {t}
-            </button>
-          ))}
-        </div>
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Vertical Sidebar Navigation */}
+          <div className="md:w-64 flex-shrink-0">
+            <div className="flex flex-col gap-1 bg-white p-3 rounded-lg border border-slate-200 shadow-sm sticky top-4">
+              {tabs.map((t) => {
+                let Icon = Activity;
+                if (t === 'SUMMARY') Icon = UserCircle2;
+                if (t === 'TREATMENT NOTE') Icon = Stethoscope;
+                if (t === 'ANNEXURES') Icon = FileText;
+                if (t === 'ADVANCE NOTES') Icon = IndianRupee;
+                if (t === 'CERTIFICATE') Icon = Pill;
+                if (t === 'FINAL NOTE') Icon = ClipboardCheck;
+                if (t === 'MOVEMENT REGISTER') Icon = Activity;
+
+                return (
+                  <button
+                    key={t}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                      active === t
+                        ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-l-4 border-transparent'
+                    }`}
+                    onClick={() => setActive(t)}
+                  >
+                    <Icon className={`w-5 h-5 ${active === t ? 'text-indigo-600' : 'text-slate-400'}`} />
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="flex-1 min-w-0">
 
         {active === 'SUMMARY' && (
           <div className={styles.page}>
@@ -580,7 +613,7 @@ export default function MRCaseWorkspaceClient() {
                   <button className={`${styles.btnPill} ${treatmentDraft.hospitalised ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, hospitalised: true }))}>Hospitalised</button>
                   <button className={`${styles.btnPill} ${!treatmentDraft.hospitalised ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, hospitalised: false, hospitalName: '', hospitalAddress: '' }))}>Not Hospitalised</button>
                 </div>
-                <div className={styles.sectionFormGrid}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                   <div>
                     <label className={styles.formLabel}>Place of Illness</label>
                     <input className={styles.field} value={treatmentDraft.placeOfIllness} onChange={(e) => setTreatmentDraft((p) => ({ ...p, placeOfIllness: e.target.value }))} />
@@ -594,7 +627,7 @@ export default function MRCaseWorkspaceClient() {
                   </div>
                 </div>
                 {treatmentDraft.hospitalised && (
-                  <div className={styles.sectionFormGrid}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                     <div>
                       <label className={styles.formLabel}>Hospital Type</label>
                       <div className={styles.toggleRow}>
@@ -651,7 +684,7 @@ export default function MRCaseWorkspaceClient() {
                 )}
               </div>
               <div className={styles.sectionCard}>
-                <div className={styles.sectionFormGrid}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                   <div>
                     <label className={styles.formLabel}>Start Date</label>
                     <input type="date" className={styles.field} value={treatmentDraft.fromDate} onChange={(e) => setTreatmentDraft((p) => ({ ...p, fromDate: e.target.value }))} />
@@ -672,9 +705,19 @@ export default function MRCaseWorkspaceClient() {
 
         {active === 'ANNEXURES' && (
           <div className={styles.page}>
-            <div className="flex gap-2 mb-3">
-              <button className={`${styles.btnPill} ${sub === 'Bills' ? styles.btnPillActive : ''}`} onClick={() => setSub('Bills')}>Bills (OCR)</button>
-              <button className={`${styles.btnPill} ${sub === 'Other' ? styles.btnPillActive : ''}`} onClick={() => setSub('Other')}>Other Documents</button>
+            <div className="flex gap-6 mb-6 border-b border-slate-200">
+              <button
+                className={`pb-3 text-sm font-medium transition-colors border-b-2 ${sub === 'Bills' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
+                onClick={() => setSub('Bills')}
+              >
+                Bills (OCR)
+              </button>
+              <button
+                className={`pb-3 text-sm font-medium transition-colors border-b-2 ${sub === 'Other' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
+                onClick={() => setSub('Other')}
+              >
+                Other Documents
+              </button>
             </div>
             {sub === 'Bills' ? (
               <>
@@ -825,7 +868,7 @@ export default function MRCaseWorkspaceClient() {
             <div className={styles.sectionGrid2}>
               <div className={styles.sectionCard}>
                 <div className={styles.summaryHead}>Certificate Details</div>
-                <div className={styles.sectionFormGrid}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                   <div>
                     <label className={styles.formLabel}>Authorized Medical Attendant</label>
                     <input className={styles.field} value={ecMeta.amaName} onChange={(e) => setEcMeta((p) => ({ ...p, amaName: e.target.value }))} />
@@ -924,6 +967,8 @@ export default function MRCaseWorkspaceClient() {
         )}
 
         {toast && <div className="fixed right-5 bottom-5 bg-indigo-600 text-white px-4 py-2 rounded shadow-lg">{toast}</div>}
+          </div>
+        </div>
       </div>
     </div>
   );
