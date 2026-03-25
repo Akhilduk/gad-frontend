@@ -1,6 +1,6 @@
 'use client';
 
-import { type ChangeEvent, useEffect, useRef, useState } from 'react';
+import React, { type ChangeEvent, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Activity, Briefcase, ClipboardCheck, UserCircle2, Stethoscope, FileText, IndianRupee, Pill } from 'lucide-react';
 import styles from '@/modules/medical-reimbursement/mr.module.css';
@@ -38,6 +38,7 @@ export default function MRCaseWorkspaceClient() {
     fromDate: '',
     toDate: '',
     diagnosis: '',
+    medicalType: 'Allopathy',
   });
   const [hospitalQuery, setHospitalQuery] = useState('');
   const [hospitalOptions, setHospitalOptions] = useState<{ name: string; address: string }[]>([]);
@@ -81,7 +82,8 @@ export default function MRCaseWorkspaceClient() {
       hospitalAddress: c.treatment.hospitalAddress || '',
       fromDate: c.treatment.fromDate || '',
       toDate: c.treatment.toDate || '',
-      diagnosis: c.treatment.diagnosis || '',
+      diagnosis: c.treatment.diagnosis?.split(' | ')[0] || '',
+      medicalType: c.treatment.diagnosis?.includes(' | ') ? c.treatment.diagnosis.split(' | ')[1] : 'Allopathy',
     });
     setHospitalQuery(c.treatment.hospitalName || '');
     setEcMeta({
@@ -280,6 +282,7 @@ export default function MRCaseWorkspaceClient() {
         ...c,
         treatment: {
           ...treatmentDraft,
+          diagnosis: `${treatmentDraft.diagnosis} | ${treatmentDraft.medicalType}`,
           hospitalName: treatmentDraft.hospitalised ? treatmentDraft.hospitalName : 'Not hospitalised',
           hospitalAddress: treatmentDraft.hospitalised ? treatmentDraft.hospitalAddress : '',
         },
@@ -693,9 +696,19 @@ export default function MRCaseWorkspaceClient() {
                     <label className={styles.formLabel}>End Date (Optional)</label>
                     <input type="date" className={styles.field} value={treatmentDraft.toDate || ''} onChange={(e) => setTreatmentDraft((p) => ({ ...p, toDate: e.target.value }))} />
                   </div>
-                  <div className={styles.sectionFormSpan}>
-                    <label className={styles.formLabel}>Diagnosis / Medical Type</label>
-                    <input className={styles.field} value={treatmentDraft.diagnosis} onChange={(e) => setTreatmentDraft((p) => ({ ...p, diagnosis: e.target.value }))} />
+                  <div>
+                    <label className={styles.formLabel}>Diagnosis</label>
+                    <input className={styles.field} placeholder="e.g. Viral Fever" value={treatmentDraft.diagnosis} onChange={(e) => setTreatmentDraft((p) => ({ ...p, diagnosis: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={styles.formLabel}>System of Medicine</label>
+                    <select className={styles.field} value={treatmentDraft.medicalType} onChange={(e) => setTreatmentDraft((p) => ({ ...p, medicalType: e.target.value }))}>
+                      <option value="Allopathy">Allopathy</option>
+                      <option value="Ayurveda">Ayurveda</option>
+                      <option value="Homeopathy">Homeopathy</option>
+                      <option value="Unani">Unani</option>
+                      <option value="Siddha">Siddha</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -745,28 +758,58 @@ export default function MRCaseWorkspaceClient() {
                       </tr>
                     </thead>
                     <tbody>
-                      {c.bills.map((b) => (
-                        <tr key={b.id}>
-                          <td>{billEditId === b.id && billDraft ? <input className={styles.field} value={billDraft.fileName} onChange={(e) => setBillDraft({ ...billDraft, fileName: e.target.value })} /> : b.fileName}</td>
-                          <td>{billEditId === b.id && billDraft ? <input className={styles.field} value={billDraft.invoiceNo} onChange={(e) => setBillDraft({ ...billDraft, invoiceNo: e.target.value })} /> : b.invoiceNo}</td>
-                          <td>{billEditId === b.id && billDraft ? <input className={styles.field} value={billDraft.gstNo} onChange={(e) => setBillDraft({ ...billDraft, gstNo: e.target.value })} /> : b.gstNo}</td>
-                          <td>{billEditId === b.id && billDraft ? <input type="date" className={styles.field} value={billDraft.billDate} onChange={(e) => setBillDraft({ ...billDraft, billDate: e.target.value })} /> : b.billDate}</td>
-                          <td>{billEditId === b.id && billDraft ? <input className={styles.field} value={billDraft.hospitalName} onChange={(e) => setBillDraft({ ...billDraft, hospitalName: e.target.value })} /> : b.hospitalName}</td>
-                          <td>{billEditId === b.id && billDraft ? <input className={styles.field} value={String(billDraft.totalAmount)} onChange={(e) => setBillDraft({ ...billDraft, totalAmount: parseAmount(e.target.value) })} /> : b.totalAmount}</td>
-                          <td>{billEditId === b.id && billDraft ? <input className={styles.field} value={String(billDraft.taxAmount)} onChange={(e) => setBillDraft({ ...billDraft, taxAmount: parseAmount(e.target.value) })} /> : b.taxAmount}</td>
-                          <td>{b.duplicateFlag ? <span className="text-red-600">Possible duplicate</span> : b.status}</td>
-                          <td>
-                            <div className="flex gap-2">
-                              {billEditId === b.id
-                                ? <>
-                                  <button className="text-indigo-700" onClick={saveBillEdit}>Save</button>
-                                  <button className="text-slate-700" onClick={() => { setBillEditId(''); setBillDraft(null); }}>Cancel</button>
-                                </>
-                                : <button className="text-indigo-700" onClick={() => startBillEdit(b)}>Edit</button>}
-                              <button className="text-red-700" onClick={() => updateCase({ ...c, bills: c.bills.filter((x) => x.id !== b.id) }, 'Saved')}>Remove</button>
-                            </div>
+                      {c.bills.length === 0 && (
+                        <tr>
+                          <td colSpan={9} className="p-8 text-center text-slate-500">
+                            No bills uploaded yet. Upload a bill or add a sample.
                           </td>
                         </tr>
+                      )}
+                      {c.bills.map((b) => (
+                        <React.Fragment key={b.id}>
+                          {billEditId === b.id && billDraft ? (
+                            <tr>
+                              <td colSpan={9} className="p-4 bg-slate-50 border-y border-slate-200">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">File Name</label><input className={styles.field} value={billDraft.fileName} onChange={(e) => setBillDraft({ ...billDraft, fileName: e.target.value })} /></div>
+                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">Invoice No</label><input className={styles.field} value={billDraft.invoiceNo} onChange={(e) => setBillDraft({ ...billDraft, invoiceNo: e.target.value })} /></div>
+                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">GST No</label><input className={styles.field} value={billDraft.gstNo} onChange={(e) => setBillDraft({ ...billDraft, gstNo: e.target.value })} /></div>
+                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">Bill Date</label><input type="date" className={styles.field} value={billDraft.billDate} onChange={(e) => setBillDraft({ ...billDraft, billDate: e.target.value })} /></div>
+                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">Hospital / Vendor</label><input className={styles.field} value={billDraft.hospitalName} onChange={(e) => setBillDraft({ ...billDraft, hospitalName: e.target.value })} /></div>
+                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">Total Amount (₹)</label><input className={styles.field} value={String(billDraft.totalAmount)} onChange={(e) => setBillDraft({ ...billDraft, totalAmount: parseAmount(e.target.value) })} /></div>
+                                  <div><label className="block text-xs font-medium text-slate-500 mb-1">Tax Amount (₹)</label><input className={styles.field} value={String(billDraft.taxAmount)} onChange={(e) => setBillDraft({ ...billDraft, taxAmount: parseAmount(e.target.value) })} /></div>
+                                </div>
+                                <div className="flex gap-3 justify-end mt-4">
+                                  <button className={`${styles.btnSecondary} !py-1 !px-4`} onClick={() => { setBillEditId(''); setBillDraft(null); }}>Cancel</button>
+                                  <button className={`${styles.btnPrimary} !py-1 !px-4`} onClick={saveBillEdit}>Save Details</button>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            <tr className="hover:bg-slate-50 transition-colors">
+                              <td className="font-medium text-slate-700 truncate max-w-[150px]" title={b.fileName}>{b.fileName}</td>
+                              <td>{b.invoiceNo}</td>
+                              <td>{b.gstNo}</td>
+                              <td>{b.billDate ? formatDMY(b.billDate) : '-'}</td>
+                              <td className="truncate max-w-[150px]" title={b.hospitalName}>{b.hospitalName}</td>
+                              <td className="font-semibold">{rupee(b.totalAmount)}</td>
+                              <td>{rupee(b.taxAmount)}</td>
+                              <td>
+                                {b.duplicateFlag ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full ring-1 ring-inset ring-red-600/20">Duplicate</span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full ring-1 ring-inset ring-green-600/20">{b.status}</span>
+                                )}
+                              </td>
+                              <td>
+                                <div className="flex items-center gap-3">
+                                  <button className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors" onClick={() => startBillEdit(b)}>Edit</button>
+                                  <button className="text-sm font-medium text-red-600 hover:text-red-800 transition-colors" onClick={() => updateCase({ ...c, bills: c.bills.filter((x) => x.id !== b.id) }, 'Bill removed')}>Delete</button>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))}
                     </tbody>
                   </table>
@@ -801,6 +844,13 @@ export default function MRCaseWorkspaceClient() {
             <div className={styles.sectionHeadRow}>
               <button className={`${styles.btnSecondary}`} onClick={() => { setAdvanceFormOpen((v) => !v); setAdvancePreview(false); }}>{advanceFormOpen ? 'Close Request Form' : 'New Advance Request'}</button>
             </div>
+            {!advanceFormOpen && c.advances.length === 0 && (
+              <div className="p-8 text-center bg-slate-50 border border-slate-200 border-dashed rounded-lg">
+                <IndianRupee className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-slate-900 mb-1">No advance requests</h3>
+                <p className="text-sm text-slate-500 max-w-sm mx-auto">If you need an advance payment before final claim settlement, you can request one by uploading a cost estimate.</p>
+              </div>
+            )}
             {advanceFormOpen && (
               <div className={styles.advanceWrap}>
                 <div className={styles.advanceFormGrid}>
@@ -946,12 +996,64 @@ export default function MRCaseWorkspaceClient() {
 
         {active === 'FINAL NOTE' && (
           <div className={styles.page}>
-            <div className={styles.bodyText}>
-              Checklist: {checks.length ? checks.map((m) => <span key={m} className="mr-2 inline-block px-2 py-1 bg-red-100 rounded">{m}</span>) : <span className="text-green-700">Ready to submit</span>}
+            <div className="bg-white border border-slate-200 rounded-lg p-6 max-w-2xl">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <ClipboardCheck className="w-5 h-5 text-indigo-600" /> Final Claim Submission
+              </h3>
+
+              <div className="mb-6 p-4 rounded-md bg-slate-50 border border-slate-100">
+                <h4 className="text-sm font-medium text-slate-700 mb-3">Claim Overview</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Total Bills</div>
+                    <div className="text-base font-semibold text-slate-900">{rupee(billsTotal(c))}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Advance Received</div>
+                    <div className="text-base font-medium text-slate-700">{rupee(advancePaid(c))}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Net Payable Claim</div>
+                    <div className="text-lg font-bold text-green-700">{rupee(billsTotal(c) - advancePaid(c))}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-slate-700 mb-2">Pre-submission Checklist</h4>
+                {checks.length > 0 ? (
+                  <ul className="space-y-2 mb-4">
+                    {checks.map((m) => (
+                      <li key={m} className="flex items-start gap-2 text-sm text-red-600 bg-red-50 p-2 rounded border border-red-100">
+                        <span className="shrink-0 mt-0.5">•</span>
+                        <span>{m}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-3 rounded border border-green-200 mb-4">
+                    <ClipboardCheck className="w-4 h-4" />
+                    <span>All required documents and details are complete. Ready for final review.</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-6">
+                 <label className="block text-sm font-medium text-slate-700 mb-1">Select Approving Medical Authority (AMA)</label>
+                 <select className={styles.field}>
+                   <option value="">-- Select Authority --</option>
+                   <option value="AMA-01">Director of Health Services</option>
+                   <option value="AMA-02">District Medical Officer</option>
+                 </select>
+                 <p className="mt-1 text-xs text-slate-500">Required for routing the claim for final administrative approval.</p>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-slate-200">
+                <button className={`${styles.btnPrimary} w-full justify-center`} disabled={checks.length > 0} onClick={openFinalPreview}>
+                  {checks.length > 0 ? 'Fix missing items to Preview' : 'Preview Final Claim Document'}
+                </button>
+              </div>
             </div>
-            <div className={`mt-3 ${styles.bodyText}`}>Total bills {rupee(billsTotal(c))} | Advance paid {rupee(advancePaid(c))} | Net claim {rupee(billsTotal(c) - advancePaid(c))}</div>
-            <div className={`mt-2 ${styles.bodyText}`}>AMA Selection: <select className={styles.field}><option>AMA-01</option></select></div>
-            <button className={`mt-3 ${styles.btnPrimary}`} disabled={checks.length > 0} onClick={openFinalPreview}>Open Final Preview</button>
           </div>
         )}
 
