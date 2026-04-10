@@ -210,21 +210,22 @@ export default function MRControlCenter() {
     <div className={styles.boardHeader}>
       <div className="flex justify-between items-center gap-3 flex-wrap">
         <h1 className="text-xl font-semibold tracking-tight">Medical Reimbursement</h1>
-        <button className={styles.btnSecondary} onClick={() => setOpen(true)}>+ Create New Request</button>
+        <button className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 shadow-sm" onClick={() => setOpen(true)}>+ Create New Request</button>
       </div>
     </div>
 
-    <div className={`${styles.searchRow} mt-4 mb-3`}>
+    <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200 shadow-sm mt-4 mb-3">
       <div className="text-sm text-gray-600">Showing {list.length} case(s)</div>
-      <input className={`${styles.field} ${styles.searchInput}`} placeholder="Search by MR No, requester, hospital, status" value={query} onChange={(e) => setQuery(e.target.value)} />
+      <input className="w-full max-w-md p-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Search by MR No, requester, hospital, status" value={query} onChange={(e) => setQuery(e.target.value)} />
     </div>
 
-    <div className="mt-2 mb-3"><div className={styles.tabBar}>
-      {tabs.map((t) => <button key={t.key} className={`${styles.boardTab} ${tab === t.key ? styles.boardTabActive : ''}`} onClick={() => setTab(t.key)}><t.icon className={styles.tabIcon} aria-hidden="true" />{t.label} ({tabCount(t.key)})</button>)}
+    <div className="mt-2 mb-4 overflow-x-auto"><div className="flex gap-2 pb-2">
+      {tabs.map((t) => <button key={t.key} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-colors ${tab === t.key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`} onClick={() => setTab(t.key)}><t.icon className={`w-4 h-4 ${tab === t.key ? 'text-indigo-200' : 'text-slate-400'}`} aria-hidden="true" />{t.label} <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${tab === t.key ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-600'}`}>{tabCount(t.key)}</span></button>)}
     </div></div>
 
     <div className={styles.cardSection}>
-      <div className={styles.bookGrid}>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {list.map((c, idx) => {
           const tone = statusStyles(c.status);
           const createdAt = withOffsetDate(c.createdAt, -idx * 2);
@@ -233,174 +234,176 @@ export default function MRControlCenter() {
           const recent = isRecent(createdAt, updatedAt);
           const actions = actionsFor(c);
           return (
-            <div key={c.mrId} className={`${styles.spiralCard} ${tone.tone}`} style={{ animationDelay: `${idx * 40}ms` }}>
-              {recent && <div className={styles.bookmark} />}
-              <div className={styles.cardTop}>
+            <div key={c.mrId} className="flex flex-col bg-white border border-slate-200 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start mb-3">
                 <div className={`${styles.statusPill} ${tone.text}`}><span className={styles.statusIcon} aria-hidden="true" />{statusLabel(c.status)}</div>
-                <div className={styles.recentText}>{recent ? 'Recently Updated' : 'Updated'}<br />{formatShort(updatedAt)}</div>
+                <div className="text-xs text-slate-500 text-right">{recent ? 'Recently Updated' : 'Updated'}<br />{formatShort(updatedAt)}</div>
               </div>
-              <div className={styles.cardId}>{c.mrNo}</div>
-              <div className={styles.cardMain}>
-                <div className={styles.line}><b>{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</b> / {c.patient.name}</div>
-                <div className={styles.line}>{c.treatment.hospitalName || 'Hospital not entered'}</div>
-                <div className={styles.lineMuted}>Start: {formatShort(startDate)} | Created: {formatShort(createdAt)}</div>
+              <div className="font-semibold text-slate-900 mb-1">{c.mrNo}</div>
+              <div className="text-sm text-slate-700 mb-1">
+                <b>{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</b> / {c.patient.name}
               </div>
-              <div className={styles.cardFooter}><div className={styles.actionGrid}>
-                {actions.map((a) => <button key={`${c.mrId}-${a.label}`} className={styles.actionBtn} onClick={a.onClick}>{a.label}</button>)}
-              </div></div>
+              <div className="text-sm text-slate-600 mb-3 truncate" title={c.treatment.hospitalName || 'Hospital not entered'}>
+                {c.treatment.hospitalName || 'Hospital not entered'}
+              </div>
+              <div className="text-xs text-slate-500 mb-4">
+                Start: {formatShort(startDate)} | Created: {formatShort(createdAt)}
+              </div>
+              <div className="mt-auto flex flex-wrap gap-2 pt-3 border-t border-slate-100">
+                {actions.map((a) => (
+                  <button key={`${c.mrId}-${a.label}`} className="px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-md hover:bg-indigo-100 transition-colors" onClick={a.onClick}>
+                    {a.label}
+                  </button>
+                ))}
+              </div>
             </div>
           );
         })}
       </div>
-
-      <div className="mt-4 text-sm text-gray-700">Page 1 of 1</div>
+<div className="mt-4 text-sm text-gray-700">Page 1 of 1</div>
     </div>
 
-    {open && <div className={styles.modalOverlay}>
-      <div className={styles.modalWrap}>
-        <div className={styles.modalShell}>
-          <div className={styles.modalHead}>
-            <div>
-              <div className={styles.modalTitle}>Create Medical Reimbursement Case</div>
-              <div className={styles.modalSubTitle}>Single-view claim form with compact, readable fields.</div>
+    {open && <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col my-auto">
+        <div className="flex justify-between items-center p-5 border-b border-slate-200">
+          <div>
+            <div className="text-lg font-semibold text-slate-900">Create Medical Reimbursement Case</div>
+            <div className="text-sm text-slate-500">Single-view claim form with compact, readable fields.</div>
+          </div>
+          <button onClick={() => { setOpen(false); setHospitalOptions([]); }} className="text-slate-400 hover:text-slate-600 p-2">✕</button>
+        </div>
+
+        <div className="p-5 overflow-y-auto flex flex-col gap-5">
+          <div className="flex flex-col md:flex-row gap-4 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+            <div className="flex gap-2">
+              <button className={`px-4 py-2 text-sm font-medium rounded-md border ${claimFor === 'SELF' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`} onClick={() => setClaimFor('SELF')}>Self</button>
+              <button className={`px-4 py-2 text-sm font-medium rounded-md border ${claimFor === 'DEPENDENT' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`} onClick={() => setClaimFor('DEPENDENT')}>Dependent</button>
             </div>
-            <button onClick={() => { setOpen(false); setHospitalOptions([]); }} className={styles.btnSecondary}>Close</button>
+            <div className="flex gap-2">
+              <button className={`px-4 py-2 text-sm font-medium rounded-md border ${form.hospitalised ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`} onClick={() => setForm((prev) => ({ ...prev, hospitalised: true }))}>Hospitalised</button>
+              <button
+                className={`px-4 py-2 text-sm font-medium rounded-md border ${!form.hospitalised ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`}
+                onClick={() => {
+                  setForm((prev) => ({ ...prev, hospitalised: false, hospitalName: '', hospitalAddress: '' }));
+                  setHospitalQuery('');
+                  setHospitalOptions([]);
+                }}
+              >
+                Not Hospitalised
+              </button>
+            </div>
+            {form.hospitalised && (
+              <div className="flex gap-2">
+                <button className={`px-4 py-2 text-sm font-medium rounded-md border ${form.hospitalType === 'Government' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`} onClick={() => setForm((prev) => ({ ...prev, hospitalType: 'Government' }))}>Government</button>
+                <button className={`px-4 py-2 text-sm font-medium rounded-md border ${form.hospitalType === 'Private' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`} onClick={() => setForm((prev) => ({ ...prev, hospitalType: 'Private' }))}>Private</button>
+              </div>
+            )}
           </div>
 
-          <div className={styles.modalBody}>
-            <div className={`${styles.modalCompactTop} ${!form.hospitalised ? styles.modalCompactTopTwo : ''}`}>
-              <div className={styles.modalPillGroup}>
-                <button className={`${styles.btnPill} ${claimFor === 'SELF' ? styles.btnPillActive : ''}`} onClick={() => setClaimFor('SELF')}>Self</button>
-                <button className={`${styles.btnPill} ${claimFor === 'DEPENDENT' ? styles.btnPillActive : ''}`} onClick={() => setClaimFor('DEPENDENT')}>Dependent</button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="flex flex-col gap-3">
+              {claimFor === 'DEPENDENT' && (
+                <select className="w-full p-2.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" value={dep} onChange={(e) => setDep(e.target.value)}>
+                  <option value="">Select dependent</option>
+                  {officer.dependents.map((d) => <option key={d.personId} value={d.personId}>{d.relationType}: {d.fullName}</option>)}
+                </select>
+              )}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-md text-sm">
+                <div className="font-semibold text-slate-900 mb-1">Applicant Name: {applicantName || 'Select dependent to continue'}</div>
+                <div className="text-slate-600 mb-1">{applicantMeta || 'Dependent basic details will appear here.'}</div>
+                {claimFor === 'SELF' && (
+                  <div className="text-slate-600">Designation: {officer.designation} | Grade {officer.grade} | {officer.level}</div>
+                )}
               </div>
-              <div className={styles.modalPillGroup}>
-                <button className={`${styles.btnPill} ${form.hospitalised ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, hospitalised: true }))}>Hospitalised</button>
-                <button
-                  className={`${styles.btnPill} ${!form.hospitalised ? styles.btnPillActive : ''}`}
-                  onClick={() => {
-                    setForm((prev) => ({ ...prev, hospitalised: false, hospitalName: '', hospitalAddress: '' }));
-                    setHospitalQuery('');
-                    setHospitalOptions([]);
-                  }}
-                >
-                  Not Hospitalised
-                </button>
-              </div>
-              {form.hospitalised ? (
-                <div className={styles.modalPillGroup}>
-                  <button className={`${styles.btnPill} ${form.hospitalType === 'Government' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, hospitalType: 'Government' }))}>Government</button>
-                  <button className={`${styles.btnPill} ${form.hospitalType === 'Private' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, hospitalType: 'Private' }))}>Private</button>
-                </div>
-              ) : null}
             </div>
 
-            <div className={styles.modalCompactGrid}>
-              <section className={`${styles.modalPanel} ${!form.hospitalised ? styles.modalPanelSpan : ''}`}>
-                {claimFor === 'DEPENDENT' ? (
-                  <select className={`${styles.field} ${styles.depSelect}`} value={dep} onChange={(e) => setDep(e.target.value)}>
-                    <option value="">Select dependent</option>
-                    {officer.dependents.map((d) => <option key={d.personId} value={d.personId}>{d.relationType}: {d.fullName}</option>)}
-                  </select>
-                ) : null}
-                <div className={styles.depCard}>
-                  <div className={styles.depName}>Applicant Name: {applicantName || 'Select dependent to continue'}</div>
-                  <div className={styles.depMeta}>{applicantMeta || 'Dependent basic details will appear here.'}</div>
-                  {claimFor === 'SELF' && (
-                    <div className={styles.depMeta}>Designation: {officer.designation} | Grade {officer.grade} | {officer.level}</div>
-                  )}
-                </div>
-              </section>
-
-              {form.hospitalised ? (
-                <section className={styles.modalPanel}>
-                  <div className={styles.modalHospitalGrid}>
-                    <div>
-                      <label className={styles.formLabel}>Hospital Name</label>
-                      <div className={styles.autoWrap}>
-                        <input
-                          className={styles.field}
-                          placeholder="Type hospital name"
-                          value={hospitalQuery}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setHospitalQuery(value);
-                            setForm((prev) => ({ ...prev, hospitalName: value }));
-                          }}
-                          onFocus={() => setHospitalFocused(true)}
-                          onBlur={() => window.setTimeout(() => setHospitalFocused(false), 140)}
-                        />
-                        {hospitalFocused && (hospitalLoading || hospitalOptions.length > 0) && (
-                          <div className={styles.autoList}>
-                            {hospitalLoading && <div className={styles.autoItem}>Searching hospitals...</div>}
-                            {!hospitalLoading && hospitalOptions.map((opt) => (
-                              <button
-                                key={`${opt.name}-${opt.address}`}
-                                type="button"
-                                className={styles.autoItem}
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  skipAutocompleteRef.current = true;
-                                  setHospitalQuery(opt.name);
-                                  setHospitalOptions([]);
-                                  setHospitalFocused(false);
-                                  setForm((prev) => ({ ...prev, hospitalName: opt.name, hospitalAddress: opt.address }));
-                                }}
-                              >
-                                {opt.name}
-                                <br />
-                                <small>{opt.address}</small>
-                              </button>
-                            ))}
-                          </div>
-                        )}
+            {form.hospitalised && (
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Hospital Name</label>
+                  <div className="relative">
+                    <input
+                      className="w-full p-2.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Type hospital name"
+                      value={hospitalQuery}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setHospitalQuery(value);
+                        setForm((prev) => ({ ...prev, hospitalName: value }));
+                      }}
+                      onFocus={() => setHospitalFocused(true)}
+                      onBlur={() => window.setTimeout(() => setHospitalFocused(false), 140)}
+                    />
+                    {hospitalFocused && (hospitalLoading || hospitalOptions.length > 0) && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                        {hospitalLoading && <div className="p-2 text-sm text-slate-500">Searching hospitals...</div>}
+                        {!hospitalLoading && hospitalOptions.map((opt) => (
+                          <button
+                            key={`${opt.name}-${opt.address}`}
+                            type="button"
+                            className="w-full text-left p-2 hover:bg-slate-50 border-b border-slate-100 last:border-0"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              skipAutocompleteRef.current = true;
+                              setHospitalQuery(opt.name);
+                              setHospitalOptions([]);
+                              setHospitalFocused(false);
+                              setForm((prev) => ({ ...prev, hospitalName: opt.name, hospitalAddress: opt.address }));
+                            }}
+                          >
+                            <div className="text-sm font-medium text-slate-900">{opt.name}</div>
+                            <div className="text-xs text-slate-500 truncate">{opt.address}</div>
+                          </button>
+                        ))}
                       </div>
-                    </div>
-                    <div>
-                      <label className={styles.formLabel}>Hospital Address</label>
-                      <input
-                        className={styles.field}
-                        placeholder="Hospital full address"
-                        value={form.hospitalAddress}
-                        onChange={(e) => setForm((prev) => ({ ...prev, hospitalAddress: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                </section>
-              ) : null}
-            </div>
-
-            <div className={styles.modalCompactGrid}>
-              {form.hospitalised ? (
-                <section className={styles.modalPanel}>
-                  <div className={styles.toggleRow}>
-                    <button className={`${styles.btnPill} ${form.medicalType === 'Allopathy' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Allopathy' }))}>Allopathy</button>
-                    <button className={`${styles.btnPill} ${form.medicalType === 'Ayurveda' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Ayurveda' }))}>Ayurveda</button>
-                    <button className={`${styles.btnPill} ${form.medicalType === 'Homeopathy' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Homeopathy' }))}>Homeo</button>
-                  </div>
-                </section>
-              ) : null}
-
-              <section className={`${styles.modalPanel} ${!form.hospitalised ? styles.modalPanelSpan : ''}`}>
-                <div className={styles.modalFormGrid2}>
-                  <div>
-                    <label className={styles.formLabel}>Start Date</label>
-                    <input type="date" className={styles.field} onChange={(e) => setForm((prev) => ({ ...prev, fromDate: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className={styles.formLabel}>End Date (Optional)</label>
-                    <input type="date" className={styles.field} onChange={(e) => setForm((prev) => ({ ...prev, toDate: e.target.value }))} />
+                    )}
                   </div>
                 </div>
-              </section>
-            </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Hospital Address</label>
+                  <input
+                    className="w-full p-2.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Hospital full address"
+                    value={form.hospitalAddress}
+                    onChange={(e) => setForm((prev) => ({ ...prev, hospitalAddress: e.target.value }))}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
 
-            <div className={styles.modalFooter}>
-              <label className={`${styles.bodyText} flex items-center gap-2`}><input type="checkbox" onChange={(e) => setForm((prev) => ({ ...prev, declaration: e.target.checked }))} /> I declare that the details provided are true and accurate.</label>
-              <div className={styles.modalActions}>
-                <button className={styles.btnSecondary} onClick={() => { setOpen(false); setHospitalOptions([]); }}>Cancel</button>
-                <button className={styles.btnPrimary} onClick={onCreate}>Create MR Case</button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {form.hospitalised && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Medical Type</label>
+                <div className="flex gap-2">
+                  <button className={`px-3 py-1.5 text-sm font-medium rounded-full border ${form.medicalType === 'Allopathy' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Allopathy' }))}>Allopathy</button>
+                  <button className={`px-3 py-1.5 text-sm font-medium rounded-full border ${form.medicalType === 'Ayurveda' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Ayurveda' }))}>Ayurveda</button>
+                  <button className={`px-3 py-1.5 text-sm font-medium rounded-full border ${form.medicalType === 'Homeopathy' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Homeopathy' }))}>Homeo</button>
+                </div>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
+                <input type="date" className="w-full p-2.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" onChange={(e) => setForm((prev) => ({ ...prev, fromDate: e.target.value }))} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">End Date (Optional)</label>
+                <input type="date" className="w-full p-2.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" onChange={(e) => setForm((prev) => ({ ...prev, toDate: e.target.value }))} />
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="p-5 border-t border-slate-200 bg-slate-50 rounded-b-xl flex flex-col md:flex-row justify-between items-center gap-4">
+          <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <input type="checkbox" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" onChange={(e) => setForm((prev) => ({ ...prev, declaration: e.target.checked }))} />
+            I declare that the details provided are true and accurate.
+          </label>
+          <div className="flex gap-3">
+            <button className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500" onClick={() => { setOpen(false); setHospitalOptions([]); }}>Cancel</button>
+            <button className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" onClick={onCreate}>Create MR Case</button>
           </div>
         </div>
       </div>
