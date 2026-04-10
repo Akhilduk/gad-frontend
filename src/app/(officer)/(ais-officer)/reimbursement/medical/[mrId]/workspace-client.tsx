@@ -456,35 +456,36 @@ export default function MRCaseWorkspaceClient() {
   return (
     <div className={styles.mrShell}>
       <div className={styles.container}>
-        <div className={`${styles.cover} mb-3`}>
-          <div className={styles.caseHeaderGrid}>
-            <div className={styles.caseHeaderLeft}>
-              <div className={styles.caseHeaderTitle}>Medical Reimbursement Case File</div>
-              <div className={styles.caseHeaderMeta}>{c.mrNo}</div>
-              <div className={styles.caseHeaderSub}>{c.officer.fullName}</div>
-              <div className={styles.caseHeaderMeta}>PEN {c.officer.penNumber} | {c.officer.serviceType} | {c.officer.cadre}</div>
+
+        <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-5 mb-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <div className="text-sm font-medium text-indigo-600">Medical Reimbursement Case File</div>
+              <div className="text-xl font-bold text-slate-900">{c.mrNo}</div>
+              <div className="text-sm font-medium text-slate-700">{c.officer.fullName}</div>
+              <div className="text-xs text-slate-500">PEN {c.officer.penNumber} | {c.officer.serviceType} | {c.officer.cadre}</div>
             </div>
-            <div className={styles.caseHeaderRight}>
-              <div className={styles.caseHeaderSub}>Patient: {c.patient.relation} - {c.patient.name}</div>
-              <span className={styles.statusStamp} style={{ color: statusColor(c.status) }}>{c.status}</span>
-              {hasGo && <div className={styles.caseHeaderMeta}>GO attached</div>}
-              <div className={styles.caseHeaderStats}>
-                <span>Bills {rupee(billsTotal(c))}</span>
-                <span>Advance paid {rupee(advancePaid(c))}</span>
-                <span>Balance {rupee(billsTotal(c) - advancePaid(c))}</span>
+            <div className="flex flex-col md:items-end gap-2">
+              <div className="text-sm font-medium text-slate-700">Patient: {c.patient.relation} - {c.patient.name}</div>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 text-sm font-semibold border rounded-full" style={{ color: statusColor(c.status), borderColor: statusColor(c.status) }}>{c.status}</span>
+                {hasGo && <span className="px-2 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded">GO attached</span>}
+              </div>
+              <div className="text-sm text-slate-600 mt-1">
+                Bills <span className="font-semibold text-slate-900">{rupee(billsTotal(c))}</span>
+                <span className="ml-3">Advance paid: <span className="font-semibold text-slate-900">{rupee(advancePaid(c))}</span></span>
               </div>
             </div>
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 mb-4 bg-white border border-slate-200 rounded-lg shadow-sm sticky top-0 z-10">
+<div className="flex flex-wrap items-center justify-between gap-3 p-3 mb-4 bg-white border border-slate-200 rounded-lg shadow-sm sticky top-0 z-10">
           <div className="flex gap-3">
-            <button className={`${styles.btnSecondary} !bg-white hover:!bg-slate-50`} onClick={() => setActive('ANNEXURES')}>Add Bill/Doc</button>
-            <button className={`${styles.btnSecondary} !bg-white hover:!bg-slate-50`} onClick={() => setActive('ADVANCE NOTES')}>Request Advance</button>
-            <button className={`${styles.btnSecondary} !bg-white hover:!bg-slate-50`} onClick={() => window.print()}>Print Preview</button>
+            <button className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 shadow-sm transition-colors" onClick={() => setActive('ANNEXURES')}>Add Bill/Doc</button>
+            <button className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 shadow-sm transition-colors" onClick={() => setActive('ADVANCE NOTES')}>Request Advance</button>
+            <button className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 shadow-sm transition-colors" onClick={() => window.print()}>Print Preview</button>
           </div>
           <div>
-            <button disabled={checks.length > 0} className={`${styles.btnPrimary} shadow-sm`} title={checks.join(', ')} onClick={openFinalPreview}>
+            <button disabled={checks.length > 0} className={`px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm transition-colors ${checks.length > 0 ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`} title={checks.join(', ')} onClick={openFinalPreview}>
               {checks.length > 0 ? 'Fix issues to Submit' : 'Submit Final Claim'}
             </button>
           </div>
@@ -526,7 +527,7 @@ export default function MRCaseWorkspaceClient() {
           <div className="flex-1 min-w-0">
 
         {active === 'SUMMARY' && (
-          <div className={styles.page}>
+          <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm min-h-[500px]">
             <div className={styles.summaryGrid}>
               <div className={styles.summaryCard}>
                 <div className={styles.summaryHead}><Briefcase className={styles.summaryHeadIcon} aria-hidden="true" />Officer Snapshot</div>
