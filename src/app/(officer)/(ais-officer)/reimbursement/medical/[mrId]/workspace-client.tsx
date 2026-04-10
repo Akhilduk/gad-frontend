@@ -2,7 +2,7 @@
 
 import React, { type ChangeEvent, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Activity, Briefcase, ClipboardCheck, UserCircle2, Stethoscope, FileText, IndianRupee, Pill, ChevronRight, CheckCircle } from 'lucide-react';
+import { Activity, Briefcase, ClipboardCheck, UserCircle2, Stethoscope, FileText, IndianRupee, Pill, ChevronRight } from 'lucide-react';
 import styles from '@/modules/medical-reimbursement/mr.module.css';
 import { loadCases, saveCases } from '@/modules/medical-reimbursement/mockStore';
 import type { Bill, DocType } from '@/modules/medical-reimbursement/types';
@@ -465,311 +465,672 @@ export default function MRCaseWorkspaceClient() {
     return `${d}-${m}-${y}`;
   };
 
-
   return (
-    <div className="min-h-screen bg-slate-100 font-sans">
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-[1600px] mx-auto">
 
-      {/* Hero Header & Tracker */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-800 to-blue-900 text-white pb-24 pt-8 px-6 lg:px-10">
-        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="animate-in fade-in slide-in-from-left duration-500">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-blue-100 text-sm font-semibold mb-4 border border-white/20 backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Medical Reimbursement Case
+        <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-5 mb-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <div className="text-sm font-medium text-indigo-600">Medical Reimbursement Case File</div>
+              <div className="text-xl font-bold text-slate-900">{c.mrNo}</div>
+              <div className="text-sm font-medium text-slate-700">{c.officer.fullName}</div>
+              <div className="text-xs text-slate-500">PEN {c.officer.penNumber} | {c.officer.serviceType} | {c.officer.cadre}</div>
             </div>
-            <h1 className="text-4xl font-extrabold tracking-tight mb-2 drop-shadow-md">{c.mrNo}</h1>
-            <div className="flex items-center gap-4 text-blue-100 mt-3 text-sm">
-              <span className="flex items-center gap-1.5"><UserCircle2 className="w-4 h-4" /> {c.officer.fullName}</span>
-              <span className="w-1 h-1 bg-blue-300 rounded-full"></span>
-              <span>PEN {c.officer.penNumber}</span>
-              <span className="w-1 h-1 bg-blue-300 rounded-full"></span>
-              <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4" /> {c.officer.designation || c.officer.serviceType}</span>
+            <div className="flex flex-col md:items-end gap-2">
+              <div className="text-sm font-medium text-slate-700">Patient: {c.patient.relation} - {c.patient.name}</div>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 text-sm font-semibold border rounded-full" style={{ color: statusColor(c.status), borderColor: statusColor(c.status) }}>{c.status}</span>
+                {hasGo && <span className="px-2 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded">GO attached</span>}
+              </div>
+              <div className="text-sm text-slate-600 mt-1">
+                Bills <span className="font-semibold text-slate-900">{rupee(billsTotal(c))}</span>
+                <span className="ml-3">Advance paid: <span className="font-semibold text-slate-900">{rupee(advancePaid(c))}</span></span>
+              </div>
             </div>
           </div>
-
-          <div className="flex flex-col items-end gap-3 animate-in fade-in slide-in-from-right duration-500 delay-150">
-            <div className="flex gap-2">
-              <button onClick={() => window.print()} className="px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl font-medium transition-all shadow-sm backdrop-blur-sm flex items-center gap-2">
-                Print Case
-              </button>
-              <button disabled={checks.length > 0} onClick={openFinalPreview} className={`px-5 py-2.5 rounded-xl font-semibold shadow-lg transition-all flex items-center gap-2 ${checks.length > 0 ? 'bg-indigo-400/50 text-indigo-100 cursor-not-allowed' : 'bg-white text-indigo-900 hover:bg-indigo-50 hover:scale-105'}`}>
-                <ClipboardCheck className="w-4 h-4" /> Final Submission
-              </button>
-            </div>
-            {checks.length > 0 && <div className="text-xs text-amber-200 mt-1 max-w-xs text-right bg-black/20 p-2 rounded-lg backdrop-blur-sm border border-amber-500/30">Action blocked: {checks[0]}</div>}
+        </div>
+<div className="flex flex-wrap items-center justify-between gap-3 p-3 mb-4 bg-white border border-slate-200 rounded-lg shadow-sm sticky top-0 z-10">
+          <div className="flex gap-3">
+            <button className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 shadow-sm transition-colors" onClick={() => setActive('ANNEXURES')}>Add Bill/Doc</button>
+            <button className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 shadow-sm transition-colors" onClick={() => setActive('ADVANCE NOTES')}>Request Advance</button>
+            <button className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 shadow-sm transition-colors" onClick={() => window.print()}>Print Preview</button>
+          </div>
+          <div>
+            <button disabled={checks.length > 0} className={`px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm transition-colors ${checks.length > 0 ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`} title={checks.join(', ')} onClick={openFinalPreview}>
+              {checks.length > 0 ? 'Fix issues to Submit' : 'Submit Final Claim'}
+            </button>
           </div>
         </div>
 
-        {/* Visual Stepper */}
-        <div className="max-w-[1600px] mx-auto mt-10">
-          <div className="flex justify-between items-center relative">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-white/10 rounded-full"></div>
-            {['Draft', 'Advance Submitted', 'Final Submitted', 'Approved', 'Paid & Closed'].map((step, i) => {
-              const isActive = c.status === step || (c.status === 'Active' && step === 'Draft');
-              const isPast = ['Draft', 'Advance Submitted', 'Final Submitted', 'Approved', 'Paid & Closed'].indexOf(c.status === 'Active' ? 'Draft' : c.status) > i;
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Vertical Sidebar Navigation */}
 
-              return (
-                <div key={step} className="relative z-10 flex flex-col items-center gap-2 group cursor-default">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-lg transition-all duration-300 ${isActive ? 'bg-white text-blue-900 scale-125 ring-4 ring-blue-400/30' : isPast ? 'bg-emerald-400 text-emerald-950' : 'bg-slate-800 text-slate-400 border-2 border-slate-600'}`}>
-                    {isPast ? '✓' : i + 1}
-                  </div>
-                  <div className={`absolute top-12 whitespace-nowrap text-xs font-semibold uppercase tracking-wider transition-all ${isActive ? 'text-white scale-110 drop-shadow-md' : isPast ? 'text-emerald-300' : 'text-slate-400 opacity-70'}`}>
-                    {step.replace(' & Closed', '')}
-                  </div>
+    {/* Stepper Header */}
+    <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex justify-between items-center overflow-x-auto">
+      {['Draft', 'Advance Submitted', 'Final Submitted', 'Approved', 'Paid & Closed'].map((step, i) => {
+        const isActive = c.status === step || (c.status === 'Active' && step === 'Draft');
+        const isPast = ['Draft', 'Advance Submitted', 'Final Submitted', 'Approved', 'Paid & Closed'].indexOf(c.status === 'Active' ? 'Draft' : c.status) > i;
+        return (
+          <div key={step} className="flex items-center">
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 text-sm font-semibold ${isActive ? 'border-indigo-600 text-indigo-600 bg-indigo-50' : isPast ? 'border-emerald-500 text-emerald-500 bg-emerald-50' : 'border-slate-300 text-slate-400'}`}>
+              {isPast ? '✓' : i + 1}
+            </div>
+            <div className={`ml-3 text-sm font-medium ${isActive ? 'text-indigo-900' : isPast ? 'text-emerald-700' : 'text-slate-500'}`}>{step.replace(' & Closed', '')}</div>
+            {i < 4 && <div className={`w-12 h-0.5 mx-4 ${isPast ? 'bg-emerald-500' : 'bg-slate-200'}`} />}
+          </div>
+        );
+      })}
+    </div>
+
+    <div className="flex flex-col lg:flex-row gap-6">
+
+      {/* Sticky Left Summary Column */}
+      <div className="w-full lg:w-80 flex-shrink-0">
+        <div className="sticky top-20 flex flex-col gap-4">
+
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
+              <h3 className="text-sm font-semibold text-slate-900">Case Snapshot</h3>
+            </div>
+            <div className="p-4 space-y-4 text-sm">
+              <div>
+                <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Applicant</div>
+                <div className="font-medium text-slate-900">{c.patient.name}</div>
+                <div className="text-slate-600">{c.patient.claimFor === 'SELF' ? 'Self' : c.patient.relation}</div>
+              </div>
+              <hr className="border-slate-100" />
+              <div>
+                <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Treatment</div>
+                <div className="font-medium text-slate-900">{c.treatment.hospitalName || 'Not hospitalised'}</div>
+                <div className="text-slate-600">{c.treatment.diagnosis}</div>
+              </div>
+              <hr className="border-slate-100" />
+              <div className="bg-indigo-50 p-3 rounded-md">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-indigo-900 font-medium">Total Bills</span>
+                  <span className="text-indigo-900 font-bold">{rupee(billsTotal(c))}</span>
                 </div>
-              );
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-indigo-700">Advance Paid</span>
+                  <span className="text-indigo-700">{rupee(advancePaid(c))}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 flex flex-col gap-1">
+            {tabs.map(t => {
+              const Icon = getTabIcon(t);
+              return (
+                <button
+                  key={t}
+                  onClick={() => setActive(t)}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${active === t ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-4 h-4 ${active === t ? 'text-indigo-600' : 'text-slate-400'}`} />
+                    {t}
+                  </div>
+                  <ChevronRight className={`w-4 h-4 ${active === t ? 'text-indigo-400' : 'text-slate-300 opacity-0'}`} />
+                </button>
+              )
             })}
           </div>
+
         </div>
       </div>
 
-      {/* Floating Action Navigation & Main Content */}
-      <div className="max-w-[1600px] mx-auto -mt-16 px-6 lg:px-10 pb-20 relative z-20">
+      <div className="flex-1 min-w-0">
 
-        {/* Navigation Pills */}
-        <div className="bg-white/90 backdrop-blur-xl p-2 rounded-2xl shadow-xl shadow-blue-900/10 border border-slate-200/50 mb-8 flex overflow-x-auto hide-scrollbar gap-2">
-          {tabs.map((t) => {
-             const Icon = getTabIcon(t);
-             return (
-               <button
-                 key={t}
-                 onClick={() => setActive(t)}
-                 className={`flex items-center gap-2.5 px-6 py-3.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${active === t ? 'bg-blue-600 text-white shadow-md scale-100' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 scale-95'}`}
-               >
-                 <Icon className={`w-4 h-4 ${active === t ? 'animate-bounce' : ''}`} />
-                 {t}
-               </button>
-             );
-          })}
-        </div>
 
-        {/* Dynamic Content Container */}
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden min-h-[600px] animate-in slide-in-from-bottom-8 duration-700">
-
-          {active === 'SUMMARY' && (
-            <div className="p-8 lg:p-12 space-y-10">
-
-              {/* Financial Bento */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-2xl border border-indigo-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-                  <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
-                  <div className="text-sm font-semibold text-indigo-600 mb-2 uppercase tracking-wide">Total Bills</div>
-                  <div className="text-4xl font-black text-indigo-950">{rupee(billsTotal(c))}</div>
-                  <div className="mt-4 text-xs font-medium text-indigo-500 flex items-center gap-1"><FileText className="w-3 h-3"/> From {c.bills.length} submitted documents</div>
-                </div>
-
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 rounded-2xl border border-emerald-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-                  <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
-                  <div className="text-sm font-semibold text-emerald-600 mb-2 uppercase tracking-wide">Advance Processed</div>
-                  <div className="text-4xl font-black text-emerald-950">{rupee(advancePaid(c))}</div>
-                  <div className="mt-4 text-xs font-medium text-emerald-600 flex items-center gap-1"><IndianRupee className="w-3 h-3"/> Across {c.advances.length} advance requests</div>
-                </div>
-
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-                  <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
-                  <div className="text-sm font-semibold text-amber-700 mb-2 uppercase tracking-wide">Remaining Balance</div>
-                  <div className="text-4xl font-black text-amber-950">{rupee(billsTotal(c) - advancePaid(c))}</div>
-                  <div className="mt-4 text-xs font-medium text-amber-600 flex items-center gap-1"><Activity className="w-3 h-3"/> Pending final settlement</div>
+        {active === 'SUMMARY' && (
+          <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm min-h-[500px]">
+            <div className={styles.summaryGrid}>
+              <div className={styles.summaryCard}>
+                <div className={styles.summaryHead}><Briefcase className={styles.summaryHeadIcon} aria-hidden="true" />Officer Snapshot</div>
+                <div className={styles.summaryKVs}>
+                  <div className={styles.summaryLabel}>Name</div>
+                  <div className={styles.summaryValue}>{c.officer.fullName}</div>
+                  <div className={styles.summaryLabel}>Service</div>
+                  <div className={styles.summaryValue}>{c.officer.serviceType} | PEN {c.officer.penNumber} | {c.officer.cadre}</div>
+                  <div className={styles.summaryLabel}>Role</div>
+                  <div className={styles.summaryValue}>{c.officer.designation}</div>
+                  <div className={styles.summaryLabel}>Current Position</div>
+                  <div className={styles.summaryValue}>{c.officer.postingTypes} | {c.officer.administrativeDepartment}</div>
+                  <div className={styles.summaryLabel}>Grade / Level</div>
+                  <div className={styles.summaryValue}>{c.officer.grade} | {c.officer.level}</div>
+                  <div className={styles.summaryLabel}>Basic Pay</div>
+                  <div className={styles.summaryValue}>{rupee(c.officer.basicPay)}</div>
+                  <div className={styles.summaryLabel}>Contact</div>
+                  <div className={styles.summaryValue}>{c.officer.email} | {c.officer.mobile}</div>
                 </div>
               </div>
 
-              {/* Patient & Treatment Bento */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="p-8 rounded-3xl border border-slate-200 bg-slate-50/50 shadow-inner">
-                  <h3 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 pb-4 border-b border-slate-200">
-                    <div className="p-2 bg-blue-100 text-blue-600 rounded-lg"><UserCircle2 className="w-5 h-5"/></div>
-                    Patient & Officer Profile
-                  </h3>
-                  <div className="space-y-5">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1 text-sm font-semibold text-slate-500">Applicant</div>
-                      <div className="col-span-2 text-sm font-bold text-slate-900">{c.patient.name} <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">{c.patient.claimFor === 'SELF' ? 'Self' : c.patient.relation}</span></div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1 text-sm font-semibold text-slate-500">Officer Name</div>
-                      <div className="col-span-2 text-sm font-bold text-slate-900">{c.officer.fullName}</div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1 text-sm font-semibold text-slate-500">Details</div>
-                      <div className="col-span-2 text-sm text-slate-700 leading-relaxed">{c.officer.designation}<br/>Level: {c.officer.level} | Grade: {c.officer.grade}<br/>{c.officer.postingTypes}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-8 rounded-3xl border border-slate-200 bg-slate-50/50 shadow-inner">
-                  <h3 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 pb-4 border-b border-slate-200">
-                    <div className="p-2 bg-rose-100 text-rose-600 rounded-lg"><Stethoscope className="w-5 h-5"/></div>
-                    Medical Treatment
-                  </h3>
-                  <div className="space-y-5">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1 text-sm font-semibold text-slate-500">Hospital</div>
-                      <div className="col-span-2 text-sm font-bold text-slate-900">{c.treatment.hospitalName || 'Not recorded'}</div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1 text-sm font-semibold text-slate-500">Facility Type</div>
-                      <div className="col-span-2 text-sm text-slate-700">{c.treatment.hospitalType} | {c.treatment.hospitalised ? 'Hospitalised' : 'Out-Patient'}</div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1 text-sm font-semibold text-slate-500">System</div>
-                      <div className="col-span-2 text-sm text-slate-700">{c.treatment.diagnosis}</div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1 text-sm font-semibold text-slate-500">Duration</div>
-                      <div className="col-span-2 text-sm text-slate-700 font-mono bg-white px-3 py-1.5 rounded-md border border-slate-200 inline-block w-max">
-                        {formatDMY(c.treatment.fromDate)} <span className="text-slate-400 mx-2">→</span> {formatDMY(c.treatment.toDate)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {active === 'TREATMENT NOTE' && (
-            <div className="p-8 lg:p-12 space-y-8">
-               <h3 className="text-2xl font-bold text-slate-900 mb-2">Detailed Treatment Note</h3>
-               <p className="text-slate-500 mb-8">Maintain hospital details and medical procedures below.</p>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                 <div className="space-y-6 bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Hospital Full Name</label>
-                      <input className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white" defaultValue={c.treatment.hospitalName} />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Hospital Address</label>
-                      <textarea className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow min-h-[100px] bg-white" defaultValue={c.treatment.hospitalAddress} />
-                    </div>
-                 </div>
-                 <div className="space-y-6 bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Diagnosis / Medical Condition</label>
-                      <textarea className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow min-h-[100px] bg-white" defaultValue={c.treatment.diagnosis} />
-                    </div>
-                 </div>
-               </div>
-               <div className="flex justify-end pt-6">
-                 <button className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all">Save Treatment Note</button>
-               </div>
-            </div>
-          )}
-
-          {active === 'ANNEXURES' && (
-            <div className="p-8 lg:p-12 space-y-8">
-              <div className="flex justify-between items-end mb-8 border-b border-slate-200 pb-6">
-                <div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-2">Annexures & Bills</h3>
-                  <p className="text-slate-500">Upload and manage all medical bills and essential certificates.</p>
-                </div>
-                <div className="flex gap-3">
-                   <button className="px-5 py-2.5 bg-blue-50 text-blue-700 font-bold rounded-xl border border-blue-200 hover:bg-blue-100 transition-colors">Upload Document</button>
-                   <button className="px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow-md hover:bg-blue-700 transition-colors">Add Bill</button>
+              <div className={styles.summaryCard}>
+                <div className={styles.summaryHead}><UserCircle2 className={styles.summaryHeadIcon} aria-hidden="true" />Claimed For</div>
+                <div className={styles.summaryKVs}>
+                  <div className={styles.summaryLabel}>Type</div>
+                  <div className={styles.summaryValue}>{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</div>
+                  <div className={styles.summaryLabel}>Name</div>
+                  <div className={styles.summaryValue}>{c.patient.name}</div>
+                  <div className={styles.summaryLabel}>Relation</div>
+                  <div className={styles.summaryValue}>{c.patient.relation}</div>
+                  {c.patient.claimFor === 'DEPENDENT' && selectedDependent && (
+                    <>
+                      <div className={styles.summaryLabel}>Dependent Details</div>
+                      <div className={styles.summaryValue}>{selectedDependent.gender} | DOB {selectedDependent.dob} | {selectedDependent.relationType}</div>
+                    </>
+                  )}
+                  <div className={styles.summaryLabel}>Hospital</div>
+                  <div className={styles.summaryValue}>{c.treatment.hospitalName || '-'}</div>
+                  <div className={styles.summaryLabel}>Address</div>
+                  <div className={styles.summaryValue}>{c.treatment.hospitalAddress || '-'}</div>
+                  <div className={styles.summaryLabel}>Period</div>
+                  <div className={styles.summaryValue}>{formatDMY(c.treatment.fromDate)} to {formatDMY(c.treatment.toDate)}</div>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <h4 className="text-lg font-bold text-slate-800 flex items-center gap-2"><IndianRupee className="w-5 h-5 text-indigo-500"/> Financial Bills</h4>
-                {c.bills.length === 0 ? (
-                  <div className="p-10 border-2 border-dashed border-slate-300 rounded-3xl text-center text-slate-500 bg-slate-50">No bills added yet. Click "Add Bill" to begin.</div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-4">
-                    {c.bills.map((b, i) => (
-                      <div key={b.id} className="flex flex-col md:flex-row justify-between items-center bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-bold">{i+1}</div>
-                          <div>
-                            <div className="font-bold text-slate-900 text-lg">{b.hospitalName}</div>
-                            <div className="text-sm text-slate-500">INV: <span className="font-mono text-slate-700">{b.invoiceNo}</span> | Date: {formatDMY(b.billDate)}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-6 mt-4 md:mt-0">
-                           <div className="text-right">
-                             <div className="text-xs text-slate-500 font-semibold uppercase">Amount</div>
-                             <div className="text-xl font-black text-indigo-900">{rupee(b.totalAmount)}</div>
-                           </div>
-                           <button className="text-blue-600 hover:text-blue-800 font-semibold text-sm bg-blue-50 px-4 py-2 rounded-lg">Review</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {active === 'ADVANCE NOTES' && (
-            <div className="p-8 lg:p-12 space-y-8">
-              <div className="flex justify-between items-end mb-8 border-b border-slate-200 pb-6">
-                <div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-2">Advance Requisitions</h3>
-                  <p className="text-slate-500">Manage advance payment requests for ongoing treatments.</p>
+              <div className={styles.summaryCard}>
+                <div className={styles.summaryHead}><ClipboardCheck className={styles.summaryHeadIcon} aria-hidden="true" />Readiness</div>
+                <div className={styles.summaryBadges}>
+                  {checks.length
+                    ? checks.map((m) => <span key={m} className={styles.summaryWarnBadge}>{m}</span>)
+                    : <span className={styles.summaryOkBadge}>Ready to process</span>}
                 </div>
-                <button className="px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow-md hover:bg-blue-700 transition-colors">Request New Advance</button>
+                <div className={styles.summaryStats}>
+                  <div className={styles.summaryStatItem}><span>Total Bills</span><b>{rupee(billsTotal(c))}</b></div>
+                  <div className={styles.summaryStatItem}><span>Advance Paid</span><b>{rupee(advancePaid(c))}</b></div>
+                  <div className={styles.summaryStatItem}><span>Net Claim</span><b>{rupee(billsTotal(c) - advancePaid(c))}</b></div>
+                </div>
               </div>
 
-              {c.advances.length === 0 ? (
-                <div className="p-10 border-2 border-dashed border-slate-300 rounded-3xl text-center text-slate-500 bg-slate-50">No advance requests found.</div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {c.advances.map(a => (
-                    <div key={a.advId} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                      <div className={`absolute top-0 left-0 w-1.5 h-full ${a.status === 'Paid' ? 'bg-emerald-500' : 'bg-amber-400'}`}></div>
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Request Number</div>
-                          <div className="font-mono text-sm text-slate-800 font-semibold bg-slate-100 px-2 py-1 rounded inline-block">{a.advNo}</div>
-                        </div>
-                        <span className={`px-3 py-1 text-xs font-bold rounded-full ${a.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{a.status.toUpperCase()}</span>
-                      </div>
-                      <div className="text-3xl font-black text-slate-900 mb-4">{rupee(a.amount)}</div>
-                      <button className="w-full py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-semibold transition-colors" onClick={() => router.push(`/reimbursement/medical/${STATIC_MR_ROUTE_PARAM}/advance/${a.advId}/preview`)}>
-                        View Request Document
-                      </button>
+              <div className={styles.summaryCard}>
+                <div className={styles.summaryHead}><Activity className={styles.summaryHeadIcon} aria-hidden="true" />Recent Activity</div>
+                <div className={styles.summaryTimeline}>
+                  {c.movement.slice(0, 4).map((m) => (
+                    <div key={m.id} className={styles.summaryTimelineItem}>
+                      <span>{m.action}</span>
+                      <small>{new Date(m.at).toLocaleString()}</small>
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {active === 'CERTIFICATE' && (
-            <div className="p-8 lg:p-12 text-center text-slate-500 font-medium pt-20">
-              <ClipboardCheck className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              Essentiality Certificate generation area. <br/> Forms will appear here based on the selected case type.
+        {active === 'TREATMENT NOTE' && (
+          <div className={styles.page}>
+            <div className={styles.sectionHeadRow}>
+              <h4 className={styles.labelText}>Treatment Note</h4>
+              <div className={styles.sectionActions}>
+                <button className={styles.btnPrimary} onClick={saveTreatment}>Save Treatment</button>
+              </div>
             </div>
-          )}
-          {active === 'FINAL NOTE' && (
-            <div className="p-8 lg:p-12 text-center text-slate-500 font-medium pt-20">
-              <Pill className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              Final settlement and medical notes overview.
+            <div className={styles.sectionGrid2}>
+              <div className={styles.sectionCard}>
+                <label className={styles.formLabel}>Hospitalisation</label>
+                <div className={styles.toggleRow}>
+                  <button className={`${styles.btnPill} ${treatmentDraft.hospitalised ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, hospitalised: true }))}>Hospitalised</button>
+                  <button className={`${styles.btnPill} ${!treatmentDraft.hospitalised ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, hospitalised: false, hospitalName: '', hospitalAddress: '' }))}>Not Hospitalised</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                  <div>
+                    <label className={styles.formLabel}>Place of Illness</label>
+                    <input className={styles.field} value={treatmentDraft.placeOfIllness} onChange={(e) => setTreatmentDraft((p) => ({ ...p, placeOfIllness: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={styles.formLabel}>Within State</label>
+                    <div className={styles.toggleRow}>
+                      <button className={`${styles.btnPill} ${treatmentDraft.withinState ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, withinState: true }))}>Within Kerala</button>
+                      <button className={`${styles.btnPill} ${!treatmentDraft.withinState ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, withinState: false }))}>Outside Kerala</button>
+                    </div>
+                  </div>
+                </div>
+                {treatmentDraft.hospitalised && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                    <div>
+                      <label className={styles.formLabel}>Hospital Type</label>
+                      <div className={styles.toggleRow}>
+                        <button className={`${styles.btnPill} ${treatmentDraft.hospitalType === 'Government' ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, hospitalType: 'Government' }))}>Government</button>
+                        <button className={`${styles.btnPill} ${treatmentDraft.hospitalType === 'Private' ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, hospitalType: 'Private' }))}>Private</button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className={styles.formLabel}>Hospital Name</label>
+                      <div className={styles.autoWrap}>
+                        <input
+                          className={styles.field}
+                          placeholder="Type hospital name"
+                          value={hospitalQuery}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setHospitalQuery(value);
+                            setTreatmentDraft((p) => ({ ...p, hospitalName: value }));
+                          }}
+                          onFocus={() => setHospitalFocused(true)}
+                          onBlur={() => window.setTimeout(() => setHospitalFocused(false), 140)}
+                        />
+                        {hospitalFocused && (hospitalLoading || hospitalOptions.length > 0) && (
+                          <div className={styles.autoList}>
+                            {hospitalLoading && <div className={styles.autoItem}>Searching hospitals...</div>}
+                            {!hospitalLoading && hospitalOptions.map((opt) => (
+                              <button
+                                key={`${opt.name}-${opt.address}`}
+                                type="button"
+                                className={styles.autoItem}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  skipAutocompleteRef.current = true;
+                                  setHospitalQuery(opt.name);
+                                  setHospitalOptions([]);
+                                  setHospitalFocused(false);
+                                  setTreatmentDraft((p) => ({ ...p, hospitalName: opt.name, hospitalAddress: opt.address }));
+                                }}
+                              >
+                                {opt.name}
+                                <br />
+                                <small>{opt.address}</small>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className={styles.sectionFormSpan}>
+                      <label className={styles.formLabel}>Hospital Address</label>
+                      <input className={styles.field} value={treatmentDraft.hospitalAddress} onChange={(e) => setTreatmentDraft((p) => ({ ...p, hospitalAddress: e.target.value }))} />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className={styles.sectionCard}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                  <div>
+                    <label className={styles.formLabel}>Start Date</label>
+                    <input type="date" className={styles.field} value={treatmentDraft.fromDate} onChange={(e) => setTreatmentDraft((p) => ({ ...p, fromDate: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={styles.formLabel}>End Date (Optional)</label>
+                    <input type="date" className={styles.field} value={treatmentDraft.toDate || ''} onChange={(e) => setTreatmentDraft((p) => ({ ...p, toDate: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={styles.formLabel}>Diagnosis</label>
+                    <input className={styles.field} placeholder="e.g. Viral Fever" value={treatmentDraft.diagnosis} onChange={(e) => setTreatmentDraft((p) => ({ ...p, diagnosis: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={styles.formLabel}>System of Medicine</label>
+                    <select className={styles.field} value={treatmentDraft.medicalType} onChange={(e) => setTreatmentDraft((p) => ({ ...p, medicalType: e.target.value }))}>
+                      <option value="Allopathy">Allopathy</option>
+                      <option value="Ayurveda">Ayurveda</option>
+                      <option value="Homeopathy">Homeopathy</option>
+                      <option value="Unani">Unani</option>
+                      <option value="Siddha">Siddha</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
-          {active === 'MOVEMENT REGISTER' && (
-            <div className="p-8 lg:p-12">
-               <h3 className="text-2xl font-bold text-slate-900 mb-8 border-b border-slate-200 pb-4">File Movement History</h3>
-               <div className="space-y-0 border-l-2 border-slate-200 ml-4 relative">
-                 {c.movement.map((m, i) => (
-                   <div key={m.id} className="relative pl-8 pb-8 last:pb-0">
-                     <div className="absolute -left-[9px] top-0 w-4 h-4 bg-white border-2 border-blue-500 rounded-full shadow-sm"></div>
-                     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                       <div className="text-sm font-bold text-slate-900 mb-1">{m.action}</div>
-                       <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{new Date(m.at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short'})}</div>
-                     </div>
-                   </div>
-                 ))}
-               </div>
-            </div>
-          )}
+          </div>
+        )}
 
-        </div>
+        {active === 'ANNEXURES' && (
+          <div className={styles.page}>
+            <div className="flex gap-6 mb-6 border-b border-slate-200">
+              <button
+                className={`pb-3 text-sm font-medium transition-colors border-b-2 ${sub === 'Bills' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
+                onClick={() => setSub('Bills')}
+              >
+                Bills (OCR)
+              </button>
+              <button
+                className={`pb-3 text-sm font-medium transition-colors border-b-2 ${sub === 'Other' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
+                onClick={() => setSub('Other')}
+              >
+                Other Documents
+              </button>
+            </div>
+            {sub === 'Bills' ? (
+              <>
+                <div className={styles.sectionHeadRow}>
+                  <div className={styles.sectionActions}>
+                    <input ref={billUploadRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={onBillUpload} />
+                    <button className={styles.btnSecondary} onClick={() => billUploadRef.current?.click()}>Upload Bill File</button>
+                    <button className={styles.btnSecondary} onClick={addBill}>Add Sample Bill</button>
+                  </div>
+                  <div className={styles.mutedText}>Upload file, sample extraction, edit, then save.</div>
+                </div>
+                <div className={styles.tableWrap}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>File</th>
+                        <th>Invoice No</th>
+                        <th>GST No</th>
+                        <th>Bill Date</th>
+                        <th>Hospital</th>
+                        <th>Total Amount</th>
+                        <th>Tax</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {c.bills.length === 0 && (
+                        <tr>
+                          <td colSpan={9} className="p-8 text-center text-slate-500">
+                            No bills uploaded yet. Upload a bill or add a sample.
+                          </td>
+                        </tr>
+                      )}
+                      {c.bills.map((b) => (
+                        <React.Fragment key={b.id}>
+                          {billEditId === b.id && billDraft ? (
+                            <tr>
+                              <td colSpan={9} className="p-4 bg-slate-50 border-y border-slate-200">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                  <div className="md:col-span-2"><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">File Name</label><input className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.fileName} onChange={(e) => setBillDraft({ ...billDraft, fileName: e.target.value })} /></div>
+                                  <div className="md:col-span-2"><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Hospital / Vendor</label><input className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.hospitalName} onChange={(e) => setBillDraft({ ...billDraft, hospitalName: e.target.value })} /></div>
+                                  <div><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Invoice No</label><input className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.invoiceNo} onChange={(e) => setBillDraft({ ...billDraft, invoiceNo: e.target.value })} /></div>
+                                  <div><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">GST No</label><input className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.gstNo} onChange={(e) => setBillDraft({ ...billDraft, gstNo: e.target.value })} /></div>
+                                  <div><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Bill Date</label><input type="date" className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.billDate} onChange={(e) => setBillDraft({ ...billDraft, billDate: e.target.value })} /></div>
+                                  <div><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Amount (₹)</label><input className={`${styles.field} !py-1.5 !text-sm font-semibold`} value={String(billDraft.totalAmount)} onChange={(e) => setBillDraft({ ...billDraft, totalAmount: parseAmount(e.target.value) })} /></div>
+                                </div>
+                                <div className="flex gap-3 justify-end mt-4">
+                                  <button className={`${styles.btnSecondary} !py-1 !px-4`} onClick={() => { setBillEditId(''); setBillDraft(null); }}>Cancel</button>
+                                  <button className={`${styles.btnPrimary} !py-1 !px-4`} onClick={saveBillEdit}>Save Details</button>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            <tr className="hover:bg-slate-50 transition-colors">
+                              <td className="font-medium text-slate-700 truncate max-w-[150px]" title={b.fileName}>{b.fileName}</td>
+                              <td>{b.invoiceNo}</td>
+                              <td>{b.gstNo}</td>
+                              <td>{b.billDate ? formatDMY(b.billDate) : '-'}</td>
+                              <td className="truncate max-w-[150px]" title={b.hospitalName}>{b.hospitalName}</td>
+                              <td className="font-semibold">{rupee(b.totalAmount)}</td>
+                              <td>{rupee(b.taxAmount)}</td>
+                              <td>
+                                {b.duplicateFlag ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full ring-1 ring-inset ring-red-600/20">Duplicate</span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full ring-1 ring-inset ring-green-600/20">{b.status}</span>
+                                )}
+                              </td>
+                              <td>
+                                <div className="flex items-center gap-3">
+                                  <button className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors" onClick={() => startBillEdit(b)}>Edit</button>
+                                  <button className="text-sm font-medium text-red-600 hover:text-red-800 transition-colors" onClick={() => updateCase({ ...c, bills: c.bills.filter((x) => x.id !== b.id) }, 'Bill removed')}>Delete</button>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mb-2 flex gap-2 flex-wrap">
+                  {docTypes.map((d) => <button key={d.value} className={`${styles.btnPill} ${docType === d.value ? styles.btnPillActive : ''}`} onClick={() => setDocType(d.value)}>{d.label}</button>)}
+                  <input ref={docUploadRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={onDocUpload} />
+                  <button className={styles.btnSecondary} onClick={() => docUploadRef.current?.click()}>Upload File</button>
+                  <button className={styles.btnSecondary} onClick={addDoc}>Add Sample</button>
+                </div>
+                {!c.docs.some((d) => d.type === 'DISCHARGE') && <div className="text-red-600 text-sm mb-2">Required: Discharge Summary missing</div>}
+                <div className="grid md:grid-cols-2 gap-2">
+                  {c.docs.map((d) => (
+                    <div key={d.id} className="border rounded p-3 bg-white">
+                      <div className={styles.labelText}>{d.type}</div>
+                      <div className={styles.bodyText}>{d.fileName}</div>
+                      <div className={styles.mutedText}>{d.uploadedAt}</div>
+                      <div className="text-sm text-indigo-700">View / Download</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {active === 'ADVANCE NOTES' && (
+          <div className={styles.page}>
+            <div className={styles.sectionHeadRow}>
+              <button className={`${styles.btnSecondary}`} onClick={() => { setAdvanceFormOpen((v) => !v); setAdvancePreview(false); }}>{advanceFormOpen ? 'Close Request Form' : 'New Advance Request'}</button>
+            </div>
+            {!advanceFormOpen && c.advances.length === 0 && (
+              <div className="p-8 text-center bg-slate-50 border border-slate-200 border-dashed rounded-lg">
+                <IndianRupee className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-slate-900 mb-1">No advance requests</h3>
+                <p className="text-sm text-slate-500 max-w-sm mx-auto">If you need an advance payment before final claim settlement, you can request one by uploading a cost estimate.</p>
+              </div>
+            )}
+            {advanceFormOpen && (
+              <div className={styles.advanceWrap}>
+                <div className={styles.advanceFormGrid}>
+                  <div className={styles.sectionCard}>
+                    <label className={styles.formLabel}>Estimate Document</label>
+                    <input ref={estimateUploadRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setEstimateFileName(e.target.files?.[0]?.name || '')} />
+                    <div className={styles.sectionActions}>
+                      <button className={styles.btnSecondary} onClick={() => estimateUploadRef.current?.click()}>Upload Estimate</button>
+                      <span className={styles.mutedText}>{estimateFileName || 'No file selected'}</span>
+                    </div>
+                    <label className={styles.formLabel}>Advance Amount</label>
+                    <input className={styles.field} placeholder="Enter amount" value={advanceAmount} onChange={(e) => setAdvanceAmount(e.target.value)} />
+                    <div className={styles.sectionActions}>
+                      <button className={styles.btnSecondary} onClick={() => setAdvancePreview(true)} disabled={!advanceAmount || !estimateFileName}>Preview</button>
+                      <button className={styles.btnPrimary} onClick={submitAdvanceRequest} disabled={!advancePreview || !advanceAmount || !estimateFileName}>Submit Request</button>
+                    </div>
+                  </div>
+                  <div className={styles.sectionCard}>
+                    <div className={styles.summaryHead}>Advance Preview</div>
+                    {advancePreview ? (
+                      <div className={styles.summaryKVs}>
+                        <div className={styles.summaryLabel}>Case</div><div className={styles.summaryValue}>{c.mrNo}</div>
+                        <div className={styles.summaryLabel}>Officer</div><div className={styles.summaryValue}>{c.officer.fullName} | PEN {c.officer.penNumber}</div>
+                        <div className={styles.summaryLabel}>Patient</div><div className={styles.summaryValue}>{c.patient.name} ({c.patient.relation})</div>
+                        <div className={styles.summaryLabel}>Hospital</div><div className={styles.summaryValue}>{c.treatment.hospitalName || '-'}</div>
+                        <div className={styles.summaryLabel}>Estimate File</div><div className={styles.summaryValue}>{estimateFileName}</div>
+                        <div className={styles.summaryLabel}>Requested Amount</div><div className={styles.summaryValue}>{rupee(parseAmount(advanceAmount))}</div>
+                      </div>
+                    ) : (
+                      <div className={styles.mutedText}>Fill estimate + amount and click Preview.</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="space-y-2">
+              {c.advances.map((a) => (
+                <div key={a.advId} className="border rounded p-3 bg-white">
+                  <div className="flex justify-between gap-2 flex-wrap">
+                    <div>
+                      <div className={styles.labelText}>{a.advNo}</div>
+                      <div className={styles.bodyText}>Amount {rupee(a.amount)} | {a.status} | eSign {a.signed ? 'Yes' : 'No'}</div>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <button className={styles.btnSecondary} onClick={() => { setActiveMrId(c.mrId); setActiveAdvanceId(a.advId); router.push(`/reimbursement/medical/${STATIC_MR_ROUTE_PARAM}/advance/${STATIC_ADV_ROUTE_PARAM}/preview`); }}>View Preview</button>
+                      <button className={styles.btnSecondary}>Download</button>
+                      <button className={styles.btnSecondary} onClick={() => updateCase({ ...c, advances: c.advances.map((x) => x.advId === a.advId ? { ...x, status: 'Paid' as const } : x), status: 'Advance Paid' }, 'Saved')}>Mark Paid</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {active === 'CERTIFICATE' && (
+          <div className={styles.page}>
+            <div className={styles.sectionHeadRow}>
+              <div className={styles.sectionActions}>
+                <button className={styles.btnPrimary} onClick={downloadEssentialityCertificate}>Download Essentiality Certificate</button>
+                <input ref={ecSignedUploadRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={onSignedEcUpload} />
+                <button className={styles.btnSecondary} onClick={() => ecSignedUploadRef.current?.click()}>Upload Signed EC</button>
+              </div>
+            </div>
+            <div className={styles.sectionGrid2}>
+              <div className={styles.sectionCard}>
+                <div className={styles.summaryHead}>Certificate Details</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                  <div>
+                    <label className={styles.formLabel}>Authorized Medical Attendant</label>
+                    <input className={styles.field} value={ecMeta.amaName} onChange={(e) => setEcMeta((p) => ({ ...p, amaName: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={styles.formLabel}>Designation</label>
+                    <input className={styles.field} value={ecMeta.amaDesignation} onChange={(e) => setEcMeta((p) => ({ ...p, amaDesignation: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={styles.formLabel}>Medical Registration No.</label>
+                    <input className={styles.field} value={ecMeta.regNo} onChange={(e) => setEcMeta((p) => ({ ...p, regNo: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={styles.formLabel}>Date of Certificate</label>
+                    <input type="date" className={styles.field} value={ecMeta.certificateDate} onChange={(e) => setEcMeta((p) => ({ ...p, certificateDate: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={styles.formLabel}>Hospital / Institution</label>
+                    <input className={styles.field} value={ecMeta.institutionName} onChange={(e) => setEcMeta((p) => ({ ...p, institutionName: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={styles.formLabel}>Signature Name</label>
+                    <input className={styles.field} value={ecMeta.signatureName} onChange={(e) => setEcMeta((p) => ({ ...p, signatureName: e.target.value }))} />
+                  </div>
+                  <div className={styles.sectionFormSpan}>
+                    <label className={styles.formLabel}>Institution Address</label>
+                    <input className={styles.field} value={ecMeta.institutionAddress} onChange={(e) => setEcMeta((p) => ({ ...p, institutionAddress: e.target.value }))} />
+                  </div>
+                </div>
+              </div>
+              <div className={styles.sectionCard}>
+                <div className={styles.summaryHead}>Auto-fill Summary</div>
+                <div className={styles.summaryKVs}>
+                  <div className={styles.summaryLabel}>Officer</div><div className={styles.summaryValue}>{c.officer.fullName} ({c.officer.serviceType})</div>
+                  <div className={styles.summaryLabel}>Designation</div><div className={styles.summaryValue}>{c.officer.designation}</div>
+                  <div className={styles.summaryLabel}>Treatment Period</div><div className={styles.summaryValue}>{c.treatment.fromDate} - {c.treatment.toDate || '-'}</div>
+                  <div className={styles.summaryLabel}>Condition</div><div className={styles.summaryValue}>{c.treatment.diagnosis || '-'}</div>
+                  <div className={styles.summaryLabel}>Hospitalisation</div><div className={styles.summaryValue}>{c.treatment.hospitalised ? 'Required hospitalization' : 'Did not require hospitalization'}</div>
+                  <div className={styles.summaryLabel}>Total Bills</div><div className={styles.summaryValue}>{rupee(billsTotal(c))}</div>
+                </div>
+              </div>
+            </div>
+            <div className="border p-3 bg-white rounded mt-2">
+              <h4 className={styles.labelText}>Statement of Medicines / Investigations</h4>
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>SlNo</th>
+                      <th>Bill No & Date</th>
+                      <th>Medicine</th>
+                      <th>Chemical</th>
+                      <th>Qty</th>
+                      <th>Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {c.bills.map((b, i) => (
+                      <tr key={b.id}>
+                        <td>{i + 1}</td>
+                        <td>{b.invoiceNo} {b.billDate}</td>
+                        <td>{b.fileName}</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>{b.totalAmount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className={`${styles.bodyText} mt-2`}>Total Amount {rupee(billsTotal(c))} | Signed EC uploaded: {c.docs.some((d) => d.type === 'EC_SIGNED') ? 'Yes' : 'No'}</div>
+            </div>
+          </div>
+        )}
+
+        {active === 'FINAL NOTE' && (
+          <div className={styles.page}>
+            <div className="bg-white border border-slate-200 rounded-lg p-6 max-w-2xl">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <ClipboardCheck className="w-5 h-5 text-indigo-600" /> Final Claim Submission
+              </h3>
+
+              <div className="mb-6 p-4 rounded-md bg-slate-50 border border-slate-100">
+                <h4 className="text-sm font-medium text-slate-700 mb-3">Claim Overview</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Total Bills</div>
+                    <div className="text-base font-semibold text-slate-900">{rupee(billsTotal(c))}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Advance Received</div>
+                    <div className="text-base font-medium text-slate-700">{rupee(advancePaid(c))}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Net Payable Claim</div>
+                    <div className="text-lg font-bold text-green-700">{rupee(billsTotal(c) - advancePaid(c))}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-slate-700 mb-2">Pre-submission Checklist</h4>
+                {checks.length > 0 ? (
+                  <ul className="space-y-2 mb-4">
+                    {checks.map((m) => (
+                      <li key={m} className="flex items-start gap-2 text-sm text-red-600 bg-red-50 p-2 rounded border border-red-100">
+                        <span className="shrink-0 mt-0.5">•</span>
+                        <span>{m}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-3 rounded border border-green-200 mb-4">
+                    <ClipboardCheck className="w-4 h-4" />
+                    <span>All required documents and details are complete. Ready for final review.</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-6">
+                 <label className="block text-sm font-medium text-slate-700 mb-1">Select Approving Medical Authority (AMA)</label>
+                 <select className={styles.field}>
+                   <option value="">-- Select Authority --</option>
+                   <option value="AMA-01">Director of Health Services</option>
+                   <option value="AMA-02">District Medical Officer</option>
+                 </select>
+                 <p className="mt-1 text-xs text-slate-500">Required for routing the claim for final administrative approval.</p>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-slate-200">
+                <button className={`${styles.btnPrimary} w-full justify-center`} disabled={checks.length > 0} onClick={openFinalPreview}>
+                  {checks.length > 0 ? 'Fix missing items to Preview' : 'Preview Final Claim Document'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {active === 'MOVEMENT REGISTER' && (
+          <div className={styles.page}>
+            {c.movement.map((m, i) => (
+              <div key={m.id} className={styles.ledgerRow}>
+                <div className={styles.bodyText}>{i + 1}. {m.action}</div>
+                <div className={styles.bodyText}>{new Date(m.at).toLocaleString()}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {toast && <div className="fixed right-5 bottom-5 bg-indigo-600 text-white px-4 py-2 rounded shadow-lg">{toast}</div>}
       </div>
-
-      {toast && (
-        <div className="fixed bottom-8 right-8 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-bottom-5 font-medium flex items-center gap-3">
-          <CheckCircle className="w-5 h-5 text-emerald-400" />
-          {toast}
-        </div>
-      )}
+    </div>
+    </div>
+    </div>
     </div>
   );
 }
