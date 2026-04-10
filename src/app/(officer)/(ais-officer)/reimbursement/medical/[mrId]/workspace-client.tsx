@@ -2,7 +2,7 @@
 
 import React, { type ChangeEvent, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Activity, Briefcase, ClipboardCheck, UserCircle2, Stethoscope, FileText, IndianRupee, Pill } from 'lucide-react';
+import { Activity, Briefcase, ClipboardCheck, UserCircle2, Stethoscope, FileText, IndianRupee, Pill, ChevronRight } from 'lucide-react';
 import styles from '@/modules/medical-reimbursement/mr.module.css';
 import { loadCases, saveCases } from '@/modules/medical-reimbursement/mockStore';
 import type { Bill, DocType } from '@/modules/medical-reimbursement/types';
@@ -19,6 +19,18 @@ const docTypes: { label: string; value: DocType }[] = [
   { label: 'GO', value: 'GO' },
   { label: 'Other', value: 'OTHER' },
 ];
+
+
+const getTabIcon = (t: string) => {
+  if (t === 'SUMMARY') return Activity;
+  if (t === 'TREATMENT NOTE') return Stethoscope;
+  if (t === 'ANNEXURES') return FileText;
+  if (t === 'ADVANCE NOTES') return IndianRupee;
+  if (t === 'CERTIFICATE') return ClipboardCheck;
+  if (t === 'FINAL NOTE') return Pill;
+  if (t === 'MOVEMENT REGISTER') return Briefcase;
+  return Activity;
+};
 
 export default function MRCaseWorkspaceClient() {
   const router = useRouter();
@@ -454,8 +466,8 @@ export default function MRCaseWorkspaceClient() {
   };
 
   return (
-    <div className={styles.mrShell}>
-      <div className={styles.container}>
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-[1600px] mx-auto">
 
         <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-5 mb-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -493,38 +505,84 @@ export default function MRCaseWorkspaceClient() {
 
         <div className="flex flex-col md:flex-row gap-6">
           {/* Vertical Sidebar Navigation */}
-          <div className="md:w-56 flex-shrink-0">
-            <div className="flex flex-col gap-1 bg-white p-3 rounded-lg border border-slate-200 shadow-sm sticky top-4">
-              {tabs.map((t) => {
-                let Icon = Activity;
-                if (t === 'SUMMARY') Icon = UserCircle2;
-                if (t === 'TREATMENT NOTE') Icon = Stethoscope;
-                if (t === 'ANNEXURES') Icon = FileText;
-                if (t === 'ADVANCE NOTES') Icon = IndianRupee;
-                if (t === 'CERTIFICATE') Icon = Pill;
-                if (t === 'FINAL NOTE') Icon = ClipboardCheck;
-                if (t === 'MOVEMENT REGISTER') Icon = Activity;
 
-                return (
-                  <button
-                    key={t}
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[13px] font-medium transition-colors ${
-                      active === t
-                        ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-l-4 border-transparent'
-                    }`}
-                    onClick={() => setActive(t)}
-                  >
-                    <Icon className={`w-5 h-5 ${active === t ? 'text-indigo-600' : 'text-slate-400'}`} />
-                    {t}
-                  </button>
-                );
-              })}
+    {/* Stepper Header */}
+    <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex justify-between items-center overflow-x-auto">
+      {['Draft', 'Advance Submitted', 'Final Submitted', 'Approved', 'Paid & Closed'].map((step, i) => {
+        const isActive = c.status === step || (c.status === 'Active' && step === 'Draft');
+        const isPast = ['Draft', 'Advance Submitted', 'Final Submitted', 'Approved', 'Paid & Closed'].indexOf(c.status === 'Active' ? 'Draft' : c.status) > i;
+        return (
+          <div key={step} className="flex items-center">
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 text-sm font-semibold ${isActive ? 'border-indigo-600 text-indigo-600 bg-indigo-50' : isPast ? 'border-emerald-500 text-emerald-500 bg-emerald-50' : 'border-slate-300 text-slate-400'}`}>
+              {isPast ? '✓' : i + 1}
+            </div>
+            <div className={`ml-3 text-sm font-medium ${isActive ? 'text-indigo-900' : isPast ? 'text-emerald-700' : 'text-slate-500'}`}>{step.replace(' & Closed', '')}</div>
+            {i < 4 && <div className={`w-12 h-0.5 mx-4 ${isPast ? 'bg-emerald-500' : 'bg-slate-200'}`} />}
+          </div>
+        );
+      })}
+    </div>
+
+    <div className="flex flex-col lg:flex-row gap-6">
+
+      {/* Sticky Left Summary Column */}
+      <div className="w-full lg:w-80 flex-shrink-0">
+        <div className="sticky top-20 flex flex-col gap-4">
+
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
+              <h3 className="text-sm font-semibold text-slate-900">Case Snapshot</h3>
+            </div>
+            <div className="p-4 space-y-4 text-sm">
+              <div>
+                <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Applicant</div>
+                <div className="font-medium text-slate-900">{c.patient.name}</div>
+                <div className="text-slate-600">{c.patient.claimFor === 'SELF' ? 'Self' : c.patient.relation}</div>
+              </div>
+              <hr className="border-slate-100" />
+              <div>
+                <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Treatment</div>
+                <div className="font-medium text-slate-900">{c.treatment.hospitalName || 'Not hospitalised'}</div>
+                <div className="text-slate-600">{c.treatment.diagnosis}</div>
+              </div>
+              <hr className="border-slate-100" />
+              <div className="bg-indigo-50 p-3 rounded-md">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-indigo-900 font-medium">Total Bills</span>
+                  <span className="text-indigo-900 font-bold">{rupee(billsTotal(c))}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-indigo-700">Advance Paid</span>
+                  <span className="text-indigo-700">{rupee(advancePaid(c))}</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Main Content Area */}
-          <div className="flex-1 min-w-0">
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 flex flex-col gap-1">
+            {tabs.map(t => {
+              const Icon = getTabIcon(t);
+              return (
+                <button
+                  key={t}
+                  onClick={() => setActive(t)}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${active === t ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-4 h-4 ${active === t ? 'text-indigo-600' : 'text-slate-400'}`} />
+                    {t}
+                  </div>
+                  <ChevronRight className={`w-4 h-4 ${active === t ? 'text-indigo-400' : 'text-slate-300 opacity-0'}`} />
+                </button>
+              )
+            })}
+          </div>
+
+        </div>
+      </div>
+
+      <div className="flex-1 min-w-0">
+
 
         {active === 'SUMMARY' && (
           <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm min-h-[500px]">
@@ -1069,9 +1127,10 @@ export default function MRCaseWorkspaceClient() {
         )}
 
         {toast && <div className="fixed right-5 bottom-5 bg-indigo-600 text-white px-4 py-2 rounded shadow-lg">{toast}</div>}
-          </div>
-        </div>
       </div>
+    </div>
+    </div>
+    </div>
     </div>
   );
 }
