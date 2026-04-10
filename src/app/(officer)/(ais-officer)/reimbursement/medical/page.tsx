@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Award, Bell, Briefcase, CheckCircle, Clock, FileText, Shield, Search, Plus, X, ChevronRight } from 'lucide-react';
+import { Award, Bell, Briefcase, CheckCircle, Clock, FileText, Shield, Search, Plus, X, ChevronRight, UserCircle2, Stethoscope } from 'lucide-react';
 import axiosInstance from '@/utils/apiClient';
 import { mapOfficerProfile } from '@/modules/medical-reimbursement/mapper';
 import { createCase, initCases, loadCases } from '@/modules/medical-reimbursement/mockStore';
@@ -156,62 +156,83 @@ export default function MRControlCenter() {
             </div>
           </div>
 
-          {/* Data Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500">
-                  <th className="px-6 py-4 font-medium">MR Number</th>
-                  <th className="px-6 py-4 font-medium">Date</th>
-                  <th className="px-6 py-4 font-medium">Patient</th>
-                  <th className="px-6 py-4 font-medium">Hospital</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {list.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                      No medical reimbursement cases found.
-                    </td>
-                  </tr>
-                ) : (
-                  list.map((c) => (
-                    <tr key={c.mrId} className="hover:bg-slate-50/80 transition-colors group">
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-900">{c.mrNo}</div>
-                      </td>
-                      <td className="px-6 py-4 text-slate-600">
-                        {formatShort(c.createdAt)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="text-slate-900 font-medium">{c.patient.name}</span>
-                          <span className="text-xs text-slate-500">{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-slate-600 max-w-[200px] truncate" title={c.treatment.hospitalName}>
-                        {c.treatment.hospitalName || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${statusColor(c.status)}`}>
+
+          {/* Animated Card Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-6 bg-slate-50/30">
+            {list.length === 0 ? (
+              <div className="col-span-full py-16 text-center text-slate-500 bg-white rounded-2xl border border-dashed border-slate-300">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4"><Search className="w-8 h-8 text-slate-300" /></div>
+                <h3 className="text-lg font-bold text-slate-700">No Cases Found</h3>
+                <p className="mt-1 text-sm">Create a new request to get started.</p>
+              </div>
+            ) : (
+              list.map((c, idx) => {
+                const colorMap: Record<string, string> = {
+                  'Draft': 'from-slate-400 to-slate-500',
+                  'Advance Submitted': 'from-amber-400 to-orange-500',
+                  'Advance Paid': 'from-emerald-400 to-teal-500',
+                  'Final Submitted': 'from-indigo-400 to-blue-500',
+                  'Approved': 'from-emerald-500 to-emerald-600',
+                  'Paid & Closed': 'from-blue-500 to-indigo-600',
+                  'Active': 'from-indigo-400 to-blue-500'
+                };
+                const bgMap: Record<string, string> = {
+                  'Draft': 'bg-slate-100 text-slate-700 border-slate-200',
+                  'Advance Submitted': 'bg-amber-50 text-amber-700 border-amber-200',
+                  'Advance Paid': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                  'Final Submitted': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                  'Approved': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                  'Paid & Closed': 'bg-blue-50 text-blue-700 border-blue-200',
+                  'Active': 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                };
+                const gradient = colorMap[c.status] || colorMap['Draft'];
+                const badge = bgMap[c.status] || bgMap['Draft'];
+
+                return (
+                  <div key={c.mrId} className="group flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    {/* Top Color Bar */}
+                    <div className={`h-1.5 w-full bg-gradient-to-r ${gradient}`}></div>
+
+                    <div className="p-6 flex-1 flex flex-col">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className={`px-3 py-1 text-xs font-bold rounded-full border ${badge}`}>
                           {c.status.toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => openCase(c.mrId)}
-                          className="inline-flex items-center gap-1 text-indigo-600 font-medium hover:text-indigo-800"
-                        >
-                          View Case <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity -ml-1 group-hover:translate-x-1 duration-200" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                        </div>
+                        <div className="text-xs font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded">
+                          {formatShort(c.createdAt)}
+                        </div>
+                      </div>
+
+                      <h3 className="text-xl font-extrabold text-slate-900 tracking-tight mb-1">{c.mrNo}</h3>
+
+                      <div className="mt-4 space-y-3 flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 text-blue-600"><UserCircle2 className="w-4 h-4" /></div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-slate-800 truncate">{c.patient.name}</p>
+                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0 text-rose-600"><Stethoscope className="w-4 h-4" /></div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-slate-800 truncate" title={c.treatment.hospitalName}>{c.treatment.hospitalName || 'No Hospital'}</p>
+                            <p className="text-xs text-slate-500 font-medium truncate">{c.treatment.diagnosis}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50/80 p-4 border-t border-slate-100 flex gap-2">
+                       <button onClick={() => openCase(c.mrId)} className="w-full flex items-center justify-center gap-2 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-100 hover:text-indigo-700 transition-colors group-hover:border-indigo-300">
+                         Manage Case <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                       </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
           <div className="p-4 border-t border-slate-100 bg-slate-50/50 text-xs text-slate-500 flex justify-between">
             <span>Showing {list.length} results</span>
