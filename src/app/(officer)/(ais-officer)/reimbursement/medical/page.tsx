@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Award, Bell, Briefcase, CheckCircle, Clock, FileText, Shield, Search, Plus, X, ChevronRight } from 'lucide-react';
+import { Plus, X, Activity, User, Building2, Stethoscope, Briefcase, FileText, CheckCircle2, LayoutGrid, Clock, ChevronRight, UserCircle2 } from 'lucide-react';
 import axiosInstance from '@/utils/apiClient';
 import { mapOfficerProfile } from '@/modules/medical-reimbursement/mapper';
 import { createCase, initCases, loadCases } from '@/modules/medical-reimbursement/mockStore';
@@ -11,13 +11,11 @@ import { STATIC_MR_ROUTE_PARAM, setActiveMrId } from '@/modules/medical-reimburs
 
 const emptyOfficer: OfficerProfileVM = mapOfficerProfile({});
 
-const statusColor = (status: MRCase['status']) => {
-  if (status === 'Draft') return 'text-slate-600 bg-slate-100 border-slate-200';
-  if (status === 'Advance Submitted') return 'text-amber-700 bg-amber-50 border-amber-200';
-  if (status === 'Advance Paid') return 'text-emerald-700 bg-emerald-50 border-emerald-200';
-  if (status === 'Final Submitted' || status === 'Active') return 'text-indigo-700 bg-indigo-50 border-indigo-200';
-  if (status === 'Approved') return 'text-emerald-700 bg-emerald-50 border-emerald-200';
-  return 'text-blue-700 bg-blue-50 border-blue-200';
+const statusVisuals = (status: string) => {
+  if (status === 'Draft') return { color: 'text-slate-600 bg-slate-100 border-slate-200', icon: <FileText className="w-4 h-4" /> };
+  if (status.includes('Submitted')) return { color: 'text-blue-700 bg-blue-100 border-blue-200', icon: <Activity className="w-4 h-4" /> };
+  if (status.includes('Paid') || status === 'Approved') return { color: 'text-emerald-700 bg-emerald-100 border-emerald-200', icon: <CheckCircle2 className="w-4 h-4" /> };
+  return { color: 'text-indigo-700 bg-indigo-100 border-indigo-200', icon: <Clock className="w-4 h-4" /> };
 };
 
 const formatShort = (dateStr: string) => {
@@ -29,306 +27,340 @@ export default function MRControlCenter() {
   const router = useRouter();
   const [cases, setCases] = useState<MRCase[]>([]);
   const [officer, setOfficer] = useState<OfficerProfileVM>(emptyOfficer);
-  const [tab, setTab] = useState('ALL');
-  const [query, setQuery] = useState('');
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState('');
+  const [tab, setTab] = useState('All');
 
+  // Drawer State
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [claimFor, setClaimFor] = useState<'SELF' | 'DEPENDENT'>('SELF');
   const [dep, setDep] = useState('');
-  const [form, setForm] = useState({
-    hospitalised: true,
-    hospitalType: 'Government',
-    medicalType: 'Allopathy',
-    hospitalName: '',
-    hospitalAddress: '',
-    fromDate: '',
-    toDate: '',
-    declaration: false,
+
+  const filtered = cases.filter(c => {
+    if (tab !== 'All' && !c.status.includes(tab)) return false;
+    if (q) {
+      const s = q.toLowerCase();
+      if (!c.mrNo.toLowerCase().includes(s) && !c.patient.name?.toLowerCase().includes(s) && !c.treatment.hospitalName?.toLowerCase().includes(s)) return false;
+    }
+    return true;
   });
+  const [form, setForm] = useState({ hospitalised: true, hospitalName: '', hospitalAddress: '', hospitalType: 'Private', medicalType: 'Allopathy', fromDate: '', toDate: '', declaration: false });
 
   useEffect(() => {
-    const boot = async () => {
-      let vm = emptyOfficer;
-      try {
-        const res = await axiosInstance.get('/officer/officer-preview');
-        vm = mapOfficerProfile(res.data);
-      } catch {
-        vm = mapOfficerProfile({});
-      }
-      setOfficer(vm);
-      setCases(initCases(vm));
-    };
-    boot();
+    initCases(emptyOfficer);
+    axiosInstance.get('/api/employee/profile').then(res => {
+      setOfficer(mapOfficerProfile(res.data));
+      setCases(loadCases());
+      setLoading(false);
+    }).catch(() => {
+      setCases(loadCases());
+      setLoading(false);
+    });
   }, []);
 
-  const selectedDependent = officer.dependents.find((d) => d.personId === dep);
-
-  const openCase = (mrId: string) => {
-    setActiveMrId(mrId);
-    router.push(`/reimbursement/medical/${STATIC_MR_ROUTE_PARAM}`);
-  };
-
-  const byTab = useMemo(() => {
-    if (tab === 'ALL') return cases;
-    return cases.filter((c) => c.status === tab);
-  }, [tab, cases]);
-
-  const list = useMemo(() => {
-    const q = query.toLowerCase();
-    if (!q) return byTab;
-    return byTab.filter((c) => `${c.mrNo} ${c.patient.name} ${c.treatment.hospitalName} ${c.status}`.toLowerCase().includes(q));
-  }, [tab, cases, query]);
-
   const onCreate = () => {
-    if (!form.fromDate || !form.declaration) return;
-    if (claimFor === 'DEPENDENT' && !dep) return;
-    if (form.hospitalised && !form.hospitalName) return;
-
-    const created = createCase(officer, {
-      patient: {
-        claimFor,
-        dependentPersonId: claimFor === 'DEPENDENT' ? selectedDependent?.personId : undefined,
-        name: claimFor === 'SELF' ? officer.fullName : selectedDependent?.fullName || 'Dependent',
-        relation: claimFor === 'SELF' ? 'Self' : selectedDependent?.relation || 'Dependent',
-      },
-      treatment: {
-        placeOfIllness: '',
-        hospitalised: form.hospitalised,
-        withinState: true,
-        hospitalType: form.hospitalType,
-        hospitalName: form.hospitalised ? form.hospitalName : 'Not hospitalised',
-        hospitalAddress: form.hospitalised ? (form.hospitalAddress || form.hospitalName) : '',
-        fromDate: form.fromDate,
-        toDate: form.toDate,
-        diagnosis: form.medicalType,
-      },
-    });
+    const claim = claimFor === 'SELF' ? { claimFor, dependentName: '', relation: '' } : { claimFor, dependentName: officer.dependents.find(d => d.personId === dep)?.fullName || '', relation: officer.dependents.find(d => d.personId === dep)?.relationType || '' };
+    const id = createCase(officer, { ...claim, ...form } as any);
     setCases(loadCases());
     setDrawerOpen(false);
-    openCase(created.mrId);
   };
 
+  const openCase = (id: string) => {
+    setActiveMrId(id);
+    router.push(`/reimbursement/medical/${STATIC_MR_ROUTE_PARAM}/workspace`);
+  };
+
+  if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div>;
+
   return (
-    <div className="min-h-screen bg-slate-50 p-6 font-sans">
-      <div className="max-w-[1600px] mx-auto">
+    <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-10 font-sans">
 
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Medical Reimbursements</h1>
-            <p className="text-sm text-slate-500 mt-1">Manage and track your medical claims and advances.</p>
+      {/* Top Navigation & Profile Section */}
+      <div className="max-w-[1400px] mx-auto mb-10">
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+          {/* Decorative background element */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-50 to-transparent rounded-full -mr-20 -mt-20 opacity-70 pointer-events-none"></div>
+
+          <div className="flex items-center gap-6 z-10">
+            <div className="w-20 h-20 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
+               <Briefcase className="w-10 h-10" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Medical Reimbursement Center</h1>
+              <p className="text-slate-500 text-lg flex items-center gap-2">
+                <UserCircle2 className="w-5 h-5" />
+                Welcome, <span className="font-semibold text-slate-700">{officer.fullName || 'Officer'}</span> ({officer.designation || 'AIS'})
+              </p>
+            </div>
           </div>
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            New Request
+
+          <button onClick={() => setDrawerOpen(true)} className="z-10 group relative inline-flex items-center justify-center gap-3 px-8 py-4 font-bold text-white bg-indigo-600 rounded-full overflow-hidden shadow-xl shadow-indigo-200 transition-all hover:bg-indigo-700 hover:scale-[1.02] active:scale-95">
+             <Plus className="w-5 h-5 transition-transform group-hover:rotate-90" />
+             Initiate New Request
           </button>
-        </div>
-
-        {/* Filters and Search */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-6">
-          <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-4 justify-between items-center">
-            <div className="flex space-x-1 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 hide-scrollbar">
-              {['ALL', 'Draft', 'Active', 'Advance Submitted', 'Advance Paid', 'Final Submitted', 'Approved', 'Paid & Closed'].map(t => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-colors ${
-                    tab === t
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  {t === 'ALL' ? 'All Cases' : t}
-                </button>
-              ))}
-            </div>
-            <div className="relative w-full sm:w-72">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
-                placeholder="Search cases..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Data Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500">
-                  <th className="px-6 py-4 font-medium">MR Number</th>
-                  <th className="px-6 py-4 font-medium">Date</th>
-                  <th className="px-6 py-4 font-medium">Patient</th>
-                  <th className="px-6 py-4 font-medium">Hospital</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {list.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                      No medical reimbursement cases found.
-                    </td>
-                  </tr>
-                ) : (
-                  list.map((c) => (
-                    <tr key={c.mrId} className="hover:bg-slate-50/80 transition-colors group">
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-900">{c.mrNo}</div>
-                      </td>
-                      <td className="px-6 py-4 text-slate-600">
-                        {formatShort(c.createdAt)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="text-slate-900 font-medium">{c.patient.name}</span>
-                          <span className="text-xs text-slate-500">{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-slate-600 max-w-[200px] truncate" title={c.treatment.hospitalName}>
-                        {c.treatment.hospitalName || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${statusColor(c.status)}`}>
-                          {c.status.toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => openCase(c.mrId)}
-                          className="inline-flex items-center gap-1 text-indigo-600 font-medium hover:text-indigo-800"
-                        >
-                          View Case <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity -ml-1 group-hover:translate-x-1 duration-200" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="p-4 border-t border-slate-100 bg-slate-50/50 text-xs text-slate-500 flex justify-between">
-            <span>Showing {list.length} results</span>
-          </div>
         </div>
       </div>
 
-      {/* Slide-over Drawer for Case Creation */}
+      {/* Main Content Area */}
+      <div className="max-w-[1400px] mx-auto">
+
+        <div className="flex items-center justify-between mb-8">
+           <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
+             <LayoutGrid className="w-6 h-6 text-indigo-500" />
+             Active Case Files
+           </h2>
+           <div className="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm text-sm font-semibold text-slate-600">
+             Total Records: <span className="text-indigo-600 ml-1">{cases.length}</span>
+           </div>
+        </div>
+
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div className="flex bg-slate-200/50 p-1 rounded-xl w-full max-w-lg">
+            {['All', 'Draft', 'Submitted', 'Approved', 'Rejected'].map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${tab === t ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+              >{t}</button>
+            ))}
+          </div>
+          <div className="relative w-full max-w-sm">
+            <input
+              type="text"
+              placeholder="Search ID, Patient, Hospital..."
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500 shadow-sm"
+            />
+            {/* Using text for icon if search not imported, but let's assume we can add it */}
+            <div className="absolute left-4 top-3.5 text-slate-400">🔍</div>
+          </div>
+        </div>
+
+        {cases.length === 0 ? (
+          <div className="bg-white rounded-[2rem] border border-slate-200 border-dashed p-20 text-center shadow-sm">
+            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-slate-50 mb-6 text-slate-400">
+              <Activity className="w-12 h-12" />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-800 mb-3">No Cases Initiated</h3>
+            <p className="text-slate-500 text-lg max-w-md mx-auto">You have no active medical reimbursement requests. Click the button above to start a new claim process.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {filtered.map((c) => {
+              const visual = statusVisuals(c.status);
+              return (
+                <div key={c.mrId} className="group bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden relative transform hover:-translate-y-1">
+
+                  {/* Decorative Header Bar */}
+                  <div className={`h-2 w-full ${visual.color.split(' ')[1]}`}></div>
+
+                  <div className="p-6 flex-1 space-y-6">
+                    {/* Header: ID & Status */}
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Tracking ID</p>
+                        <p className="font-mono text-base font-bold text-slate-800 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100 inline-block">
+                          {c.mrNo}
+                        </p>
+                      </div>
+                      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border ${visual.color}`}>
+                        {visual.icon}
+                        {c.status.toUpperCase()}
+                      </div>
+                    </div>
+
+                    <div className="h-px w-full bg-slate-100"></div>
+
+                    {/* Patient Section */}
+                    <div className="flex gap-4 items-center bg-slate-50 p-4 rounded-2xl">
+                      <div className="w-12 h-12 rounded-full bg-white border border-slate-200 text-indigo-500 flex items-center justify-center shadow-sm flex-shrink-0">
+                        <User className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Patient</p>
+                        <p className="text-lg font-bold text-slate-900 leading-tight">
+                          {c.patient.claimFor === 'SELF' ? 'Self' : c.patient.name}
+                        </p>
+                        {c.patient.claimFor !== 'SELF' && (
+                          <p className="text-xs font-semibold text-slate-500 mt-1">{c.patient.relation}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Treatment Grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                          <Building2 className="w-3 h-3" /> Facility
+                        </div>
+                        <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-snug" title={c.treatment.hospitalName}>
+                          {c.treatment.hospitalName || 'Not Specified'}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                          <Stethoscope className="w-3 h-3" /> Diagnosis
+                        </div>
+                        <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-snug" title={c.treatment.diagnosis}>
+                          {c.treatment.diagnosis || 'Pending Entry'}
+                        </p>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Footer Action */}
+                  <div className="p-4 bg-slate-50/50 mt-auto border-t border-slate-100">
+                    <button onClick={() => openCase(c.mrId)} className="w-full flex items-center justify-center gap-2 py-3.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm group-hover:shadow-md">
+                      Manage Case File
+                      <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </button>
+                  </div>
+
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+      </div>
+
+      {/* Drawer Component */}
       {drawerOpen && (
-        <>
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity" onClick={() => setDrawerOpen(false)} />
-          <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 bg-slate-50/50">
-              <h2 className="text-lg font-semibold text-slate-900">Initiate New Request</h2>
-              <button onClick={() => setDrawerOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setDrawerOpen(false)}></div>
+          <div className="relative w-full max-w-[500px] bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">New Claim Form</h2>
+                <p className="text-sm text-slate-500 font-medium mt-1">Initiate a new medical reimbursement</p>
+              </div>
+              <button onClick={() => setDrawerOpen(false)} className="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+            {/* Drawer Body */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
 
-              <section className="space-y-4">
-                <h3 className="text-sm font-semibold text-indigo-900 uppercase tracking-wider">Patient Details</h3>
+              {/* Patient Section */}
+              <section>
+                <h3 className="flex items-center gap-2 text-sm font-bold text-indigo-600 uppercase tracking-wider mb-5">
+                  <User className="w-4 h-4" /> 1. Patient Details
+                </h3>
 
-                <div className="flex p-1 bg-slate-100 rounded-lg">
-                  <button className={`flex-1 py-2 text-sm font-medium rounded-md ${claimFor === 'SELF' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`} onClick={() => setClaimFor('SELF')}>Self</button>
-                  <button className={`flex-1 py-2 text-sm font-medium rounded-md ${claimFor === 'DEPENDENT' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`} onClick={() => setClaimFor('DEPENDENT')}>Dependent</button>
+                <div className="bg-slate-50 p-1.5 rounded-xl flex mb-6">
+                  <button className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${claimFor === 'SELF' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:bg-slate-100'}`} onClick={() => setClaimFor('SELF')}>Self</button>
+                  <button className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${claimFor === 'DEPENDENT' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:bg-slate-100'}`} onClick={() => setClaimFor('DEPENDENT')}>Dependent</button>
                 </div>
 
                 {claimFor === 'DEPENDENT' && (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Select Dependent</label>
+                  <div className="animate-in fade-in slide-in-from-top-2">
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Select Dependent</label>
                     <select
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                      className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
                       value={dep}
                       onChange={(e) => setDep(e.target.value)}
                     >
-                      <option value="">Select dependent...</option>
+                      <option value="">Choose a dependent...</option>
                       {officer.dependents.map((d) => <option key={d.personId} value={d.personId}>{d.relationType}: {d.fullName}</option>)}
                     </select>
                   </div>
                 )}
               </section>
 
-              <hr className="border-slate-100" />
+              {/* Treatment Section */}
+              <section>
+                <h3 className="flex items-center gap-2 text-sm font-bold text-indigo-600 uppercase tracking-wider mb-5">
+                  <Activity className="w-4 h-4" /> 2. Treatment Information
+                </h3>
 
-              <section className="space-y-4">
-                <h3 className="text-sm font-semibold text-indigo-900 uppercase tracking-wider">Treatment Details</h3>
-
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                    <input type="radio" checked={form.hospitalised} onChange={() => setForm(p => ({ ...p, hospitalised: true }))} className="text-indigo-600 focus:ring-indigo-500" />
-                    Hospitalised
+                <div className="flex gap-6 mb-6">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${form.hospitalised ? 'border-indigo-600' : 'border-slate-300 group-hover:border-indigo-400'}`}>
+                      {form.hospitalised && <div className="w-2.5 h-2.5 rounded-full bg-indigo-600"></div>}
+                    </div>
+                    <input type="radio" checked={form.hospitalised} onChange={() => setForm(p => ({ ...p, hospitalised: true }))} className="hidden" />
+                    <span className="text-sm font-bold text-slate-700">Hospitalised</span>
                   </label>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                    <input type="radio" checked={!form.hospitalised} onChange={() => setForm(p => ({ ...p, hospitalised: false, hospitalName: '', hospitalAddress: '' }))} className="text-indigo-600 focus:ring-indigo-500" />
-                    Out-Patient
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${!form.hospitalised ? 'border-indigo-600' : 'border-slate-300 group-hover:border-indigo-400'}`}>
+                      {!form.hospitalised && <div className="w-2.5 h-2.5 rounded-full bg-indigo-600"></div>}
+                    </div>
+                    <input type="radio" checked={!form.hospitalised} onChange={() => setForm(p => ({ ...p, hospitalised: false, hospitalName: '', hospitalAddress: '' }))} className="hidden" />
+                    <span className="text-sm font-bold text-slate-700">Out-Patient</span>
                   </label>
                 </div>
 
                 {form.hospitalised && (
-                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex p-1 bg-slate-100 rounded-lg">
-                      <button className={`flex-1 py-1.5 text-sm font-medium rounded-md ${form.hospitalType === 'Government' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`} onClick={() => setForm(p => ({ ...p, hospitalType: 'Government' }))}>Government</button>
-                      <button className={`flex-1 py-1.5 text-sm font-medium rounded-md ${form.hospitalType === 'Private' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`} onClick={() => setForm(p => ({ ...p, hospitalType: 'Private' }))}>Private</button>
+                  <div className="space-y-5 mb-6 animate-in fade-in slide-in-from-top-2">
+                    <div className="bg-slate-50 p-1.5 rounded-xl flex">
+                      <button className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${form.hospitalType === 'Government' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:bg-slate-100'}`} onClick={() => setForm(p => ({ ...p, hospitalType: 'Government' }))}>Govt. Hospital</button>
+                      <button className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${form.hospitalType === 'Private' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:bg-slate-100'}`} onClick={() => setForm(p => ({ ...p, hospitalType: 'Private' }))}>Private Hospital</button>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">Hospital Name</label>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Hospital Name</label>
                       <input
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                        className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
                         value={form.hospitalName}
                         onChange={(e) => setForm(p => ({ ...p, hospitalName: e.target.value }))}
-                        placeholder="Enter hospital name"
+                        placeholder="Enter full hospital name"
                       />
                     </div>
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Medical System</label>
-                  <select
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white"
-                    value={form.medicalType}
-                    onChange={(e) => setForm(p => ({ ...p, medicalType: e.target.value }))}
-                  >
-                    <option value="Allopathy">Allopathy</option>
-                    <option value="Ayurveda">Ayurveda</option>
-                    <option value="Homeopathy">Homeopathy</option>
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Start Date</label>
-                    <input type="date" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white" onChange={(e) => setForm(p => ({ ...p, fromDate: e.target.value }))} />
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Medical System</label>
+                    <select
+                      className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                      value={form.medicalType}
+                      onChange={(e) => setForm(p => ({ ...p, medicalType: e.target.value }))}
+                    >
+                      <option value="Allopathy">Allopathy</option>
+                      <option value="Ayurveda">Ayurveda</option>
+                      <option value="Homeopathy">Homeopathy</option>
+                    </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">End Date</label>
-                    <input type="date" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white" onChange={(e) => setForm(p => ({ ...p, toDate: e.target.value }))} />
+
+                  <div className="grid grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Start Date</label>
+                      <input type="date" className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm" onChange={(e) => setForm(p => ({ ...p, fromDate: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">End Date (Optional)</label>
+                      <input type="date" className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm" onChange={(e) => setForm(p => ({ ...p, toDate: e.target.value }))} />
+                    </div>
                   </div>
                 </div>
               </section>
 
-              <div className="mt-auto pt-6">
-                <label className="flex items-start gap-3 p-4 bg-indigo-50 rounded-lg border border-indigo-100 cursor-pointer">
-                  <input type="checkbox" className="mt-0.5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500" onChange={(e) => setForm(p => ({ ...p, declaration: e.target.checked }))} />
-                  <span className="text-sm text-indigo-900 leading-snug">I declare that the details provided above are true and accurate to the best of my knowledge.</span>
+              {/* Declaration */}
+              <div className="pt-6">
+                <label className="flex items-start gap-4 p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100 cursor-pointer group">
+                  <div className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${form.declaration ? 'bg-indigo-600 border-indigo-600' : 'border-indigo-300 bg-white group-hover:border-indigo-400'}`}>
+                    {form.declaration && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                  <input type="checkbox" className="hidden" checked={form.declaration} onChange={(e) => setForm(p => ({ ...p, declaration: e.target.checked }))} />
+                  <span className="text-sm font-semibold text-indigo-900 leading-relaxed">I solemnly declare that the details provided above are true, complete, and accurate to the best of my knowledge.</span>
                 </label>
               </div>
 
             </div>
 
-            <div className="p-5 border-t border-slate-200 bg-slate-50/50 flex gap-3">
-              <button className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-colors" onClick={() => setDrawerOpen(false)}>Cancel</button>
+            {/* Drawer Footer */}
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-4">
+              <button className="flex-1 px-6 py-3.5 text-sm font-bold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 transition-colors shadow-sm" onClick={() => setDrawerOpen(false)}>Cancel</button>
               <button
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-[2] px-6 py-3.5 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200"
                 onClick={onCreate}
                 disabled={!form.declaration || !form.fromDate || (claimFor === 'DEPENDENT' && !dep) || (form.hospitalised && !form.hospitalName)}
               >
@@ -336,7 +368,7 @@ export default function MRControlCenter() {
               </button>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

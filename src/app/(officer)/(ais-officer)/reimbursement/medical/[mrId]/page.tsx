@@ -5,6 +5,6 @@ export function generateStaticParams() {
   return [{ mrId: STATIC_MR_ROUTE_PARAM }];
 }
 
-export default function MRCaseWorkspacePage() {
-  return <MRCaseWorkspaceClient />;
+export default function MRCaseWorkspacePage({ params }: { params: { mrId: string } }) {
+  return <MRCaseWorkspaceClient params={params} />;
 }
