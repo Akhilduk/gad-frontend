@@ -92,11 +92,7 @@ export default function WorkspaceClient({ params }: { params: { mrId: string } }
                Status: <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold uppercase">{c.status}</span>
              </p>
           </div>
-        );
-      })}
-    </div>
-
-    <div className="flex flex-col lg:flex-row gap-6">
+        </div>
 
         <div className="flex gap-3">
           {c.status === 'Draft' && (
@@ -166,37 +162,7 @@ export default function WorkspaceClient({ params }: { params: { mrId: string } }
                     <p className="text-xs font-bold text-indigo-200 uppercase tracking-widest mb-2 relative z-10">Net Payable</p>
                     <p className="text-3xl font-black text-white relative z-10">{rupee((c.bills.reduce((sum, b) => sum + b.totalAmount, 0) - c.advances.filter(a => a.status === "Paid").reduce((sum, a) => sum + a.amount, 0)))}</p>
                   </div>
-                )}
-              </div>
-              <div className={styles.sectionCard}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-                  <div>
-                    <label className={styles.formLabel}>Start Date</label>
-                    <input type="date" className={styles.field} value={treatmentDraft.fromDate} onChange={(e) => setTreatmentDraft((p) => ({ ...p, fromDate: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className={styles.formLabel}>End Date (Optional)</label>
-                    <input type="date" className={styles.field} value={treatmentDraft.toDate || ''} onChange={(e) => setTreatmentDraft((p) => ({ ...p, toDate: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className={styles.formLabel}>Diagnosis</label>
-                    <input className={styles.field} placeholder="e.g. Viral Fever" value={treatmentDraft.diagnosis} onChange={(e) => setTreatmentDraft((p) => ({ ...p, diagnosis: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className={styles.formLabel}>System of Medicine</label>
-                    <select className={styles.field} value={treatmentDraft.medicalType} onChange={(e) => setTreatmentDraft((p) => ({ ...p, medicalType: e.target.value }))}>
-                      <option value="Allopathy">Allopathy</option>
-                      <option value="Ayurveda">Ayurveda</option>
-                      <option value="Homeopathy">Homeopathy</option>
-                      <option value="Unani">Unani</option>
-                      <option value="Siddha">Siddha</option>
-                    </select>
-                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
 
                 {/* Patient & Treatment Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -233,9 +199,7 @@ export default function WorkspaceClient({ params }: { params: { mrId: string } }
                         <p className="text-xs font-bold text-slate-400 uppercase mb-1">Condition / Diagnosis</p>
                         <p className="text-base font-bold text-slate-800 line-clamp-2">{c.treatment.diagnosis || 'Pending'}</p>
                       </div>
-                    ) : (
-                      <div className={styles.mutedText}>Fill estimate + amount and click Preview.</div>
-                    )}
+                    </div>
                   </div>
 
                 </div>
@@ -371,8 +335,8 @@ export default function WorkspaceClient({ params }: { params: { mrId: string } }
                         </button>
                       </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                )}
               </div>
             )}
 
