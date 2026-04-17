@@ -22,6 +22,8 @@ const tabs = [
   { key: 'Paid & Closed', label: 'Paid', icon: Shield },
 ];
 
+const workflowSteps = ['Draft', 'Advance Submitted', 'Advance Paid', 'Final Submitted', 'Approved', 'Paid & Closed'] as const;
+
 const statusStyles = (status: MRCase['status']) => {
   if (status === 'Draft') return { tone: styles.toneDraft, text: styles.statusDraft };
   if (status === 'Advance Submitted') return { tone: styles.toneAdvanceRequested, text: styles.statusAdvanceRequested };
@@ -205,26 +207,42 @@ export default function MRControlCenter() {
   };
 
   const formatShort = (date: Date) => date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const statusIndex = (status: MRCase['status']) => {
+    if (status === 'Active') return 2;
+    return Math.max(0, workflowSteps.indexOf(status as (typeof workflowSteps)[number]));
+  };
+  const activeCases = cases.filter((c) => ['Advance Submitted', 'Advance Paid', 'Active', 'Final Submitted', 'Approved'].includes(c.status)).length;
+  const recentCases = cases.filter((c) => isRecent(new Date(c.createdAt), new Date(c.lastUpdated))).length;
 
   return <div className={styles.mrShell}><div className={styles.container}>
-    <div className={styles.boardHeader}>
-      <div className="flex justify-between items-center gap-3 flex-wrap">
-        <h1 className="text-xl font-semibold tracking-tight">Medical Reimbursement</h1>
-        <button className={styles.btnSecondary} onClick={() => setOpen(true)}>+ Create New Request</button>
+    <section className={styles.mrLandingHero}>
+      <div className={styles.mrLandingHeroMain}>
+        <div className={styles.mrLandingEyebrow}>Medical Reimbursement</div>
+        <h1 className={styles.mrLandingTitle}>Medical reimbursement requests</h1>
+        <p className={styles.mrLandingText}>Create, find, and continue a case from one clean workspace.</p>
+        <div className={styles.mrLandingActions}>
+          <button className={styles.btnPrimary} onClick={() => setOpen(true)}>Create New Request</button>
+          <div className={styles.mrInlineMeta}>{activeCases} active case(s) and {recentCases} recently updated</div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div className={`${styles.searchRow} mt-4 mb-3`}>
-      <div className="text-sm text-gray-600">Showing {list.length} case(s)</div>
-      <input className={`${styles.field} ${styles.searchInput}`} placeholder="Search by MR No, requester, hospital, status" value={query} onChange={(e) => setQuery(e.target.value)} />
-    </div>
+    <section className={styles.mrExplorerShell}>
+      <div className={styles.mrExplorerHeader}>
+        <div>
+          <div className={styles.mrSectionEyebrow}>Request Explorer</div>
+          <h2 className={styles.mrSectionTitle}>Request Explorer</h2>
+        </div>
+        <div className={styles.mrExplorerSearch}>
+          <input className={`${styles.field} ${styles.searchInput}`} placeholder="Search by MR No, requester, hospital, status" value={query} onChange={(e) => setQuery(e.target.value)} />
+        </div>
+      </div>
 
-    <div className="mt-2 mb-3"><div className={styles.tabBar}>
-      {tabs.map((t) => <button key={t.key} className={`${styles.boardTab} ${tab === t.key ? styles.boardTabActive : ''}`} onClick={() => setTab(t.key)}><t.icon className={styles.tabIcon} aria-hidden="true" />{t.label} ({tabCount(t.key)})</button>)}
-    </div></div>
+      <div className={styles.mrFilterRail}>
+        {tabs.map((t) => <button key={t.key} className={`${styles.mrFilterChip} ${tab === t.key ? styles.mrFilterChipActive : ''}`} onClick={() => setTab(t.key)}><t.icon className={styles.tabIcon} aria-hidden="true" /><span>{t.label}</span><b>{tabCount(t.key)}</b></button>)}
+      </div>
 
-    <div className={styles.cardSection}>
-      <div className={styles.bookGrid}>
+      <div className={styles.mrCaseGrid}>
         {list.map((c, idx) => {
           const tone = statusStyles(c.status);
           const createdAt = withOffsetDate(c.createdAt, -idx * 2);
@@ -232,29 +250,51 @@ export default function MRControlCenter() {
           const startDate = withOffsetDate(c.treatment.fromDate || c.createdAt, idx % 6);
           const recent = isRecent(createdAt, updatedAt);
           const actions = actionsFor(c);
+          const progress = statusIndex(c.status);
+
           return (
-            <div key={c.mrId} className={`${styles.spiralCard} ${tone.tone}`} style={{ animationDelay: `${idx * 40}ms` }}>
-              {recent && <div className={styles.bookmark} />}
-              <div className={styles.cardTop}>
+            <article key={c.mrId} className={`${styles.mrCaseCard} ${tone.tone}`} style={{ animationDelay: `${idx * 50}ms` }}>
+              <div className={styles.mrCaseCardTop}>
                 <div className={`${styles.statusPill} ${tone.text}`}><span className={styles.statusIcon} aria-hidden="true" />{statusLabel(c.status)}</div>
-                <div className={styles.recentText}>{recent ? 'Recently Updated' : 'Updated'}<br />{formatShort(updatedAt)}</div>
+                <div className={styles.mrCaseUpdate}>{recent ? 'Recently updated' : 'Updated'} {formatShort(updatedAt)}</div>
               </div>
-              <div className={styles.cardId}>{c.mrNo}</div>
-              <div className={styles.cardMain}>
-                <div className={styles.line}><b>{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</b> / {c.patient.name}</div>
-                <div className={styles.line}>{c.treatment.hospitalName || 'Hospital not entered'}</div>
-                <div className={styles.lineMuted}>Start: {formatShort(startDate)} | Created: {formatShort(createdAt)}</div>
+
+              <div className={styles.mrCaseIdentity}>
+                <div>
+                  <div className={styles.cardId}>{c.mrNo}</div>
+                  <div className={styles.mrCasePatient}>{c.patient.name} <span>{c.patient.claimFor === 'SELF' ? 'Self' : c.patient.relation}</span></div>
+                </div>
+                {recent ? <div className={styles.mrCaseBeacon}>Live</div> : null}
               </div>
-              <div className={styles.cardFooter}><div className={styles.actionGrid}>
+
+              <div className={styles.mrCaseFacts}>
+                <div className={styles.mrCaseFact}><span>Hospital</span><strong>{c.treatment.hospitalName || 'Hospital not entered'}</strong></div>
+                <div className={styles.mrCaseFact}><span>Treatment Window</span><strong>{formatShort(startDate)}</strong></div>
+                <div className={styles.mrCaseFact}><span>Created</span><strong>{formatShort(createdAt)}</strong></div>
+              </div>
+
+              <div className={styles.mrCaseProgress}>
+                <div className={styles.mrCaseProgressHead}>
+                  <span>Progress</span>
+                  <strong>{Math.min(progress + 1, workflowSteps.length)} / {workflowSteps.length}</strong>
+                </div>
+                <div className={styles.mrProgressTrackCompact}>
+                  <div className={styles.mrProgressBar}>
+                    <i style={{ width: `${((progress + 1) / workflowSteps.length) * 100}%` }} />
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.mrCaseActions}>
                 {actions.map((a) => <button key={`${c.mrId}-${a.label}`} className={styles.actionBtn} onClick={a.onClick}>{a.label}</button>)}
-              </div></div>
-            </div>
+              </div>
+            </article>
           );
         })}
       </div>
 
-      <div className="mt-4 text-sm text-gray-700">Page 1 of 1</div>
-    </div>
+      <div className={styles.mrExplorerFooter}>Page 1 of 1</div>
+    </section>
 
     {open && <div className={styles.modalOverlay}>
       <div className={styles.modalWrap}>
@@ -262,40 +302,50 @@ export default function MRControlCenter() {
           <div className={styles.modalHead}>
             <div>
               <div className={styles.modalTitle}>Create Medical Reimbursement Case</div>
-              <div className={styles.modalSubTitle}>Single-view claim form with compact, readable fields.</div>
+              <div className={styles.modalSubTitle}>Start a new case.</div>
             </div>
             <button onClick={() => { setOpen(false); setHospitalOptions([]); }} className={styles.btnSecondary}>Close</button>
           </div>
 
           <div className={styles.modalBody}>
-            <div className={`${styles.modalCompactTop} ${!form.hospitalised ? styles.modalCompactTopTwo : ''}`}>
-              <div className={styles.modalPillGroup}>
-                <button className={`${styles.btnPill} ${claimFor === 'SELF' ? styles.btnPillActive : ''}`} onClick={() => setClaimFor('SELF')}>Self</button>
-                <button className={`${styles.btnPill} ${claimFor === 'DEPENDENT' ? styles.btnPillActive : ''}`} onClick={() => setClaimFor('DEPENDENT')}>Dependent</button>
+            <div className={styles.mrModalHero}>
+              <div className={styles.mrModalHeroBlock}>
+                <span className={styles.mrModalHeroLabel}>Applicant Type</span>
+                <div className={styles.modalPillGroup}>
+                  <button className={`${styles.btnPill} ${claimFor === 'SELF' ? styles.btnPillActive : ''}`} onClick={() => setClaimFor('SELF')}>Self</button>
+                  <button className={`${styles.btnPill} ${claimFor === 'DEPENDENT' ? styles.btnPillActive : ''}`} onClick={() => setClaimFor('DEPENDENT')}>Dependent</button>
+                </div>
               </div>
-              <div className={styles.modalPillGroup}>
-                <button className={`${styles.btnPill} ${form.hospitalised ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, hospitalised: true }))}>Hospitalised</button>
-                <button
-                  className={`${styles.btnPill} ${!form.hospitalised ? styles.btnPillActive : ''}`}
-                  onClick={() => {
-                    setForm((prev) => ({ ...prev, hospitalised: false, hospitalName: '', hospitalAddress: '' }));
-                    setHospitalQuery('');
-                    setHospitalOptions([]);
-                  }}
-                >
-                  Not Hospitalised
-                </button>
+              <div className={styles.mrModalHeroBlock}>
+                <span className={styles.mrModalHeroLabel}>Care Journey</span>
+                <div className={styles.modalPillGroup}>
+                  <button className={`${styles.btnPill} ${form.hospitalised ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, hospitalised: true }))}>Hospitalised</button>
+                  <button
+                    className={`${styles.btnPill} ${!form.hospitalised ? styles.btnPillActive : ''}`}
+                    onClick={() => {
+                      setForm((prev) => ({ ...prev, hospitalised: false, hospitalName: '', hospitalAddress: '' }));
+                      setHospitalQuery('');
+                      setHospitalOptions([]);
+                    }}
+                  >
+                    Not Hospitalised
+                  </button>
+                </div>
               </div>
               {form.hospitalised ? (
-                <div className={styles.modalPillGroup}>
-                  <button className={`${styles.btnPill} ${form.hospitalType === 'Government' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, hospitalType: 'Government' }))}>Government</button>
-                  <button className={`${styles.btnPill} ${form.hospitalType === 'Private' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, hospitalType: 'Private' }))}>Private</button>
+                <div className={styles.mrModalHeroBlock}>
+                  <span className={styles.mrModalHeroLabel}>Institution Type</span>
+                  <div className={styles.modalPillGroup}>
+                    <button className={`${styles.btnPill} ${form.hospitalType === 'Government' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, hospitalType: 'Government' }))}>Government</button>
+                    <button className={`${styles.btnPill} ${form.hospitalType === 'Private' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, hospitalType: 'Private' }))}>Private</button>
+                  </div>
                 </div>
               ) : null}
             </div>
 
-            <div className={styles.modalCompactGrid}>
-              <section className={`${styles.modalPanel} ${!form.hospitalised ? styles.modalPanelSpan : ''}`}>
+            <div className={styles.mrModalContentGrid}>
+              <section className={styles.mrModalSpotlight}>
+                <div className={styles.mrModalSectionTitle}>Claim Snapshot</div>
                 {claimFor === 'DEPENDENT' ? (
                   <select className={`${styles.field} ${styles.depSelect}`} value={dep} onChange={(e) => setDep(e.target.value)}>
                     <option value="">Select dependent</option>
@@ -309,89 +359,96 @@ export default function MRControlCenter() {
                     <div className={styles.depMeta}>Designation: {officer.designation} | Grade {officer.grade} | {officer.level}</div>
                   )}
                 </div>
-              </section>
-
-              {form.hospitalised ? (
-                <section className={styles.modalPanel}>
-                  <div className={styles.modalHospitalGrid}>
-                    <div>
-                      <label className={styles.formLabel}>Hospital Name</label>
-                      <div className={styles.autoWrap}>
-                        <input
-                          className={styles.field}
-                          placeholder="Type hospital name"
-                          value={hospitalQuery}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setHospitalQuery(value);
-                            setForm((prev) => ({ ...prev, hospitalName: value }));
-                          }}
-                          onFocus={() => setHospitalFocused(true)}
-                          onBlur={() => window.setTimeout(() => setHospitalFocused(false), 140)}
-                        />
-                        {hospitalFocused && (hospitalLoading || hospitalOptions.length > 0) && (
-                          <div className={styles.autoList}>
-                            {hospitalLoading && <div className={styles.autoItem}>Searching hospitals...</div>}
-                            {!hospitalLoading && hospitalOptions.map((opt) => (
-                              <button
-                                key={`${opt.name}-${opt.address}`}
-                                type="button"
-                                className={styles.autoItem}
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  skipAutocompleteRef.current = true;
-                                  setHospitalQuery(opt.name);
-                                  setHospitalOptions([]);
-                                  setHospitalFocused(false);
-                                  setForm((prev) => ({ ...prev, hospitalName: opt.name, hospitalAddress: opt.address }));
-                                }}
-                              >
-                                {opt.name}
-                                <br />
-                                <small>{opt.address}</small>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <label className={styles.formLabel}>Hospital Address</label>
-                      <input
-                        className={styles.field}
-                        placeholder="Hospital full address"
-                        value={form.hospitalAddress}
-                        onChange={(e) => setForm((prev) => ({ ...prev, hospitalAddress: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                </section>
-              ) : null}
-            </div>
-
-            <div className={styles.modalCompactGrid}>
-              {form.hospitalised ? (
-                <section className={styles.modalPanel}>
-                  <div className={styles.toggleRow}>
-                    <button className={`${styles.btnPill} ${form.medicalType === 'Allopathy' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Allopathy' }))}>Allopathy</button>
-                    <button className={`${styles.btnPill} ${form.medicalType === 'Ayurveda' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Ayurveda' }))}>Ayurveda</button>
-                    <button className={`${styles.btnPill} ${form.medicalType === 'Homeopathy' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Homeopathy' }))}>Homeo</button>
-                  </div>
-                </section>
-              ) : null}
-
-              <section className={`${styles.modalPanel} ${!form.hospitalised ? styles.modalPanelSpan : ''}`}>
-                <div className={styles.modalFormGrid2}>
-                  <div>
-                    <label className={styles.formLabel}>Start Date</label>
-                    <input type="date" className={styles.field} onChange={(e) => setForm((prev) => ({ ...prev, fromDate: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className={styles.formLabel}>End Date (Optional)</label>
-                    <input type="date" className={styles.field} onChange={(e) => setForm((prev) => ({ ...prev, toDate: e.target.value }))} />
-                  </div>
+                <div className={styles.mrModalTimeline}>
+                  <div><span>Start date</span><strong>{form.fromDate || 'Pending'}</strong></div>
+                  <div><span>End date</span><strong>{form.toDate || 'Optional'}</strong></div>
+                  <div><span>System</span><strong>{form.medicalType}</strong></div>
                 </div>
               </section>
+
+              <div className={styles.mrModalFormArea}>
+                <div className={styles.modalCompactGrid}>
+                  {form.hospitalised ? (
+                    <section className={styles.modalPanel}>
+                      <div className={styles.mrModalSectionTitle}>Hospital Details</div>
+                      <div className={styles.modalHospitalGrid}>
+                        <div>
+                          <label className={styles.formLabel}>Hospital Name</label>
+                          <div className={styles.autoWrap}>
+                            <input
+                              className={styles.field}
+                              placeholder="Type hospital name"
+                              value={hospitalQuery}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setHospitalQuery(value);
+                                setForm((prev) => ({ ...prev, hospitalName: value }));
+                              }}
+                              onFocus={() => setHospitalFocused(true)}
+                              onBlur={() => window.setTimeout(() => setHospitalFocused(false), 140)}
+                            />
+                            {hospitalFocused && (hospitalLoading || hospitalOptions.length > 0) && (
+                              <div className={styles.autoList}>
+                                {hospitalLoading && <div className={styles.autoItem}>Searching hospitals...</div>}
+                                {!hospitalLoading && hospitalOptions.map((opt) => (
+                                  <button
+                                    key={`${opt.name}-${opt.address}`}
+                                    type="button"
+                                    className={styles.autoItem}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      skipAutocompleteRef.current = true;
+                                      setHospitalQuery(opt.name);
+                                      setHospitalOptions([]);
+                                      setHospitalFocused(false);
+                                      setForm((prev) => ({ ...prev, hospitalName: opt.name, hospitalAddress: opt.address }));
+                                    }}
+                                  >
+                                    {opt.name}
+                                    <br />
+                                    <small>{opt.address}</small>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <label className={styles.formLabel}>Hospital Address</label>
+                          <input
+                            className={styles.field}
+                            placeholder="Hospital full address"
+                            value={form.hospitalAddress}
+                            onChange={(e) => setForm((prev) => ({ ...prev, hospitalAddress: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </section>
+                  ) : null}
+
+                  <section className={`${styles.modalPanel} ${!form.hospitalised ? styles.modalPanelSpan : ''}`}>
+                    <div className={styles.mrModalSectionTitle}>Treatment Details</div>
+                    {form.hospitalised ? (
+                      <div className={styles.toggleRow}>
+                        <button className={`${styles.btnPill} ${form.medicalType === 'Allopathy' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Allopathy' }))}>Allopathy</button>
+                        <button className={`${styles.btnPill} ${form.medicalType === 'Ayurveda' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Ayurveda' }))}>Ayurveda</button>
+                        <button className={`${styles.btnPill} ${form.medicalType === 'Homeopathy' ? styles.btnPillActive : ''}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Homeopathy' }))}>Homeo</button>
+                      </div>
+                    ) : null}
+
+                    <div className={styles.modalFormGrid2}>
+                      <div>
+                        <label className={styles.formLabel}>Start Date</label>
+                        <input type="date" className={styles.field} onChange={(e) => setForm((prev) => ({ ...prev, fromDate: e.target.value }))} />
+                      </div>
+                      <div>
+                        <label className={styles.formLabel}>End Date (Optional)</label>
+                        <input type="date" className={styles.field} onChange={(e) => setForm((prev) => ({ ...prev, toDate: e.target.value }))} />
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
             </div>
 
             <div className={styles.modalFooter}>
