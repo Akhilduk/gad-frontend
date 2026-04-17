@@ -2,7 +2,7 @@
 
 import React, { type ChangeEvent, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Activity, AlertTriangle, Briefcase, CalendarDays, CheckCircle, ChevronLeft, ChevronRight, ClipboardCheck, FileText, IndianRupee, Pill, Stethoscope, Upload, UserCircle2 } from 'lucide-react';
+import { Activity, AlertTriangle, Briefcase, CalendarDays, CheckCircle, ChevronLeft, ChevronRight, ClipboardCheck, FileText, IndianRupee, Pill, Stethoscope, Upload, UserCircle2, Save, History, Download, FileCheck } from 'lucide-react';
 import styles from '@/modules/medical-reimbursement/mr.module.css';
 import { loadCases, saveCases } from '@/modules/medical-reimbursement/mockStore';
 import type { Bill, DocType } from '@/modules/medical-reimbursement/types';
@@ -487,861 +487,485 @@ export default function MRCaseWorkspaceClient() {
   const officerInitial = c.officer.fullName.trim().charAt(0).toUpperCase() || 'O';
 
   return (
-    <div className={styles.mrShell}>
-      <div className={styles.container}>
-        <section className={styles.mrWorkspaceTopBar}>
-          <div className={styles.mrWorkspaceTopBarLeft}>
-            <div>
-              <div className={styles.mrSectionEyebrow}>Case Workspace</div>
-              <div className={styles.mrWorkspaceCaseId}>{c.mrNo}</div>
-            </div>
-            <div className={styles.mrWorkspaceStatusBadge} style={{ color: statusColor(c.status) }}>{c.status}</div>
-          </div>
-          <div className={styles.mrWorkspaceTopBarRight}>
-            <div className={styles.mrWorkspaceOfficerAvatar}>{officerInitial}</div>
-            <div>
-              <div className={styles.mrWorkspaceOfficerLabel}>Officer</div>
-              <div className={styles.mrWorkspaceOfficerName}>{c.officer.fullName}</div>
-              <div className={styles.mrWorkspaceOfficerMeta}>{c.officer.cadre}</div>
-            </div>
-          </div>
-        </section>
+    <div className={styles.modernContainer}>
+      {toast && <div className={styles.mrToast}>{toast}</div>}
+      <div className={styles.modernHeader}>
+        <div>
+          <h1 className={styles.modernHeaderTitle}>Medical Reimbursement Application</h1>
+          <div className={styles.modernHeaderSubtitle}>Workspace for {c.mrNo}</div>
+        </div>
+        <div>
+          <span className={styles.modernBadgeInfo}>{c.status}</span>
+        </div>
+      </div>
 
-        <section className={styles.mrWorkspaceDashboard}>
-          <div className={styles.mrWorkspaceDossierColumn}>
-            <div className={styles.mrEnterpriseCard}>
-              <div className={styles.mrEnterpriseCardTitle}>Officer Dossier</div>
-              <div className={styles.mrDossierHeader}>
-                <div className={styles.mrWorkspaceOfficerAvatarLarge}>{officerInitial}</div>
-                <div>
-                  <div className={styles.mrDossierName}>{c.officer.fullName}</div>
-                  <div className={styles.mrDossierMeta}>{c.officer.serviceType} | PEN {c.officer.penNumber}</div>
+      <div className={styles.modernTabs}>
+        {workflowTabs.map(tab => (
+          <div
+            key={tab}
+            className={`${styles.modernTab} ${active === tab ? styles.modernTabActive : ''}`}
+            onClick={() => goToStep(tab)}
+          >
+            {tab}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginBottom: '2rem' }}>
+
+        {billEditId && billDraft && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className={styles.modernCard} style={{ width: '500px', maxWidth: '90%' }}>
+              <div className={styles.modernCardHeader}><h3 className={styles.modernCardTitle}>Preview / Edit Bill Details</h3></div>
+              <div className={styles.modernGrid2}>
+                <div className={styles.modernFormGroup}>
+                  <label className={styles.modernLabel}>Invoice No</label>
+                  <input className={styles.modernInput} value={billDraft.invoiceNo} onChange={(e) => setBillDraft({ ...billDraft, invoiceNo: e.target.value })} />
+                </div>
+                <div className={styles.modernFormGroup}>
+                  <label className={styles.modernLabel}>Amount (₹)</label>
+                  <input type="number" className={styles.modernInput} value={billDraft.totalAmount} onChange={(e) => setBillDraft({ ...billDraft, totalAmount: Number(e.target.value) || 0 })} />
                 </div>
               </div>
-              <div className={styles.summaryKVs}>
-                <div className={styles.summaryLabel}>Grade</div><div className={styles.summaryValue}>{c.officer.grade} | {c.officer.level}</div>
-                <div className={styles.summaryLabel}>Service</div><div className={styles.summaryValue}>{c.officer.cadre}</div>
-                <div className={styles.summaryLabel}>Contact</div><div className={styles.summaryValue}>{c.officer.mobile} | {c.officer.email}</div>
-                <div className={styles.summaryLabel}>Designation</div><div className={styles.summaryValue}>{c.officer.designation}</div>
-              </div>
-            </div>
-
-            <div className={styles.mrEnterpriseCard}>
-              <div className={styles.mrEnterpriseCardTitle}>Patient Dossier</div>
-              <div className={styles.summaryKVs}>
-                <div className={styles.summaryLabel}>Type</div><div className={styles.summaryValue}>{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</div>
-                <div className={styles.summaryLabel}>Patient</div><div className={styles.summaryValue}>{c.patient.name}</div>
-                <div className={styles.summaryLabel}>Hospital</div><div className={styles.summaryValue}>{c.treatment.hospitalName || '-'}</div>
-                <div className={styles.summaryLabel}>Address</div><div className={styles.summaryValue}>{c.treatment.hospitalAddress || '-'}</div>
-                <div className={styles.summaryLabel}>Dates</div><div className={styles.summaryValue}>{formatDMY(c.treatment.fromDate)} to {formatDMY(c.treatment.toDate)}</div>
-              </div>
-            </div>
-
-            <div className={styles.mrEnterpriseCard}>
-              <div className={styles.mrEnterpriseCardTitle}>Claim Summary</div>
-              <div className={styles.mrClaimMetrics}>
-                <div><span>Gross Bills</span><strong>{rupee(billsTotal(c))}</strong></div>
-                <div><span>Advance Paid</span><strong>{rupee(advancePaid(c))}</strong></div>
-                <div><span>Net Claim</span><strong>{rupee(billsTotal(c) - advancePaid(c))}</strong></div>
+              <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button className={styles.modernBtnSecondary} onClick={() => { setBillEditId(''); setBillDraft(null); }}>Cancel</button>
+                <button className={styles.modernBtnPrimary} onClick={saveBillEdit}>Save Bill</button>
               </div>
             </div>
           </div>
-
-          <div className={styles.mrWorkspaceActionColumn}>
-            <div className={styles.mrEnterpriseCard}>
-              <div className={styles.mrEnterpriseCardTitle}>Progress</div>
-              <div className={styles.mrStepperRow}>
-                {workflowTabs.map((t, index) => {
-                  const Icon = tabMeta[t]?.icon || Activity;
-                  const state = index < activeStepIndex ? styles.mrStepperDone : index === activeStepIndex ? styles.mrStepperCurrent : styles.mrStepperUpcoming;
-                  return (
-                    <button key={t} className={`${styles.mrStepperStep} ${state}`} onClick={() => setActive(t)}>
-                      <span className={styles.mrStepperIndex}>{index + 1}</span>
-                      <Icon className={styles.tabIcon} />
-                      <small>{t}</small>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className={styles.mrEnterpriseCard}>
-              <div className={styles.mrEnterpriseCardTitle}>Readiness Review</div>
-              {readinessLinks.length > 0 ? (
-                <div className={styles.mrIssueChipList}>
-                  {readinessLinks.map(({ issue, step }) => (
-                    <button key={issue} className={styles.mrIssueChip} onClick={() => setActive(step)}>
-                      <AlertTriangle className={styles.tabIcon} />
-                      <span>{issue}</span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className={styles.mrReadyPanel}>
-                  <CheckCircle className={styles.tabIcon} />
-                  <span>No blockers. Case is ready for final review.</span>
-                </div>
-              )}
-            </div>
-
-            <div className={styles.mrEnterpriseCard}>
-              <div className={styles.mrEnterpriseCardTitle}>Current Step</div>
-              <div className={styles.mrCurrentStepPanel}>
-                <div className={styles.mrCurrentStepName}>{activeStepIndex + 1}. {active}</div>
-                <div className={styles.mrWorkspaceProgressText}>{tabMeta[active]?.caption}</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className={styles.mrWorkspaceMain}>
+        )}
 
         {active === 'SUMMARY' && (
-          <div className={styles.mrStagePanel}>
-            <div className={styles.mrStageHeader}>
-              <div>
-                <div className={styles.mrSectionEyebrow}>Case Summary</div>
-                <h3 className={styles.mrSectionTitle}>Summary</h3>
-              </div>
+          <div className={`${styles.modernCard} ${styles.animateFadeIn}`}>
+            <div className={styles.modernCardHeader}>
+              <Activity className="text-blue-500" size={24} />
+              <h3 className={styles.modernCardTitle}>Application Summary</h3>
             </div>
-            <div className={styles.summaryHeroGrid}>
-              <div className={styles.summaryStatStrip}>
-                <div className={styles.summaryStatCard}>
-                  <span>Gross Bills</span>
-                  <strong>{rupee(billsTotal(c))}</strong>
-                  <small>{c.bills.length} bill(s)</small>
-                </div>
-                <div className={styles.summaryStatCard}>
-                  <span>Advance Paid</span>
-                  <strong>{rupee(advancePaid(c))}</strong>
-                  <small>{c.advances.length} request(s)</small>
-                </div>
-                <div className={styles.summaryStatCard}>
-                  <span>Net Claim</span>
-                  <strong>{rupee(billsTotal(c) - advancePaid(c))}</strong>
-                  <small>After adjustment</small>
-                </div>
-                <div className={styles.summaryStatCard}>
-                  <span>Readiness</span>
-                  <strong>{checks.length === 0 ? 'Ready' : 'Review'}</strong>
-                  <small>{checks.length === 0 ? 'No pending blockers' : `${checks.length} issue(s)`}</small>
-                </div>
+            <div className={styles.modernGrid3}>
+              <div className={styles.modernFormGroup}>
+                <span className={styles.modernLabel}>Applicant Name</span>
+                <span className={styles.modernValue}>{c.officer.fullName}</span>
               </div>
-
-              <div className={styles.summaryShowcase}>
-                <div className={styles.summarySpotlight}>
-                  <div className={styles.summarySpotlightHeader}>
-                    <div>
-                      <div className={styles.summarySpotlightTitle}>{c.patient.name}</div>
-                      <div className={styles.summarySpotlightMeta}>{c.patient.claimFor === 'SELF' ? 'Self claim' : `${c.patient.relation} claim`} for case {c.mrNo}</div>
-                    </div>
-                    <div className={styles.summaryPillRow}>
-                      <span className={styles.summaryPill}>{c.status}</span>
-                      <span className={styles.summaryPill}>{c.treatment.hospitalised ? 'Hospitalised' : 'Non-hospitalised'}</span>
-                    </div>
-                  </div>
-
-                  <div className={styles.summaryFactGrid}>
-                    <div className={styles.summaryFactCard}>
-                      <span>Officer</span>
-                      <strong>{c.officer.fullName}</strong>
-                    </div>
-                    <div className={styles.summaryFactCard}>
-                      <span>Designation</span>
-                      <strong>{c.officer.designation}</strong>
-                    </div>
-                    <div className={styles.summaryFactCard}>
-                      <span>Hospital</span>
-                      <strong>{c.treatment.hospitalName || '-'}</strong>
-                    </div>
-                    <div className={styles.summaryFactCard}>
-                      <span>Treatment Period</span>
-                      <strong>{formatDMY(c.treatment.fromDate)} to {formatDMY(c.treatment.toDate)}</strong>
-                    </div>
-                    <div className={styles.summaryFactCard}>
-                      <span>Diagnosis</span>
-                      <strong>{c.treatment.diagnosis || 'Not specified'}</strong>
-                    </div>
-                    <div className={styles.summaryFactCard}>
-                      <span>Claim Value</span>
-                      <strong>{rupee(billsTotal(c) - advancePaid(c))}</strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={styles.summarySideCard}>
-                  <div className={styles.summaryHead}><ClipboardCheck className={styles.summaryHeadIcon} aria-hidden="true" />Claim Status</div>
-                  <div className={styles.summaryBadges}>
-                    {checks.length
-                      ? checks.map((m) => <span key={m} className={styles.summaryWarnBadge}>{m}</span>)
-                      : <span className={styles.summaryOkBadge}>Ready to process</span>}
-                  </div>
-                  <div className={styles.summaryTimeline}>
-                    {c.movement.slice(0, 3).map((m) => (
-                      <div key={m.id} className={styles.summaryTimelineItem}>
-                        <span>{m.action}</span>
-                        <small>{new Date(m.at).toLocaleString()}</small>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <div className={styles.modernFormGroup}>
+                <span className={styles.modernLabel}>Designation</span>
+                <span className={styles.modernValue}>{c.officer.designation}</span>
               </div>
-
-              <div className={styles.summaryGrid}>
-                <div className={styles.summaryCard}>
-                  <div className={styles.summaryHead}><Briefcase className={styles.summaryHeadIcon} aria-hidden="true" />Officer Dossier</div>
-                  <div className={styles.summaryKVs}>
-                    <div className={styles.summaryLabel}>Service</div>
-                    <div className={styles.summaryValue}>{c.officer.serviceType} | PEN {c.officer.penNumber} | {c.officer.cadre}</div>
-                    <div className={styles.summaryLabel}>Current Position</div>
-                    <div className={styles.summaryValue}>{c.officer.postingTypes} | {c.officer.administrativeDepartment}</div>
-                    <div className={styles.summaryLabel}>Grade / Level</div>
-                    <div className={styles.summaryValue}>{c.officer.grade} | {c.officer.level}</div>
-                    <div className={styles.summaryLabel}>Basic Pay</div>
-                    <div className={styles.summaryValue}>{rupee(c.officer.basicPay)}</div>
-                    <div className={styles.summaryLabel}>Contact</div>
-                    <div className={styles.summaryValue}>{c.officer.email} | {c.officer.mobile}</div>
-                  </div>
-                </div>
-
-                <div className={styles.summaryCard}>
-                  <div className={styles.summaryHead}><UserCircle2 className={styles.summaryHeadIcon} aria-hidden="true" />Patient Dossier</div>
-                  <div className={styles.summaryKVs}>
-                    <div className={styles.summaryLabel}>Type</div>
-                    <div className={styles.summaryValue}>{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</div>
-                    <div className={styles.summaryLabel}>Relation</div>
-                    <div className={styles.summaryValue}>{c.patient.relation}</div>
-                    {c.patient.claimFor === 'DEPENDENT' && selectedDependent && (
-                      <>
-                        <div className={styles.summaryLabel}>Dependent Details</div>
-                        <div className={styles.summaryValue}>{selectedDependent.gender} | DOB {selectedDependent.dob} | {selectedDependent.relationType}</div>
-                      </>
-                    )}
-                    <div className={styles.summaryLabel}>Hospital Address</div>
-                    <div className={styles.summaryValue}>{c.treatment.hospitalAddress || '-'}</div>
-                    <div className={styles.summaryLabel}>Medical System</div>
-                    <div className={styles.summaryValue}>{c.treatment.diagnosis?.includes(' | ') ? c.treatment.diagnosis.split(' | ')[1] : 'Allopathy'}</div>
-                  </div>
-                </div>
+              <div className={styles.modernFormGroup}>
+                <span className={styles.modernLabel}>MR Number</span>
+                <span className={styles.modernValue}>{c.mrNo}</span>
+              </div>
+              <div className={styles.modernFormGroup}>
+                <span className={styles.modernLabel}>Created On</span>
+                <span className={styles.modernValue}>{new Date(c.createdAt).toLocaleDateString()}</span>
+              </div>
+              <div className={styles.modernFormGroup}>
+                <span className={styles.modernLabel}>Total Claim</span>
+                <span className={styles.modernValue}>₹{(c.bills.reduce((acc, b) => acc + (Number(b.totalAmount) || 0), 0) || 0).toLocaleString()}</span>
+              </div>
+              <div className={styles.modernFormGroup}>
+                <span className={styles.modernLabel}>Total Advance Requested</span>
+                <span className={styles.modernValue}>₹{(c.advances.reduce((acc, a) => acc + (Number(a.amount) || 0), 0) || 0).toLocaleString()}</span>
               </div>
             </div>
           </div>
         )}
+
 
         {active === 'TREATMENT NOTE' && (
-          <div className={styles.mrStagePanel}>
-            <div className={styles.mrStageHeader}>
-              <div>
-                <div className={styles.mrSectionEyebrow}>Treatment Note</div>
-                <h3 className={styles.mrSectionTitle}>Treatment Note</h3>
-              </div>
-              <div className={styles.sectionActions}>
-                <button className={styles.btnPrimary} onClick={saveTreatment}>Save Treatment</button>
-              </div>
+          <div className={`${styles.modernCard} ${styles.animateFadeIn}`}>
+            <div className={styles.modernCardHeader}>
+              <Stethoscope className="text-blue-500" size={24} />
+              <h3 className={styles.modernCardTitle}>Treatment Details</h3>
             </div>
-            <div className={`${styles.formShell} ${styles.formShellTwoColumn}`}>
-              <div className={`${styles.formCard} ${styles.formCardSoft}`}>
-                <div className={styles.formCardHeader}>
-                  <div className={styles.formCardTitle}>Care Setting</div>
-                </div>
-                <div className={styles.formCluster}>
-                  <label className={styles.formLabel}>Hospitalisation</label>
-                  <div className={styles.toggleRow}>
-                    <button className={`${styles.btnPill} ${treatmentDraft.hospitalised ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, hospitalised: true }))}>Hospitalised</button>
-                    <button className={`${styles.btnPill} ${!treatmentDraft.hospitalised ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, hospitalised: false, hospitalName: '', hospitalAddress: '' }))}>Not Hospitalised</button>
-                  </div>
-                </div>
 
-                <div className={styles.formDualGrid}>
-                  <div>
-                    <label className={styles.formLabel}>Place of Illness</label>
-                    <input className={styles.field} value={treatmentDraft.placeOfIllness} onChange={(e) => setTreatmentDraft((p) => ({ ...p, placeOfIllness: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className={styles.formLabel}>Within State</label>
-                    <div className={styles.toggleRow}>
-                      <button className={`${styles.btnPill} ${treatmentDraft.withinState ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, withinState: true }))}>Within Kerala</button>
-                      <button className={`${styles.btnPill} ${!treatmentDraft.withinState ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, withinState: false }))}>Outside Kerala</button>
-                    </div>
-                  </div>
-                </div>
-
-                {treatmentDraft.hospitalised && (
-                  <>
-                    <div className={styles.formCluster}>
-                      <label className={styles.formLabel}>Hospital Type</label>
-                      <div className={styles.toggleRow}>
-                        <button className={`${styles.btnPill} ${treatmentDraft.hospitalType === 'Government' ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, hospitalType: 'Government' }))}>Government</button>
-                        <button className={`${styles.btnPill} ${treatmentDraft.hospitalType === 'Private' ? styles.btnPillActive : ''}`} onClick={() => setTreatmentDraft((p) => ({ ...p, hospitalType: 'Private' }))}>Private</button>
-                      </div>
-                    </div>
-                    <div className={styles.formDualGrid}>
-                      <div>
-                        <label className={styles.formLabel}>Hospital Name</label>
-                        <div className={styles.autoWrap}>
-                          <input
-                            className={styles.field}
-                            placeholder="Type hospital name"
-                            value={hospitalQuery}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setHospitalQuery(value);
-                              setTreatmentDraft((p) => ({ ...p, hospitalName: value }));
-                            }}
-                            onFocus={() => setHospitalFocused(true)}
-                            onBlur={() => window.setTimeout(() => setHospitalFocused(false), 140)}
-                          />
-                          {hospitalFocused && (hospitalLoading || hospitalOptions.length > 0) && (
-                            <div className={styles.autoList}>
-                              {hospitalLoading && <div className={styles.autoItem}>Searching hospitals...</div>}
-                              {!hospitalLoading && hospitalOptions.map((opt) => (
-                                <button
-                                  key={`${opt.name}-${opt.address}`}
-                                  type="button"
-                                  className={styles.autoItem}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    skipAutocompleteRef.current = true;
-                                    setHospitalQuery(opt.name);
-                                    setHospitalOptions([]);
-                                    setHospitalFocused(false);
-                                    setTreatmentDraft((p) => ({ ...p, hospitalName: opt.name, hospitalAddress: opt.address }));
-                                  }}
-                                >
-                                  {opt.name}
-                                  <br />
-                                  <small>{opt.address}</small>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <label className={styles.formLabel}>Hospital Address</label>
-                        <input className={styles.field} value={treatmentDraft.hospitalAddress} onChange={(e) => setTreatmentDraft((p) => ({ ...p, hospitalAddress: e.target.value }))} />
-                      </div>
-                    </div>
-                  </>
-                )}
+            <div className={styles.modernGrid2}>
+              <div className={styles.modernFormGroup}>
+                <label className={styles.modernLabel}>Diagnosis</label>
+                <input
+                  className={styles.modernInput}
+                  value={treatmentDraft.diagnosis.split(' | ')[0] || ''}
+                  onChange={(e) => setTreatmentDraft({ ...treatmentDraft, diagnosis: e.target.value })}
+                  placeholder="e.g. Viral Fever"
+                />
+              </div>
+              <div className={styles.modernFormGroup}>
+                <label className={styles.modernLabel}>Medical Type</label>
+                <select
+                  className={styles.modernSelect}
+                  value={treatmentDraft.medicalType || 'Allopathy'}
+                  onChange={(e) => setTreatmentDraft({ ...treatmentDraft, medicalType: e.target.value })}
+                >
+                  <option>Allopathy</option>
+                  <option>Ayurveda</option>
+                  <option>Homeopathy</option>
+                </select>
               </div>
 
-              <div className={styles.summarySectionStack}>
-                <div className={styles.formCard}>
-                  <div className={styles.formCardHeader}>
-                    <div className={styles.formCardTitle}>Treatment Timeline</div>
-                  </div>
-                  <div className={styles.formDualGrid}>
-                    <div>
-                      <label className={styles.formLabel}>Start Date</label>
-                      <input type="date" className={styles.field} value={treatmentDraft.fromDate} onChange={(e) => setTreatmentDraft((p) => ({ ...p, fromDate: e.target.value }))} />
-                    </div>
-                    <div>
-                      <label className={styles.formLabel}>End Date (Optional)</label>
-                      <input type="date" className={styles.field} value={treatmentDraft.toDate || ''} onChange={(e) => setTreatmentDraft((p) => ({ ...p, toDate: e.target.value }))} />
-                    </div>
-                  </div>
-                </div>
+              <div className={styles.modernFormGroup}>
+                <label className={styles.modernLabel}>Place of Illness</label>
+                <input
+                  className={styles.modernInput}
+                  value={treatmentDraft.placeOfIllness}
+                  onChange={(e) => setTreatmentDraft({ ...treatmentDraft, placeOfIllness: e.target.value })}
+                  placeholder="Place of Illness"
+                />
+              </div>
 
-                <div className={styles.formCard}>
-                  <div className={styles.formCardHeader}>
-                    <div className={styles.formCardTitle}>Clinical Details</div>
-                  </div>
-                  <div className={styles.formCluster}>
-                    <div>
-                      <label className={styles.formLabel}>Diagnosis</label>
-                      <input className={styles.field} placeholder="e.g. Viral Fever" value={treatmentDraft.diagnosis} onChange={(e) => setTreatmentDraft((p) => ({ ...p, diagnosis: e.target.value }))} />
-                    </div>
-                    <div>
-                      <label className={styles.formLabel}>System of Medicine</label>
-                      <select className={styles.field} value={treatmentDraft.medicalType} onChange={(e) => setTreatmentDraft((p) => ({ ...p, medicalType: e.target.value }))}>
-                        <option value="Allopathy">Allopathy</option>
-                        <option value="Ayurveda">Ayurveda</option>
-                        <option value="Homeopathy">Homeopathy</option>
-                        <option value="Unani">Unani</option>
-                        <option value="Siddha">Siddha</option>
-                      </select>
-                    </div>
-                  </div>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className={styles.modernLabel}>Hospitalised?</label>
+                  <select
+                    className={styles.modernSelect}
+                    value={treatmentDraft.hospitalised ? 'Yes' : 'No'}
+                    onChange={(e) => setTreatmentDraft({ ...treatmentDraft, hospitalised: e.target.value === 'Yes' })}
+                  >
+                    <option>Yes</option>
+                    <option>No</option>
+                  </select>
                 </div>
-
-                <div className={styles.compactNotice}>
-                  Review care setting, dates, and diagnosis here before moving to bills and final note preparation.
+                <div className="flex-1">
+                  <label className={styles.modernLabel}>Within State?</label>
+                  <select
+                    className={styles.modernSelect}
+                    value={treatmentDraft.withinState ? 'Yes' : 'No'}
+                    onChange={(e) => setTreatmentDraft({ ...treatmentDraft, withinState: e.target.value === 'Yes' })}
+                  >
+                    <option>Yes</option>
+                    <option>No</option>
+                  </select>
                 </div>
               </div>
+
+              {treatmentDraft.hospitalised && (
+                <>
+                  <div className={styles.modernFormGroup}>
+                    <label className={styles.modernLabel}>Hospital Type</label>
+                    <select
+                      className={styles.modernSelect}
+                      value={treatmentDraft.hospitalType}
+                      onChange={(e) => setTreatmentDraft({ ...treatmentDraft, hospitalType: e.target.value })}
+                    >
+                      <option>Government</option>
+                      <option>Private</option>
+                    </select>
+                  </div>
+
+                  <div className={styles.modernFormGroup}>
+                    <label className={styles.modernLabel}>Hospital Name</label>
+                    <input
+                      className={styles.modernInput}
+                      value={treatmentDraft.hospitalName}
+                      onChange={(e) => setTreatmentDraft({ ...treatmentDraft, hospitalName: e.target.value })}
+                      placeholder="Enter Hospital Name"
+                    />
+                  </div>
+
+                  <div className={styles.modernFormGroup}>
+                    <label className={styles.modernLabel}>Hospital Address</label>
+                    <input
+                      className={styles.modernInput}
+                      value={treatmentDraft.hospitalAddress}
+                      onChange={(e) => setTreatmentDraft({ ...treatmentDraft, hospitalAddress: e.target.value })}
+                      placeholder="Enter Hospital Address"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className={styles.modernFormGroup}>
+                <label className={styles.modernLabel}>Treatment Start Date</label>
+                <input
+                  type="date"
+                  className={styles.modernInput}
+                  value={treatmentDraft.fromDate}
+                  onChange={(e) => setTreatmentDraft({ ...treatmentDraft, fromDate: e.target.value })}
+                />
+              </div>
+              <div className={styles.modernFormGroup}>
+                <label className={styles.modernLabel}>Treatment End Date</label>
+                <input
+                  type="date"
+                  className={styles.modernInput}
+                  value={treatmentDraft.toDate}
+                  onChange={(e) => setTreatmentDraft({ ...treatmentDraft, toDate: e.target.value })}
+                />
+              </div>
+
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button className={styles.modernBtnPrimary} onClick={() => {
+                updateCase({
+                  ...c,
+                  treatment: {
+                    ...c.treatment,
+                    diagnosis: `${treatmentDraft.diagnosis} | ${treatmentDraft.medicalType}`,
+                    hospitalised: treatmentDraft.hospitalised,
+                    hospitalName: treatmentDraft.hospitalName,
+                    hospitalAddress: treatmentDraft.hospitalAddress,
+                    hospitalType: treatmentDraft.hospitalType,
+                    fromDate: treatmentDraft.fromDate,
+                    toDate: treatmentDraft.toDate,
+                    placeOfIllness: treatmentDraft.placeOfIllness,
+                    withinState: treatmentDraft.withinState,
+                  }
+                }, 'Treatment details saved');
+              }}>
+                <Save size={18} className="mr-2" />
+                Save Treatment Details
+              </button>
             </div>
           </div>
         )}
 
+
         {active === 'ANNEXURES' && (
-          <div className={styles.mrStagePanel}>
-            <div className={styles.mrStageHeader}>
-              <div>
-                <div className={styles.mrSectionEyebrow}>Annexures</div>
-                <h3 className={styles.mrSectionTitle}>Annexures</h3>
-              </div>
-            </div>
-            <div className={styles.mrSegmentedTabs}>
-              <button
-                className={`${styles.mrSegmentedTab} ${sub === 'Bills' ? styles.mrSegmentedTabActive : ''}`}
-                onClick={() => setSub('Bills')}
-              >
-                Bills (OCR)
-              </button>
-              <button
-                className={`${styles.mrSegmentedTab} ${sub === 'Other' ? styles.mrSegmentedTabActive : ''}`}
-                onClick={() => setSub('Other')}
-              >
-                Other Documents
-              </button>
-            </div>
-            {sub === 'Bills' ? (
-              <div className={styles.docWorkspace}>
-                <div className={styles.docSummaryStrip}>
-                  <div className={styles.docSummaryCard}>
-                    <span>Total Bills</span>
-                    <strong>{c.bills.length}</strong>
-                  </div>
-                  <div className={styles.docSummaryCard}>
-                    <span>Verified Value</span>
-                    <strong>{rupee(billsTotal(c))}</strong>
-                  </div>
-                  <div className={styles.docSummaryCard}>
-                    <span>Duplicates</span>
-                    <strong>{c.bills.filter((b) => b.duplicateFlag).length}</strong>
-                  </div>
-                </div>
-                <div className={styles.docToolbar}>
-                  <div className={styles.sectionActions}>
-                    <input ref={billUploadRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={onBillUpload} />
-                    <button className={styles.btnSecondary} onClick={() => billUploadRef.current?.click()}><Upload className={styles.tabIcon} /> Upload Bill File</button>
-                    <button className={styles.btnSecondary} onClick={addBill}>Add Sample Bill</button>
-                  </div>
-                  <div className={styles.mutedText}>Bills workspace</div>
-                </div>
-                <div className={styles.tableWrap}>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th>File</th>
-                        <th>Invoice No</th>
-                        <th>GST No</th>
-                        <th>Bill Date</th>
-                        <th>Hospital</th>
-                        <th>Total Amount</th>
-                        <th>Tax</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {c.bills.length === 0 && (
-                        <tr>
-                          <td colSpan={9} className="p-8 text-center text-slate-500">
-                            No bills uploaded yet. Upload a bill or add a sample.
-                          </td>
-                        </tr>
-                      )}
-                      {c.bills.map((b) => (
-                        <React.Fragment key={b.id}>
-                          {billEditId === b.id && billDraft ? (
-                            <tr>
-                              <td colSpan={9} className="p-4 bg-slate-50 border-y border-slate-200">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                                  <div className="md:col-span-2"><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">File Name</label><input className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.fileName} onChange={(e) => setBillDraft({ ...billDraft, fileName: e.target.value })} /></div>
-                                  <div className="md:col-span-2"><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Hospital / Vendor</label><input className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.hospitalName} onChange={(e) => setBillDraft({ ...billDraft, hospitalName: e.target.value })} /></div>
-                                  <div><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Invoice No</label><input className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.invoiceNo} onChange={(e) => setBillDraft({ ...billDraft, invoiceNo: e.target.value })} /></div>
-                                  <div><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">GST No</label><input className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.gstNo} onChange={(e) => setBillDraft({ ...billDraft, gstNo: e.target.value })} /></div>
-                                  <div><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Bill Date</label><input type="date" className={`${styles.field} !py-1.5 !text-sm`} value={billDraft.billDate} onChange={(e) => setBillDraft({ ...billDraft, billDate: e.target.value })} /></div>
-                                  <div><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Amount (₹)</label><input className={`${styles.field} !py-1.5 !text-sm font-semibold`} value={String(billDraft.totalAmount)} onChange={(e) => setBillDraft({ ...billDraft, totalAmount: parseAmount(e.target.value) })} /></div>
-                                </div>
-                                <div className="flex gap-3 justify-end mt-4">
-                                  <button className={`${styles.btnSecondary} !py-1 !px-4`} onClick={() => { setBillEditId(''); setBillDraft(null); }}>Cancel</button>
-                                  <button className={`${styles.btnPrimary} !py-1 !px-4`} onClick={saveBillEdit}>Save Details</button>
-                                </div>
-                              </td>
-                            </tr>
-                          ) : (
-                            <tr className="hover:bg-slate-50 transition-colors">
-                              <td className="font-medium text-slate-700 truncate max-w-[150px]" title={b.fileName}>{b.fileName}</td>
-                              <td>{b.invoiceNo}</td>
-                              <td>{b.gstNo}</td>
-                              <td>{b.billDate ? formatDMY(b.billDate) : '-'}</td>
-                              <td className="truncate max-w-[150px]" title={b.hospitalName}>{b.hospitalName}</td>
-                              <td className="font-semibold">{rupee(b.totalAmount)}</td>
-                              <td>{rupee(b.taxAmount)}</td>
-                              <td>
-                                {b.duplicateFlag ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full ring-1 ring-inset ring-red-600/20">Duplicate</span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full ring-1 ring-inset ring-green-600/20">{b.status}</span>
-                                )}
-                              </td>
-                              <td>
-                                <div className="flex items-center gap-3">
-                                  <button className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors" onClick={() => startBillEdit(b)}>Edit</button>
-                                  <button className="text-sm font-medium text-red-600 hover:text-red-800 transition-colors" onClick={() => updateCase({ ...c, bills: c.bills.filter((x) => x.id !== b.id) }, 'Bill removed')}>Delete</button>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <div className={styles.docWorkspace}>
-                <div className={styles.docToolbar}>
-                  <div className="flex gap-2 flex-wrap">
-                    {docTypes.map((d) => <button key={d.value} className={`${styles.btnPill} ${docType === d.value ? styles.btnPillActive : ''}`} onClick={() => setDocType(d.value)}>{d.label}</button>)}
-                  </div>
-                  <div className={styles.sectionActions}>
-                    <input ref={docUploadRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={onDocUpload} />
-                    <button className={styles.btnSecondary} onClick={() => docUploadRef.current?.click()}><Upload className={styles.tabIcon} /> Upload File</button>
-                    <button className={styles.btnSecondary} onClick={addDoc}>Add Sample</button>
-                  </div>
-                </div>
-                {!c.docs.some((d) => d.type === 'DISCHARGE') && <div className={styles.compactNotice}>Required: Discharge Summary missing</div>}
-                <div className={styles.docGrid}>
-                  {c.docs.map((d) => (
-                    <div key={d.id} className={styles.docTile}>
-                      <div className={styles.docTileTitle}>{d.type}</div>
-                      <div className={styles.bodyText}>{d.fileName}</div>
-                      <div className={styles.mutedText}>{d.uploadedAt}</div>
-                      <div className={styles.docTileAction}>View / Download</div>
-                    </div>
-                  ))}
-                  {c.docs.length === 0 && (
-                    <div className={styles.compactNotice}>No supporting documents uploaded yet.</div>
-                  )}
-                </div>
-              </div>
-            )}
+          <div className={`${styles.modernCard} ${styles.animateFadeIn}`}>
+             <div className={styles.modernCardHeader} style={{ justifyContent: 'space-between' }}>
+               <div style={{ display: 'flex', alignItems: 'center' }}>
+                 <FileText className="text-blue-500" size={24} />
+                 <h3 className={styles.modernCardTitle}>Annexures & Bills</h3>
+               </div>
+               <div style={{ display: 'flex', gap: '12px' }}>
+                 <select className={styles.modernSelect} value={docType} onChange={e => setDocType(e.target.value as DocType)} style={{ width: 'auto' }}>
+                    <option value="OP Ticket">OP Ticket</option>
+                    <option value="Discharge Summary">Discharge Summary</option>
+                    <option value="Medical Report">Medical Report</option>
+                    <option value="Prescription">Prescription</option>
+                    <option value="Other">Other</option>
+                 </select>
+                 <button className={styles.modernBtnSecondary} onClick={() => docUploadRef.current?.click()}>
+                   <Upload size={18} /> Upload Doc
+                 </button>
+                 <button className={styles.modernBtnPrimary} onClick={() => billUploadRef.current?.click()}>
+                   <Upload size={18} /> Upload Bill
+                 </button>
+               </div>
+             </div>
+             <input type="file" ref={billUploadRef} style={{ display: 'none' }} accept=".pdf,.jpg,.png" onChange={onBillUpload} />
+             <input type="file" ref={docUploadRef} style={{ display: 'none' }} accept=".pdf,.jpg,.png" onChange={onDocUpload} />
+
+             {c.bills.length === 0 && c.docs.length === 0 ? (
+               <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>No bills or documents uploaded yet.</div>
+             ) : (
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+                 {c.bills.length > 0 && (
+                   <div>
+                     <h4 className={styles.modernLabel} style={{ marginBottom: '12px' }}>Bills</h4>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                       {c.bills.map((b) => (
+                         <div key={b.id} className={styles.modernStatCard} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div>
+                                <div className={styles.modernValue}>{b.invoiceNo}</div>
+                                <div className={styles.modernLabel}>File: {b.fileName}</div>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <div className={styles.modernStatValue} style={{ fontSize: '1.25rem' }}>₹{b.totalAmount}</div>
+                                <button className={styles.modernBtnSecondary} onClick={() => startBillEdit(b)}>Edit</button>
+                                <button className={styles.modernBtnDanger} onClick={() => updateCase({ ...c, bills: c.bills.filter(x => x.id !== b.id) }, 'Bill deleted')}>Delete</button>
+                              </div>
+                            </div>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
+
+                 {c.docs.filter(d => d.type !== 'EC_SIGNED').length > 0 && (
+                   <div>
+                     <h4 className={styles.modernLabel} style={{ marginBottom: '12px' }}>Other Documents</h4>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                       {c.docs.filter(d => d.type !== 'EC_SIGNED').map((d) => (
+                         <div key={d.id} className={styles.modernStatCard} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <div className={styles.modernValue}>{d.type}</div>
+                              <div className={styles.modernLabel}>File: {d.fileName}</div>
+                            </div>
+                            <button className={styles.modernBtnDanger} onClick={() => updateCase({ ...c, docs: c.docs.filter(x => x.id !== d.id) }, 'Doc deleted')}>Delete</button>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
+
+               </div>
+             )}
           </div>
         )}
 
         {active === 'ADVANCE NOTES' && (
-          <div className={styles.mrStagePanel}>
-            <div className={styles.mrStageHeader}>
-              <div>
-                <div className={styles.mrSectionEyebrow}>Advance Notes</div>
-                <h3 className={styles.mrSectionTitle}>Advance Notes</h3>
-              </div>
-              <button className={`${styles.btnSecondary}`} onClick={() => { setAdvanceFormOpen((v) => !v); setAdvancePreview(false); }}>{advanceFormOpen ? 'Close Request Form' : 'New Advance Request'}</button>
-            </div>
-            {!advanceFormOpen && c.advances.length === 0 && (
-              <div className={styles.mrEmptyState}>
-                <IndianRupee className={styles.mrEmptyStateIcon} />
-                <h3>No advance requests</h3>
-                <p>Upload an estimate to start an advance request.</p>
-              </div>
-            )}
-            {advanceFormOpen && (
-              <div className={`${styles.formShell} ${styles.formShellTwoColumn}`}>
-                <div className={styles.formCard}>
-                  <div className={styles.formCardHeader}>
-                    <div className={styles.formCardTitle}>Advance Request</div>
-                  </div>
-                  <div className={styles.formCluster}>
-                    <label className={styles.formLabel}>Estimate Document</label>
-                    <input ref={estimateUploadRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setEstimateFileName(e.target.files?.[0]?.name || '')} />
-                    <div className={styles.sectionActions}>
-                      <button className={styles.btnSecondary} onClick={() => estimateUploadRef.current?.click()}><Upload className={styles.tabIcon} /> Upload Estimate</button>
-                      <span className={styles.mutedText}>{estimateFileName || 'No file selected'}</span>
-                    </div>
-                  </div>
-                  <div className={styles.formCluster}>
-                    <label className={styles.formLabel}>Advance Amount</label>
-                    <input className={styles.field} placeholder="Enter amount" value={advanceAmount} onChange={(e) => setAdvanceAmount(e.target.value)} />
-                  </div>
-                  <div className={styles.sectionActions}>
-                    <button className={styles.btnSecondary} onClick={() => setAdvancePreview(true)} disabled={!advanceAmount || !estimateFileName}>Preview</button>
-                    <button className={styles.btnPrimary} onClick={submitAdvanceRequest} disabled={!advancePreview || !advanceAmount || !estimateFileName}>Submit Request</button>
-                  </div>
-                </div>
-                <div className={styles.formCard}>
-                  <div className={styles.formCardHeader}>
-                    <div className={styles.formCardTitle}>Preview</div>
-                  </div>
-                  {advancePreview ? (
-                    <div className={styles.summaryKVs}>
-                      <div className={styles.summaryLabel}>Case</div><div className={styles.summaryValue}>{c.mrNo}</div>
-                      <div className={styles.summaryLabel}>Officer</div><div className={styles.summaryValue}>{c.officer.fullName} | PEN {c.officer.penNumber}</div>
-                      <div className={styles.summaryLabel}>Patient</div><div className={styles.summaryValue}>{c.patient.name} ({c.patient.relation})</div>
-                      <div className={styles.summaryLabel}>Hospital</div><div className={styles.summaryValue}>{c.treatment.hospitalName || '-'}</div>
-                      <div className={styles.summaryLabel}>Estimate File</div><div className={styles.summaryValue}>{estimateFileName}</div>
-                      <div className={styles.summaryLabel}>Requested Amount</div><div className={styles.summaryValue}>{rupee(parseAmount(advanceAmount))}</div>
-                    </div>
-                  ) : (
-                    <div className={styles.compactNotice}>Add estimate and amount to preview.</div>
-                  )}
-                </div>
-              </div>
-            )}
-            <div className={styles.ledgerList}>
-              {c.advances.map((a) => (
-                <div key={a.advId} className={styles.ledgerCard}>
-                  <div className={styles.ledgerCardHead}>
-                    <div>
-                      <div className={styles.labelText}>{a.advNo}</div>
-                      <div className={styles.ledgerCardMeta}>Amount {rupee(a.amount)} | {a.status} | eSign {a.signed ? 'Yes' : 'No'}</div>
-                    </div>
-                    <div className={styles.sectionActions}>
-                      <button className={styles.btnSecondary} onClick={() => { setActiveMrId(c.mrId); setActiveAdvanceId(a.advId); router.push(`/reimbursement/medical/${STATIC_MR_ROUTE_PARAM}/advance/${STATIC_ADV_ROUTE_PARAM}/preview`); }}>View Preview</button>
-                      <button className={styles.btnSecondary}>Download</button>
-                      <button className={styles.btnSecondary} onClick={() => updateCase({ ...c, advances: c.advances.map((x) => x.advId === a.advId ? { ...x, status: 'Paid' as const } : x), status: 'Advance Paid' }, 'Saved')}>Mark Paid</button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+           <div className={`${styles.modernCard} ${styles.animateFadeIn}`}>
+             <div className={styles.modernCardHeader} style={{ justifyContent: 'space-between' }}>
+               <div style={{ display: 'flex', alignItems: 'center' }}>
+                 <IndianRupee className="text-blue-500" size={24} />
+                 <h3 className={styles.modernCardTitle}>Advances</h3>
+               </div>
+               <button className={styles.modernBtnSecondary} onClick={() => setAdvanceFormOpen(!advanceFormOpen)}>
+                 {advanceFormOpen ? 'Cancel Request' : 'Request Advance'}
+               </button>
+             </div>
+
+             {advanceFormOpen && (
+               <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                 <div className={styles.modernGrid2}>
+                   <div className={styles.modernFormGroup}>
+                     <label className={styles.modernLabel}>Advance Amount (₹)</label>
+                     <input type="number" className={styles.modernInput} value={advanceAmount} onChange={e => setAdvanceAmount(e.target.value)} />
+                   </div>
+                   <div className={styles.modernFormGroup}>
+                     <label className={styles.modernLabel}>Estimate Document</label>
+                     <div style={{ display: 'flex', gap: '8px' }}>
+                       <input type="file" ref={estimateUploadRef} style={{ display: 'none' }} onChange={(e) => {
+                         if (e.target.files?.[0]) {
+                           setEstimateFileName(e.target.files[0].name);
+                           setToast('Estimate document attached');
+                           setTimeout(() => setToast(''), 2000);
+                         }
+                       }} />
+                       <button className={styles.modernBtnSecondary} onClick={() => estimateUploadRef.current?.click()} style={{ flex: 1 }}>
+                         <Upload size={16} /> {estimateFileName || 'Upload Estimate'}
+                       </button>
+                     </div>
+                   </div>
+                 </div>
+                 <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                   <button className={styles.modernBtnPrimary} onClick={submitAdvanceRequest} disabled={!advanceAmount || !estimateFileName}>
+                     Submit Advance Request
+                   </button>
+                 </div>
+               </div>
+             )}
+
+             {c.advances.length === 0 ? (
+               <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>No advance requests made.</div>
+             ) : (
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                 {c.advances.map(a => (
+                   <div key={a.advId} className={styles.modernStatCard} style={{ justifyContent: 'space-between' }}>
+                     <div>
+                       <div className={styles.modernValue}>₹{a.amount.toLocaleString()}</div>
+                       <div className={styles.modernLabel}>Status: <span className={styles.modernBadgeInfo}>{a.status}</span></div>
+                     </div>
+                     <div className={styles.modernLabel}>Requested on {new Date(a.submittedAt || new Date()).toLocaleDateString()}</div>
+                   </div>
+                 ))}
+               </div>
+             )}
+           </div>
         )}
 
         {active === 'CERTIFICATE' && (
-          <div className={styles.mrStagePanel}>
-            <div className={styles.mrStageHeader}>
-              <div>
-                <div className={styles.mrSectionEyebrow}>Certificate Desk</div>
-                <h3 className={styles.mrSectionTitle}>Certificate</h3>
-              </div>
-              <div className="flex items-center gap-3 w-full md:w-auto">
-                <button className={`${styles.btnSecondary} flex items-center justify-center gap-2 flex-1 md:flex-none`} onClick={downloadEssentialityCertificate}><FileText className="w-4 h-4" /> Download EC Template</button>
-                <input ref={ecSignedUploadRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={onSignedEcUpload} />
-                <button className={`${styles.btnPrimary} flex items-center justify-center gap-2 flex-1 md:flex-none`} onClick={() => ecSignedUploadRef.current?.click()}><Upload className="w-4 h-4" /> Upload Signed EC</button>
-              </div>
-            </div>
-            <div className={styles.certificateLayout}>
-              <div className={styles.certificatePanel}>
-                <div className={styles.formCardHeader}>
-                  <div className={styles.formCardTitle}>Certificate Metadata</div>
-                </div>
-                <div className={styles.formDualGrid}>
-                  <div><label className={styles.formLabel}>Authorized Medical Attendant</label><input className={styles.field} value={ecMeta.amaName} onChange={(e) => setEcMeta((p) => ({ ...p, amaName: e.target.value }))} /></div>
-                  <div><label className={styles.formLabel}>Designation</label><input className={styles.field} value={ecMeta.amaDesignation} onChange={(e) => setEcMeta((p) => ({ ...p, amaDesignation: e.target.value }))} /></div>
-                  <div><label className={styles.formLabel}>Medical Registration No.</label><input className={styles.field} value={ecMeta.regNo} onChange={(e) => setEcMeta((p) => ({ ...p, regNo: e.target.value }))} /></div>
-                  <div><label className={styles.formLabel}>Date of Certificate</label><input type="date" className={styles.field} value={ecMeta.certificateDate} onChange={(e) => setEcMeta((p) => ({ ...p, certificateDate: e.target.value }))} /></div>
-                  <div className={styles.sectionFormSpan}><label className={styles.formLabel}>Hospital / Institution</label><input className={styles.field} value={ecMeta.institutionName} onChange={(e) => setEcMeta((p) => ({ ...p, institutionName: e.target.value }))} /></div>
-                  <div className={styles.sectionFormSpan}><label className={styles.formLabel}>Institution Address</label><input className={styles.field} value={ecMeta.institutionAddress} onChange={(e) => setEcMeta((p) => ({ ...p, institutionAddress: e.target.value }))} /></div>
-                </div>
-              </div>
+          <div className={`${styles.modernCard} ${styles.animateFadeIn}`}>
+             <div className={styles.modernCardHeader} style={{ justifyContent: 'space-between' }}>
+               <div style={{ display: 'flex', alignItems: 'center' }}>
+                 <FileCheck className="text-blue-500" size={24} />
+                 <h3 className={styles.modernCardTitle}>Essentiality Certificate</h3>
+               </div>
+             </div>
 
-              <div className={styles.summarySectionStack}>
-                <div className={styles.certificateStatus}>
-                  <div className={styles.formCardTitle}>Pre-fill Data</div>
-                  <div className={styles.summaryKVs}>
-                    <div className={styles.summaryLabel}>Officer</div><div className={styles.summaryValue}>{c.officer.fullName}</div>
-                    <div className={styles.summaryLabel}>Designation</div><div className={styles.summaryValue}>{c.officer.designation}</div>
-                    <div className={styles.summaryLabel}>Treatment</div><div className={styles.summaryValue}>{c.treatment.fromDate} - {c.treatment.toDate || 'Present'}</div>
-                    <div className={styles.summaryLabel}>Condition</div><div className={styles.summaryValue}>{c.treatment.diagnosis || 'Not specified'}</div>
-                    <div className={styles.summaryLabel}>Admitted</div><div className={styles.summaryValue}>{c.treatment.hospitalised ? 'Yes' : 'No'}</div>
-                  </div>
-                </div>
+             <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+               <button className={styles.modernBtnSecondary} onClick={downloadEssentialityCertificate}>
+                 <Download size={18} /> Download Generated EC
+               </button>
+               <div>
+                 <input type="file" ref={ecSignedUploadRef} style={{ display: 'none' }} accept=".pdf,.jpg,.png" onChange={onSignedEcUpload} />
+                 <button className={styles.modernBtnPrimary} onClick={() => ecSignedUploadRef.current?.click()}>
+                   <Upload size={18} /> Upload Signed EC
+                 </button>
+               </div>
+             </div>
 
-                <div className={styles.certificateStatus}>
-                  <div className={styles.formCardHeader}>
-                    <div className={styles.formCardTitle}>Signed EC</div>
-                    {c.docs.some((d) => d.type === 'EC_SIGNED') ? (
-                      <span className={styles.summaryOkBadge}>Verified</span>
-                    ) : (
-                      <span className={styles.summaryWarnBadge}>Missing</span>
-                    )}
-                  </div>
-                  <div className={styles.mutedText}>Upload the signed essentiality certificate after completing the metadata.</div>
+             {c.docs.filter(d => d.type === 'EC_SIGNED').length > 0 && (
+                <div style={{ backgroundColor: '#f0fdf4', padding: '16px', borderRadius: '8px', border: '1px solid #bbf7d0', color: '#15803d', fontWeight: 500 }}>
+                  Signed Essentiality Certificate is uploaded and verified.
                 </div>
-              </div>
-            </div>
-
-            <div className={styles.formCard}>
-              <div className={styles.formCardHeader}>
-                <div className={styles.formCardTitle}>Statement of Medicines & Investigations</div>
-              </div>
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>SlNo</th>
-                      <th>Bill No & Date</th>
-                      <th>Medicine / Details</th>
-                      <th>Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {c.bills.map((b, i) => (
-                      <tr key={b.id}>
-                        <td>{i + 1}</td>
-                        <td>{b.invoiceNo} ({formatDMY(b.billDate)})</td>
-                        <td>{b.fileName}</td>
-                        <td>{rupee(b.totalAmount)}</td>
-                      </tr>
-                    ))}
-                    {c.bills.length === 0 && <tr><td colSpan={4} className="text-center">No bills added yet.</td></tr>}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colSpan={3}>Total Certified Amount</td>
-                      <td>{rupee(billsTotal(c))}</td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
+             )}
           </div>
         )}
 
         {active === 'FINAL NOTE' && (
-          <div className="bg-slate-50 rounded-2xl border border-slate-200 shadow-inner p-6 lg:p-10 flex justify-center">
-            <div className="bg-white border border-slate-200 shadow-xl max-w-4xl w-full" style={{ minHeight: '800px', padding: '48px 64px' }}>
-              <div className="text-center mb-10 border-b-2 border-slate-800 pb-6">
-                <h1 className="text-2xl font-black text-slate-900 uppercase tracking-widest mb-1">Government of Kerala</h1>
-                <h2 className="text-lg font-bold text-slate-700 uppercase tracking-wider mb-4">Medical Reimbursement Claim Form</h2>
-                <div className="flex justify-between items-end text-sm font-semibold text-slate-600">
-                  <div>Claim ID: {c.mrNo}</div>
-                  <div>Date: {new Date().toLocaleDateString('en-GB')}</div>
+          <div className={styles.mrStagePanel}>
+            <div className={styles.mrStageHeader}>
+              <div>
+                <div className={styles.mrSectionEyebrow}>Final Documentation</div>
+                <h3 className={styles.mrSectionTitle}>Final Note</h3>
+              </div>
+            </div>
+            <div className={styles.mrA4Preview}>
+              <div className={styles.mrA4Header}>
+                <h2>Final Claim Submission Note</h2>
+                <div className={styles.mrA4Meta}>
+                  <div><strong>MR Number:</strong> {c.mrNo}</div>
+                  <div><strong>Officer:</strong> {c.officer.fullName}</div>
                 </div>
               </div>
-
-              <div className="space-y-8 text-sm text-slate-800">
-                <section>
-                  <h3 className="font-bold text-base uppercase bg-slate-100 px-3 py-1.5 border-l-4 border-slate-800 mb-4">1. Officer Particulars</h3>
-                  <div className="grid grid-cols-2 gap-y-4 px-3">
-                    <div className="flex gap-2"><span className="font-semibold w-32">Name:</span> <span>{c.officer.fullName}</span></div>
-                    <div className="flex gap-2"><span className="font-semibold w-32">Designation:</span> <span>{c.officer.designation}</span></div>
-                    <div className="flex gap-2"><span className="font-semibold w-32">PEN No:</span> <span>{c.officer.penNumber}</span></div>
-                    <div className="flex gap-2"><span className="font-semibold w-32">Basic Pay:</span> <span>{rupee(c.officer.basicPay)}</span></div>
-                    <div className="flex gap-2 col-span-2"><span className="font-semibold w-32">Department:</span> <span>{c.officer.administrativeDepartment}</span></div>
-                  </div>
-                </section>
-
-                <section>
-                  <h3 className="font-bold text-base uppercase bg-slate-100 px-3 py-1.5 border-l-4 border-slate-800 mb-4">2. Patient & Treatment</h3>
-                  <div className="grid grid-cols-2 gap-y-4 px-3">
-                    <div className="flex gap-2"><span className="font-semibold w-32">Patient Name:</span> <span>{c.patient.name}</span></div>
-                    <div className="flex gap-2"><span className="font-semibold w-32">Relation:</span> <span>{c.patient.relation}</span></div>
-                    <div className="flex gap-2 col-span-2"><span className="font-semibold w-32">Hospital:</span> <span>{c.treatment.hospitalName} ({c.treatment.hospitalType})</span></div>
-                    <div className="flex gap-2 col-span-2"><span className="font-semibold w-32">Diagnosis:</span> <span>{c.treatment.diagnosis || 'Not specified'}</span></div>
-                    <div className="flex gap-2"><span className="font-semibold w-32">Period:</span> <span>{formatDMY(c.treatment.fromDate)} to {formatDMY(c.treatment.toDate)}</span></div>
-                    <div className="flex gap-2"><span className="font-semibold w-32">System:</span> <span>{c.treatment.diagnosis?.includes(" | ") ? c.treatment.diagnosis.split(" | ")[1] : "Allopathy"}</span></div>
-                  </div>
-                </section>
-
-                <section>
-                  <h3 className="font-bold text-base uppercase bg-slate-100 px-3 py-1.5 border-l-4 border-slate-800 mb-4">3. Claim Settlement Abstract</h3>
-                  <div className="border border-slate-800 rounded-md overflow-hidden mb-6">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-slate-100 border-b border-slate-800">
-                          <th className="px-4 py-2 font-bold border-r border-slate-800">Description</th>
-                          <th className="px-4 py-2 font-bold text-right w-40">Amount (₹)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b border-slate-300">
-                          <td className="px-4 py-2 border-r border-slate-800">Gross Value of Verified Bills ({c.bills.length} Nos)</td>
-                          <td className="px-4 py-2 text-right font-medium">{billsTotal(c).toLocaleString('en-IN')}</td>
-                        </tr>
-                        <tr className="border-b border-slate-300">
-                          <td className="px-4 py-2 border-r border-slate-800">Less: Medical Advance Received</td>
-                          <td className="px-4 py-2 text-right font-medium">{advancePaid(c).toLocaleString('en-IN')}</td>
-                        </tr>
-                        <tr className="bg-slate-50 font-bold text-base">
-                          <td className="px-4 py-3 border-r border-slate-800 text-right uppercase">Net Amount Claimed</td>
-                          <td className="px-4 py-3 text-right">{(billsTotal(c) - advancePaid(c)).toLocaleString('en-IN')}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-
-                {checks.length > 0 ? (
-                  <div className="bg-red-50 border-l-4 border-red-600 p-4 mb-8">
-                    <h4 className="font-bold text-red-800 uppercase text-xs mb-2">Claim Validation Failed</h4>
-                    <ul className="list-disc pl-5 text-sm text-red-700 space-y-1">
-                      {checks.map((m) => <li key={m}>{m}</li>)}
-                    </ul>
-                  </div>
-                ) : (
-                  <div className="bg-emerald-50 border-l-4 border-emerald-600 p-4 mb-8 flex items-center gap-3">
-                    <CheckCircle className="w-6 h-6 text-emerald-600" />
-                    <div>
-                      <h4 className="font-bold text-emerald-800 uppercase text-xs mb-0.5">Validation Passed</h4>
-                      <p className="text-sm text-emerald-700">All mandatory documents and fields have been verified for e-submission.</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="pt-8 flex justify-end gap-4 border-t-2 border-dashed border-slate-300 print:hidden">
-                  <select className={`${styles.field} !w-72 !py-2 !text-sm bg-slate-50 border-slate-300`} defaultValue="">
-                   <option value="" disabled>-- Routing Authority --</option>
-                   <option value="AMA-01">Director of Health Services</option>
-                   <option value="AMA-02">District Medical Officer</option>
-                  </select>
-                  <button className={`${styles.btnPrimary} !px-8 !py-2`} disabled={checks.length > 0} onClick={openFinalPreview}>
-                    {checks.length > 0 ? 'Resolve Issues' : 'Proceed to e-Sign'}
-                  </button>
-                </div>
+              <div className={styles.mrA4Body}>
+                <p><strong>1. Applicant Details:</strong> {c.officer.fullName}, {c.officer.designation}</p>
+                <p><strong>2. Treatment Details:</strong> Patient was {treatmentDraft.hospitalised ? 'hospitalised' : 'treated as outpatient'} for {treatmentDraft.diagnosis.split(' | ')[0] || 'Medical treatment'} at {treatmentDraft.hospitalName || 'the facility'}.</p>
+                <p><strong>3. Claim Amount:</strong> ₹{(c.bills.reduce((acc, b) => acc + (Number(b.totalAmount) || 0), 0) || 0).toLocaleString()}</p>
+                <p><strong>4. Advance Taken:</strong> ₹{(c.advances.reduce((acc, a) => acc + (Number(a.amount) || 0), 0) || 0).toLocaleString()}</p>
+                <p><strong>5. Net Payable:</strong> ₹{((c.bills.reduce((acc, b) => acc + (Number(b.totalAmount) || 0), 0) || 0) - (c.advances.reduce((acc, a) => acc + (Number(a.amount) || 0), 0) || 0)).toLocaleString()}</p>
               </div>
             </div>
           </div>
         )}
 
         {active === 'MOVEMENT REGISTER' && (
-          <div className={styles.mrStagePanel}>
-            <div className={styles.mrStageHeader}>
-              <div>
-                <div className={styles.mrSectionEyebrow}>Movement Register</div>
-                <h3 className={styles.mrSectionTitle}>Movement Register</h3>
-              </div>
-            </div>
-            <div className={styles.mrTimelineRail}>
-              {c.movement.map((m, i) => (
-                <div key={m.id} className={styles.mrTimelineEvent}>
-                  <div className={styles.mrTimelineDot}></div>
-                  <div className={styles.mrTimelineCard}>
-                    <div className={styles.mrTimelineCardHead}>
-                      <div className={styles.mrTimelineAction}>{m.action}</div>
-                      <div className={styles.mrTimelineStamp}>{new Date(m.at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</div>
-                    </div>
-                    <div className={styles.mrTimelineActor}>Actor: {c.officer.fullName} (Initiator)</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className={`${styles.modernCard} ${styles.animateFadeIn}`}>
+             <div className={styles.modernCardHeader}>
+               <History className="text-blue-500" size={24} />
+               <h3 className={styles.modernCardTitle}>Movement Register</h3>
+             </div>
+
+             {c.movement.length === 0 ? (
+               <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>No movements recorded yet.</div>
+             ) : (
+               <div className={styles.modernTimeline}>
+                 {c.movement.map((m, idx) => (
+                   <div key={m.id} className={`${styles.modernTimelineItem} ${styles.animateSlideUp}`} style={{ animationDelay: `${idx * 0.05}s` }}>
+                     <div className={styles.modernTimelineDot} />
+                     <div className={styles.modernTimelineContent} style={{ marginLeft: '16px' }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                         <div style={{ fontWeight: 700, fontSize: '15px' }} className={styles.modernValue}>{m.action}</div>
+                         <div style={{ fontSize: '12px', fontWeight: 600 }} className={styles.modernLabel}>{new Date(m.at).toLocaleString()}</div>
+                       </div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             )}
           </div>
         )}
 
-        <div className={styles.mrStepNavigator}>
-          <button className={styles.btnSecondary} onClick={() => goToStep(previousStep)} disabled={!previousStep}>
-            <ChevronLeft className={styles.tabIcon} />
-            Previous
-          </button>
-          <div className={styles.mrStepNavigatorMeta}>
-            <CalendarDays className={styles.tabIcon} />
-            <span>Step {activeStepIndex + 1} of {workflowTabs.length}</span>
-          </div>
-          <button className={styles.btnSecondary} onClick={() => goToStep(nextStep)} disabled={!nextStep}>
-            Next
-            <ChevronRight className={styles.tabIcon} />
-          </button>
-        </div>
+      </div>
 
-        {toast && <div className={styles.mrToast}>{toast}</div>}
+      <div className={styles.mrStepNavigator}>
+        <button className={styles.modernBtnSecondary} onClick={() => goToStep(previousStep)} disabled={!previousStep}>
+          <ChevronLeft className={styles.tabIcon} size={18} />
+          Previous
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontWeight: 500 }}>
+          <CalendarDays size={18} />
+          <span>Step {activeStepIndex + 1} of {workflowTabs.length}</span>
         </div>
+        <button className={styles.modernBtnSecondary} onClick={() => goToStep(nextStep)} disabled={!nextStep}>
+          Next
+          <ChevronRight className={styles.tabIcon} size={18} />
+        </button>
+      </div>
 
-        <div className={styles.mrStickyActionBar}>
-          <div className={styles.mrStickyActionStatus}>
-            <span>{unreadinessCount > 0 ? `${unreadinessCount} issue(s) pending` : 'Ready for submission'}</span>
-            <small>{active}</small>
-          </div>
-          <div className={styles.mrStickyActionButtons}>
-            <button className={styles.btnSecondary} onClick={saveDraftOnly}>Save Draft</button>
-            <button className={styles.btnSecondary} onClick={() => setActive('ADVANCE NOTES')}>Request Advance</button>
-            <button disabled={checks.length > 0} className={styles.btnPrimary} title={checks.join(', ')} onClick={openFinalPreview}>
-              {checks.length > 0 ? 'Resolve Issues' : 'Submit Final Claim'}
-            </button>
-          </div>
+      <div className={styles.mrStickyActionBar}>
+        <div className={styles.mrStickyActionStatus}>
+          <span style={{ fontWeight: 600 }}>{unreadinessCount > 0 ? `${unreadinessCount} issue(s) pending` : 'Ready for submission'}</span>
+          <small style={{ display: 'block', color: '#94a3b8' }}>{active}</small>
+        </div>
+        <div className={styles.mrStickyActionButtons} style={{ display: 'flex', gap: '12px' }}>
+          <button className={styles.modernBtnSecondary} onClick={saveDraftOnly}>Save Draft</button>
+          <button disabled={checks.length > 0} className={styles.modernBtnPrimary} title={checks.map((c: any) => typeof c === 'string' ? c : c.msg).join(', ')} onClick={openFinalPreview}>
+            {checks.length > 0 ? 'Resolve Issues' : 'Submit Final Claim'}
+          </button>
         </div>
       </div>
     </div>

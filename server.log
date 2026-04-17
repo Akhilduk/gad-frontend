@@ -1,0 +1,38 @@
+
+> gad-tailwindui2@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+✓ Ready in 1278ms
+ GET /login/ 200 in 1054ms (compile: 554ms, render: 500ms)
+
+🔍 isLoaded check: false
+REQUIRED_SECTIONS: [
+  'personal',
+  'profile_photo',
+  'education',
+  'service',
+  'central_deputation',
+  'training',
+  'awards',
+  'disability',
+  'disciplinary'
+]
+sectionLoaded keys: []
+sectionProgress keys: []
+personal: loaded=undefined, progress=NO
+profile_photo: loaded=undefined, progress=NO
+education: loaded=undefined, progress=NO
+service: loaded=undefined, progress=NO
+central_deputation: loaded=undefined, progress=NO
+training: loaded=undefined, progress=NO
+awards: loaded=undefined, progress=NO
+disability: loaded=undefined, progress=NO
+disciplinary: loaded=undefined, progress=NO
+ GET /reimbursement/medical/current/ 200 in 919ms (compile: 657ms, generate-params: 626ms, render: 262ms)
+ GET /login/ 200 in 32ms (compile: 5ms, render: 28ms)
+ GET /login/ 200 in 71ms (compile: 4ms, render: 67ms)
