@@ -7,8 +7,7 @@
 - Network:       http://192.168.0.2:3000
 
 ✓ Starting...
-✓ Ready in 1278ms
- GET /login/ 200 in 1054ms (compile: 554ms, render: 500ms)
+✓ Ready in 3.2s
 
 🔍 isLoaded check: false
 REQUIRED_SECTIONS: [
@@ -33,6 +32,61 @@ training: loaded=undefined, progress=NO
 awards: loaded=undefined, progress=NO
 disability: loaded=undefined, progress=NO
 disciplinary: loaded=undefined, progress=NO
- GET /reimbursement/medical/current/ 200 in 919ms (compile: 657ms, generate-params: 626ms, render: 262ms)
- GET /login/ 200 in 32ms (compile: 5ms, render: 28ms)
- GET /login/ 200 in 71ms (compile: 4ms, render: 67ms)
+ GET /reimbursement/medical/ 200 in 2.5s (compile: 1803ms, render: 730ms)
+ GET /login/ 200 in 534ms (compile: 302ms, render: 232ms)
+ GET /login/ 200 in 184ms (compile: 58ms, render: 126ms)
+ GET /login/ 200 in 276ms (compile: 8ms, render: 269ms)
+
+🔍 isLoaded check: false
+REQUIRED_SECTIONS: [
+  'personal',
+  'profile_photo',
+  'education',
+  'service',
+  'central_deputation',
+  'training',
+  'awards',
+  'disability',
+  'disciplinary'
+]
+sectionLoaded keys: []
+sectionProgress keys: []
+personal: loaded=undefined, progress=NO
+profile_photo: loaded=undefined, progress=NO
+education: loaded=undefined, progress=NO
+service: loaded=undefined, progress=NO
+central_deputation: loaded=undefined, progress=NO
+training: loaded=undefined, progress=NO
+awards: loaded=undefined, progress=NO
+disability: loaded=undefined, progress=NO
+disciplinary: loaded=undefined, progress=NO
+ GET /reimbursement/medical/current/ 200 in 1005ms (compile: 898ms, generate-params: 853ms, render: 107ms)
+ GET /login/ 200 in 130ms (compile: 6ms, render: 124ms)
+ GET /login/ 200 in 78ms (compile: 6ms, render: 72ms)
+
+🔍 isLoaded check: false
+REQUIRED_SECTIONS: [
+  'personal',
+  'profile_photo',
+  'education',
+  'service',
+  'central_deputation',
+  'training',
+  'awards',
+  'disability',
+  'disciplinary'
+]
+sectionLoaded keys: []
+sectionProgress keys: []
+personal: loaded=undefined, progress=NO
+profile_photo: loaded=undefined, progress=NO
+education: loaded=undefined, progress=NO
+service: loaded=undefined, progress=NO
+central_deputation: loaded=undefined, progress=NO
+training: loaded=undefined, progress=NO
+awards: loaded=undefined, progress=NO
+disability: loaded=undefined, progress=NO
+disciplinary: loaded=undefined, progress=NO
+ GET /reimbursement/medical/current/?tab=FINAL%20NOTE 200 in 120ms (compile: 29ms, generate-params: 25ms, render: 91ms)
+ GET /login/ 200 in 97ms (compile: 6ms, render: 92ms)
+ GET /login/ 200 in 59ms (compile: 5ms, render: 53ms)

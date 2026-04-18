@@ -1,220 +1,9 @@
-'use client';
+const fs = require('fs');
+const path = 'src/app/(officer)/(ais-officer)/reimbursement/medical/page.tsx';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Award, Bell, Briefcase, CheckCircle, Clock, FileText, Shield } from 'lucide-react';
-import axiosInstance from '@/utils/apiClient';
-import { mapOfficerProfile } from '@/modules/medical-reimbursement/mapper';
-import { createCase, initCases, loadCases } from '@/modules/medical-reimbursement/mockStore';
-import type { MRCase, OfficerProfileVM } from '@/modules/medical-reimbursement/types';
-import styles from '@/modules/medical-reimbursement/mr.module.css';
-import { STATIC_MR_ROUTE_PARAM, setActiveMrId } from '@/modules/medical-reimbursement/session';
+let code = fs.readFileSync(path, 'utf8');
 
-const emptyOfficer: OfficerProfileVM = mapOfficerProfile({});
-
-const tabs = [
-  { key: 'ALL', label: 'All', icon: Briefcase },
-  { key: 'Draft', label: 'Draft', icon: FileText },
-  { key: 'Advance Submitted', label: 'Advance Requested', icon: Clock },
-  { key: 'Advance Paid', label: 'Advance Approved', icon: Award },
-  { key: 'Final Submitted', label: 'Submitted', icon: Bell },
-  { key: 'Approved', label: 'Approved', icon: CheckCircle },
-  { key: 'Paid & Closed', label: 'Paid', icon: Shield },
-];
-
-const workflowSteps = ['Draft', 'Advance Submitted', 'Advance Paid', 'Final Submitted', 'Approved', 'Paid & Closed'] as const;
-
-const statusStyles = (status: MRCase['status']) => {
-  if (status === 'Draft') return { tone: styles.toneDraft, text: styles.statusDraft };
-  if (status === 'Advance Submitted') return { tone: styles.toneAdvanceRequested, text: styles.statusAdvanceRequested };
-  if (status === 'Advance Paid') return { tone: styles.toneAdvanceApproved, text: styles.statusAdvanceApproved };
-  if (status === 'Final Submitted' || status === 'Active') return { tone: styles.toneSubmitted, text: styles.statusSubmitted };
-  if (status === 'Approved') return { tone: styles.toneApproved, text: styles.statusApproved };
-  return { tone: styles.tonePaid, text: styles.statusPaid };
-};
-
-const statusLabel = (status: MRCase['status']) => {
-  if (status === 'Advance Submitted') return 'ADVANCE REQUESTED';
-  if (status === 'Advance Paid') return 'ADVANCE APPROVED';
-  if (status === 'Final Submitted') return 'FINAL SUBMITTED';
-  if (status === 'Active') return 'ACTIVE';
-  if (status === 'Paid & Closed') return 'PAID';
-  return status.toUpperCase();
-};
-
-const withOffsetDate = (dateIso: string, dayOffset: number) => {
-  const d = new Date(dateIso);
-  d.setDate(d.getDate() + dayOffset);
-  return d;
-};
-
-const isRecent = (createdAt: Date, updatedAt: Date) => {
-  const latest = Math.max(createdAt.getTime(), updatedAt.getTime());
-  return Date.now() - latest <= 1000 * 60 * 60 * 48;
-};
-
-type CardAction = { label: string; onClick: () => void };
-type HospitalOption = { name: string; address: string };
-
-export default function MRControlCenter() {
-  const router = useRouter();
-  const [cases, setCases] = useState<MRCase[]>([]);
-  const [officer, setOfficer] = useState<OfficerProfileVM>(emptyOfficer);
-  const [tab, setTab] = useState('ALL');
-  const [query, setQuery] = useState('');
-  const [open, setOpen] = useState(false);
-  const [claimFor, setClaimFor] = useState<'SELF' | 'DEPENDENT'>('SELF');
-  const [dep, setDep] = useState('');
-  const [form, setForm] = useState({
-    hospitalised: true,
-    hospitalType: 'Government',
-    medicalType: 'Allopathy',
-    hospitalName: '',
-    hospitalAddress: '',
-    fromDate: '',
-    toDate: '',
-    declaration: false,
-  });
-  const [hospitalQuery, setHospitalQuery] = useState('');
-  const [hospitalOptions, setHospitalOptions] = useState<HospitalOption[]>([]);
-  const [hospitalLoading, setHospitalLoading] = useState(false);
-  const [hospitalFocused, setHospitalFocused] = useState(false);
-  const skipAutocompleteRef = useRef(false);
-
-  useEffect(() => {
-    const boot = async () => {
-      let vm = emptyOfficer;
-      try {
-        const res = await axiosInstance.get('/officer/officer-preview');
-        vm = mapOfficerProfile(res.data);
-      } catch {
-        vm = mapOfficerProfile({});
-      }
-      setOfficer(vm);
-      setCases(initCases(vm));
-    };
-    boot();
-  }, []);
-
-  const selectedDependent = officer.dependents.find((d) => d.personId === dep);
-  const applicantName = claimFor === 'SELF' ? officer.fullName : selectedDependent?.fullName || '';
-  const applicantMeta = claimFor === 'SELF'
-    ? `${officer.serviceType} | PEN ${officer.penNumber}`
-    : selectedDependent
-      ? `${selectedDependent.relation} | ${selectedDependent.gender} | DOB: ${selectedDependent.dob}`
-      : '';
-
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open || !form.hospitalised) return;
-    if (skipAutocompleteRef.current) {
-      skipAutocompleteRef.current = false;
-      return;
-    }
-    const q = hospitalQuery.trim();
-    if (!hospitalFocused || q.length < 3) {
-      setHospitalOptions([]);
-      return;
-    }
-    const ctrl = new AbortController();
-    const timer = window.setTimeout(async () => {
-      setHospitalLoading(true);
-      try {
-        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=in&limit=6&q=${encodeURIComponent(`${q} hospital`)}`;
-        const res = await fetch(url, { signal: ctrl.signal, headers: { Accept: 'application/json' } });
-        const data = await res.json();
-        const opts: HospitalOption[] = Array.isArray(data)
-          ? data.map((item: any) => ({
-              name: String(item?.name || item?.display_name?.split(',')[0] || 'Hospital'),
-              address: String(item?.display_name || ''),
-            }))
-          : [];
-        setHospitalOptions(opts.filter((o) => o.address));
-      } catch {
-        if (!ctrl.signal.aborted) setHospitalOptions([]);
-      } finally {
-        if (!ctrl.signal.aborted) setHospitalLoading(false);
-      }
-    }, 320);
-    return () => {
-      ctrl.abort();
-      window.clearTimeout(timer);
-    };
-  }, [hospitalQuery, form.hospitalised, hospitalFocused, open]);
-
-  const openCase = (mrId: string, tabName?: string) => {
-    setActiveMrId(mrId);
-    const suffix = tabName ? `?tab=${encodeURIComponent(tabName)}` : '';
-    router.push(`/reimbursement/medical/${STATIC_MR_ROUTE_PARAM}${suffix}`);
-  };
-
-  const list = useMemo(() => {
-    const byTab = tab === 'ALL' ? cases : cases.filter((c) => c.status === tab);
-    const q = query.trim().toLowerCase();
-    if (!q) return byTab;
-    return byTab.filter((c) => `${c.mrNo} ${c.patient.name} ${c.treatment.hospitalName} ${c.status}`.toLowerCase().includes(q));
-  }, [tab, cases, query]);
-
-  const tabCount = (key: string) => key === 'ALL' ? cases.length : cases.filter((c) => c.status === key).length;
-
-  const onCreate = () => {
-    if (!form.fromDate || !form.declaration) return;
-    if (claimFor === 'DEPENDENT' && !dep) return;
-    if (form.hospitalised && !form.hospitalName) return;
-
-    const created = createCase(officer, {
-      patient: {
-        claimFor,
-        dependentPersonId: claimFor === 'DEPENDENT' ? selectedDependent?.personId : undefined,
-        name: claimFor === 'SELF' ? officer.fullName : selectedDependent?.fullName || 'Dependent',
-        relation: claimFor === 'SELF' ? 'Self' : selectedDependent?.relation || 'Dependent',
-      },
-      treatment: {
-        placeOfIllness: '',
-        hospitalised: form.hospitalised,
-        withinState: true,
-        hospitalType: form.hospitalType,
-        hospitalName: form.hospitalised ? form.hospitalName : 'Not hospitalised',
-        hospitalAddress: form.hospitalised ? (form.hospitalAddress || form.hospitalName) : '',
-        fromDate: form.fromDate,
-        toDate: form.toDate,
-        diagnosis: form.medicalType,
-      },
-    });
-    setCases(loadCases());
-    setOpen(false);
-    openCase(created.mrId);
-  };
-
-  const actionsFor = (c: MRCase): CardAction[] => {
-    const view = { label: 'View', onClick: () => openCase(c.mrId) };
-    const cont = { label: 'Continue', onClick: () => openCase(c.mrId) };
-    if (c.status === 'Draft') return [view, cont, { label: 'Add Bills', onClick: () => openCase(c.mrId, 'ANNEXURES') }];
-    if (c.status === 'Active') return [view, cont, { label: 'Add Bills', onClick: () => openCase(c.mrId, 'ANNEXURES') }, { label: 'Add Advance', onClick: () => openCase(c.mrId, 'ADVANCE NOTES') }];
-    if (c.status === 'Advance Submitted') return [view, cont, { label: 'Track Advance', onClick: () => openCase(c.mrId, 'ADVANCE NOTES') }];
-    if (c.status === 'Advance Paid') return [view, cont, { label: 'Final Note', onClick: () => openCase(c.mrId, 'FINAL NOTE') }];
-    if (c.status === 'Final Submitted') return [view, { label: 'Track', onClick: () => openCase(c.mrId, 'MOVEMENT REGISTER') }];
-    if (c.status === 'Approved') return [view, { label: 'Track Payment', onClick: () => openCase(c.mrId, 'MOVEMENT REGISTER') }];
-    return [view];
-  };
-
-  const formatShort = (date: Date) => date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  const statusIndex = (status: MRCase['status']) => {
-    if (status === 'Active') return 2;
-    return Math.max(0, workflowSteps.indexOf(status as (typeof workflowSteps)[number]));
-  };
-  const activeCases = cases.filter((c) => ['Advance Submitted', 'Advance Paid', 'Active', 'Final Submitted', 'Approved'].includes(c.status)).length;
-  const recentCases = cases.filter((c) => isRecent(new Date(c.createdAt), new Date(c.lastUpdated))).length;
-
-    return <div className="min-h-screen p-6 transition-colors duration-300 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800"><div className="max-w-7xl mx-auto space-y-6">
+const listPageModernJSX = `  return <div className="min-h-screen p-6 transition-colors duration-300 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800"><div className="max-w-7xl mx-auto space-y-6">
     <section className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-blue-50 dark:border-slate-700 p-8 transition-all duration-300">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
@@ -240,31 +29,31 @@ export default function MRControlCenter() {
       </div>
 
       <div className="flex space-x-2 p-4 bg-gray-50 dark:bg-slate-800/50 overflow-x-auto border-b border-gray-100 dark:border-slate-700">
-        {tabs.map((t) => <button key={t.key} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t.key ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-slate-600' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700/50'}`} onClick={() => setTab(t.key)}><t.icon size={16} /><span>{t.label}</span><b className="ml-1.5 px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs">{tabCount(t.key)}</b></button>)}
+        {tabs.map((t) => <button key={t.key} className={\`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all \${tab === t.key ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-slate-600' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700/50'}\`} onClick={() => setTab(t.key)}><t.icon size={16} /><span>{t.label}</span><b className="ml-1.5 px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs">{tabCount(t.key)}</b></button>)}
       </div>
 
       <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cases.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400">No cases found matching your criteria.</div>
         ) : (
-          list.map((c, idx) => {
+          filtered.map((c, idx) => {
             const tone = statusStyles(c.status);
-            const recent = isRecent(new Date(c.createdAt), new Date(c.lastUpdated));
-            const actions = actionsFor(c);
+            const recent = isRecent(c.lastUpdated);
+            const actions = availableActions(c);
             const updatedAt = new Date(c.lastUpdated);
             const createdAt = new Date(c.createdAt);
             const startDate = new Date(c.treatment.fromDate);
 
             return (
-            <article key={c.mrId} className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 flex flex-col justify-between shadow-sm hover:shadow-lg transition-all duration-300 relative group overflow-hidden" style={{ animationDelay: `${idx * 50}ms` }}>
+            <article key={c.mrId} className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 flex flex-col justify-between shadow-sm hover:shadow-lg transition-all duration-300 relative group overflow-hidden" style={{ animationDelay: \`\${idx * 50}ms\` }}>
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
               <div className="flex justify-between items-start mb-4">
-                <div className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
+                <div className={\`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold \${
                   c.status === 'Draft' ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' :
                   c.status.includes('Approved') || c.status.includes('Paid') ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' :
                   'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300'
-                }`}>{statusLabel(c.status)}</div>
+                }\`}>{statusLabel(c.status)}</div>
                 <div className="text-xs text-gray-500 dark:text-slate-400">{recent ? 'Recently updated' : 'Updated'} {formatShort(updatedAt)}</div>
               </div>
 
@@ -295,14 +84,14 @@ export default function MRControlCenter() {
                 <div className="mb-4">
                   <div className="flex justify-between text-xs text-gray-500 dark:text-slate-400 mb-1.5">
                     <span>Progress</span>
-                    <span>{statusIndex(c.status) + 1} of {workflowSteps.length}</span>
+                    <span>{workflowSteps.indexOf(c.status) + 1} of {workflowSteps.length}</span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5">
-                    <div className="bg-gradient-to-r from-indigo-500 to-cyan-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${Math.max(10, ((statusIndex(c.status) + 1) / workflowSteps.length) * 100)}%` }}></div>
+                    <div className="bg-gradient-to-r from-indigo-500 to-cyan-500 h-1.5 rounded-full transition-all duration-500" style={{ width: \`\${Math.max(10, ((workflowSteps.indexOf(c.status) + 1) / workflowSteps.length) * 100)}%\` }}></div>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100 dark:border-slate-700">
-                  {actions.map((a) => <button key={`${c.mrId}-${a.label}`} className="flex-1 min-w-[100px] text-center rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 px-3 py-2 text-sm font-semibold transition-all" onClick={a.onClick}>{a.label}</button>)}
+                  {actions.map((a) => <button key={\`\${c.mrId}-\${a.label}\`} className="flex-1 min-w-[100px] text-center rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 px-3 py-2 text-sm font-semibold transition-all" onClick={a.onClick}>{a.label}</button>)}
                 </div>
               </div>
             </article>
@@ -329,16 +118,16 @@ export default function MRControlCenter() {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Applicant Type</label>
               <div className="flex p-1 bg-gray-100 dark:bg-slate-900 rounded-lg">
-                <button className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${claimFor === 'SELF' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}`} onClick={() => setClaimFor('SELF')}>Self</button>
-                <button className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${claimFor === 'DEPENDENT' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}`} onClick={() => setClaimFor('DEPENDENT')}>Dependent</button>
+                <button className={\`flex-1 py-2 text-sm font-semibold rounded-md transition-all \${claimFor === 'SELF' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}\`} onClick={() => setClaimFor('SELF')}>Self</button>
+                <button className={\`flex-1 py-2 text-sm font-semibold rounded-md transition-all \${claimFor === 'DEPENDENT' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}\`} onClick={() => setClaimFor('DEPENDENT')}>Dependent</button>
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Care Journey</label>
               <div className="flex p-1 bg-gray-100 dark:bg-slate-900 rounded-lg">
-                <button className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${form.hospitalised ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}`} onClick={() => setForm((prev) => ({ ...prev, hospitalised: true }))}>Hospitalised</button>
+                <button className={\`flex-1 py-2 text-sm font-semibold rounded-md transition-all \${form.hospitalised ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}\`} onClick={() => setForm((prev) => ({ ...prev, hospitalised: true }))}>Hospitalised</button>
                 <button
-                  className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${!form.hospitalised ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}`}
+                  className={\`flex-1 py-2 text-sm font-semibold rounded-md transition-all \${!form.hospitalised ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}\`}
                   onClick={() => {
                     setForm((prev) => ({ ...prev, hospitalised: false, hospitalName: '', hospitalAddress: '' }));
                     setHospitalQuery('');
@@ -353,8 +142,8 @@ export default function MRControlCenter() {
               <div className="col-span-1 md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Institution Type</label>
                 <div className="flex p-1 bg-gray-100 dark:bg-slate-900 rounded-lg max-w-sm">
-                  <button className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${form.hospitalType === 'Government' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}`} onClick={() => setForm((prev) => ({ ...prev, hospitalType: 'Government' }))}>Government</button>
-                  <button className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${form.hospitalType === 'Private' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}`} onClick={() => setForm((prev) => ({ ...prev, hospitalType: 'Private' }))}>Private</button>
+                  <button className={\`flex-1 py-2 text-sm font-semibold rounded-md transition-all \${form.hospitalType === 'Government' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}\`} onClick={() => setForm((prev) => ({ ...prev, hospitalType: 'Government' }))}>Government</button>
+                  <button className={\`flex-1 py-2 text-sm font-semibold rounded-md transition-all \${form.hospitalType === 'Private' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}\`} onClick={() => setForm((prev) => ({ ...prev, hospitalType: 'Private' }))}>Private</button>
                 </div>
               </div>
             )}
@@ -423,7 +212,7 @@ export default function MRControlCenter() {
                           {hospitalLoading && <div className="p-3 text-sm text-gray-500">Searching hospitals...</div>}
                           {!hospitalLoading && hospitalOptions.map((opt) => (
                             <button
-                              key={`${opt.name}-${opt.address}`}
+                              key={\`\${opt.name}-\${opt.address}\`}
                               type="button"
                               className="w-full text-left p-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 border-b border-gray-100 dark:border-slate-700 last:border-0"
                               onMouseDown={(e) => {
@@ -460,9 +249,9 @@ export default function MRControlCenter() {
 
                 {form.hospitalised && (
                   <div className="flex p-1 bg-gray-100 dark:bg-slate-900 rounded-lg">
-                    <button className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${form.medicalType === 'Allopathy' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400'}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Allopathy' }))}>Allopathy</button>
-                    <button className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${form.medicalType === 'Ayurveda' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400'}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Ayurveda' }))}>Ayurveda</button>
-                    <button className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${form.medicalType === 'Homeopathy' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400'}`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Homeopathy' }))}>Homeo</button>
+                    <button className={\`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all \${form.medicalType === 'Allopathy' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400'}\`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Allopathy' }))}>Allopathy</button>
+                    <button className={\`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all \${form.medicalType === 'Ayurveda' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400'}\`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Ayurveda' }))}>Ayurveda</button>
+                    <button className={\`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all \${form.medicalType === 'Homeopathy' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400'}\`} onClick={() => setForm((prev) => ({ ...prev, medicalType: 'Homeopathy' }))}>Homeo</button>
                   </div>
                 )}
 
@@ -493,5 +282,18 @@ export default function MRControlCenter() {
         </div>
       </div>
     </div>}
-  </div></div>;
+  </div></div>;`;
+
+const targetStartString = "return <div className={styles.mrShell}><div className={styles.container}>";
+const targetEndString = "  </div></div>;\n}";
+
+const startIndex = code.indexOf(targetStartString);
+const endIndex = code.lastIndexOf(targetEndString) + targetEndString.length;
+
+if (startIndex !== -1 && endIndex !== -1) {
+  code = code.substring(0, startIndex) + listPageModernJSX + "\n}\n";
+  fs.writeFileSync(path, code);
+  console.log("page.tsx updated with gradient modern ui.");
+} else {
+  console.log("Could not find replacement block in page.tsx");
 }
