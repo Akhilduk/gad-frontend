@@ -516,7 +516,7 @@ export default function MRCaseWorkspaceClient() {
         {billEditId && billDraft && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className={styles.modernCard} style={{ width: '500px', maxWidth: '90%' }}>
-              <div className={styles.modernCardHeader}><h3 className={styles.modernCardTitle}>Preview / Edit Bill Details</h3></div>
+              <div className="bg-gradient-to-r from-slate-50 to-indigo-50/50 dark:from-slate-900 dark:to-indigo-900/20 px-6 py-4 border-b border-indigo-100 dark:border-slate-700 flex items-center gap-3"><h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-300">Preview / Edit Bill Details</h3></div>
               <div className={styles.modernGrid2}>
                 <div className={styles.modernFormGroup}>
                   <label className={styles.modernLabel}>Invoice No</label>
@@ -536,35 +536,84 @@ export default function MRCaseWorkspaceClient() {
         )}
 
         {active === 'SUMMARY' && (
-          <div className={`${styles.modernCard} ${styles.animateFadeIn}`}>
-            <div className={styles.modernCardHeader}>
-              <Activity className="text-blue-500" size={24} />
-              <h3 className={styles.modernCardTitle}>Application Summary</h3>
+          <div className="space-y-6 animateFadeIn">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-indigo-100 dark:border-slate-700 overflow-hidden">
+              <div className="bg-gradient-to-r from-indigo-900 via-indigo-500 to-indigo-900 text-white p-5 flex items-center gap-3">
+                <UserCircle2 size={24} className="text-indigo-200" />
+                <h3 className="text-xl font-bold">Applicant Details</h3>
+              </div>
+
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-slate-50 dark:bg-slate-900/50">
+                <div className="col-span-1 md:col-span-2 lg:col-span-4 flex items-center justify-between border-b border-gray-200 dark:border-slate-700 pb-4 mb-2">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-100 to-cyan-100 dark:from-indigo-900 dark:to-cyan-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-xl shadow-inner border border-indigo-200 dark:border-indigo-700">
+                      {c.officer.fullName.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold text-gray-900 dark:text-slate-100">{c.officer.fullName}</div>
+                      <div className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">{c.officer.designation}</div>
+                    </div>
+                  </div>
+                  <div className="text-right hidden sm:block">
+                    <div className="text-xs text-gray-500 dark:text-slate-400 font-medium mb-1">PEN Number</div>
+                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 text-indigo-800 dark:text-indigo-300 font-mono font-bold tracking-wider">{c.officer.penNumber}</div>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Service Type</span>
+                  <div className="text-sm font-semibold text-gray-900 dark:text-slate-200">{c.officer.serviceType}</div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Cadre</span>
+                  <div className="text-sm font-semibold text-gray-900 dark:text-slate-200">{c.officer.cadre}</div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Basic Pay</span>
+                  <div className="text-sm font-semibold text-gray-900 dark:text-slate-200">₹{c.officer.basicPay?.toLocaleString() || 'N/A'}</div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Grade & Level</span>
+                  <div className="text-sm font-semibold text-gray-900 dark:text-slate-200">{c.officer.grade} | Level {c.officer.level}</div>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Department</span>
+                  <div className="text-sm font-semibold text-gray-900 dark:text-slate-200 truncate" title={c.officer.administrativeDepartment}>{c.officer.administrativeDepartment}</div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Phone</span>
+                  <div className="text-sm font-semibold text-gray-900 dark:text-slate-200">{c.officer.mobile}</div>
+                </div>
+                <div className="space-y-1 col-span-1 md:col-span-2">
+                  <span className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Office Address</span>
+                  <div className="text-sm font-semibold text-gray-900 dark:text-slate-200 line-clamp-2" title={c.officer.officeAddress}>{c.officer.officeAddress}</div>
+                </div>
+              </div>
             </div>
-            <div className={styles.modernGrid3}>
-              <div className={styles.modernFormGroup}>
-                <span className={styles.modernLabel}>Applicant Name</span>
-                <span className={styles.modernValue}>{c.officer.fullName}</span>
+
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-cyan-100 dark:border-slate-700 overflow-hidden">
+              <div className="bg-gradient-to-r from-cyan-800 via-cyan-600 to-cyan-800 text-white p-5 flex items-center gap-3">
+                <Activity size={24} className="text-cyan-200" />
+                <h3 className="text-xl font-bold">Case Information</h3>
               </div>
-              <div className={styles.modernFormGroup}>
-                <span className={styles.modernLabel}>Designation</span>
-                <span className={styles.modernValue}>{c.officer.designation}</span>
-              </div>
-              <div className={styles.modernFormGroup}>
-                <span className={styles.modernLabel}>MR Number</span>
-                <span className={styles.modernValue}>{c.mrNo}</span>
-              </div>
-              <div className={styles.modernFormGroup}>
-                <span className={styles.modernLabel}>Created On</span>
-                <span className={styles.modernValue}>{new Date(c.createdAt).toLocaleDateString()}</span>
-              </div>
-              <div className={styles.modernFormGroup}>
-                <span className={styles.modernLabel}>Total Claim</span>
-                <span className={styles.modernValue}>₹{(c.bills.reduce((acc, b) => acc + (Number(b.totalAmount) || 0), 0) || 0).toLocaleString()}</span>
-              </div>
-              <div className={styles.modernFormGroup}>
-                <span className={styles.modernLabel}>Total Advance Requested</span>
-                <span className={styles.modernValue}>₹{(c.advances.reduce((acc, a) => acc + (Number(a.amount) || 0), 0) || 0).toLocaleString()}</span>
+              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 bg-slate-50 dark:bg-slate-900/50">
+                <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                  <div className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">MR Number</div>
+                  <div className="text-lg font-bold text-cyan-700 dark:text-cyan-400">{c.mrNo}</div>
+                </div>
+                <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                  <div className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Created On</div>
+                  <div className="text-lg font-bold text-gray-900 dark:text-slate-200">{new Date(c.createdAt).toLocaleDateString('en-GB')}</div>
+                </div>
+                <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-emerald-100 dark:border-emerald-900/30">
+                  <div className="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase mb-1">Total Claim Amount</div>
+                  <div className="text-lg font-bold text-emerald-700 dark:text-emerald-400">₹{(c.bills.reduce((acc, b) => acc + (Number(b.totalAmount) || 0), 0) || 0).toLocaleString()}</div>
+                </div>
+                <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-rose-100 dark:border-rose-900/30">
+                  <div className="text-xs font-bold text-rose-600 dark:text-rose-500 uppercase mb-1">Total Advance Requested</div>
+                  <div className="text-lg font-bold text-rose-700 dark:text-rose-400">₹{(c.advances.reduce((acc, a) => acc + (Number(a.amount) || 0), 0) || 0).toLocaleString()}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -572,10 +621,10 @@ export default function MRCaseWorkspaceClient() {
 
 
         {active === 'TREATMENT NOTE' && (
-          <div className={`${styles.modernCard} ${styles.animateFadeIn}`}>
-            <div className={styles.modernCardHeader}>
-              <Stethoscope className="text-blue-500" size={24} />
-              <h3 className={styles.modernCardTitle}>Treatment Details</h3>
+          <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-indigo-100 dark:border-slate-700 overflow-hidden ${styles.animateFadeIn}`}>
+            <div className="bg-gradient-to-r from-slate-50 to-indigo-50/50 dark:from-slate-900 dark:to-indigo-900/20 px-6 py-4 border-b border-indigo-100 dark:border-slate-700 flex items-center gap-3">
+              <Stethoscope className="text-indigo-600 dark:text-indigo-400" size={24} />
+              <h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-300">Treatment Details</h3>
             </div>
 
             <div className={styles.modernGrid2}>
@@ -720,11 +769,11 @@ export default function MRCaseWorkspaceClient() {
 
 
         {active === 'ANNEXURES' && (
-          <div className={`${styles.modernCard} ${styles.animateFadeIn}`}>
-             <div className={styles.modernCardHeader} style={{ justifyContent: 'space-between' }}>
+          <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-indigo-100 dark:border-slate-700 overflow-hidden ${styles.animateFadeIn}`}>
+             <div className="bg-gradient-to-r from-slate-50 to-indigo-50/50 dark:from-slate-900 dark:to-indigo-900/20 px-6 py-4 border-b border-indigo-100 dark:border-slate-700 flex items-center gap-3" style={{ justifyContent: 'space-between' }}>
                <div style={{ display: 'flex', alignItems: 'center' }}>
-                 <FileText className="text-blue-500" size={24} />
-                 <h3 className={styles.modernCardTitle}>Annexures & Bills</h3>
+                 <FileText className="text-indigo-600 dark:text-indigo-400" size={24} />
+                 <h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-300">Annexures & Bills</h3>
                </div>
                <div style={{ display: 'flex', gap: '12px' }}>
                  <select className={styles.modernSelect} value={docType} onChange={e => setDocType(e.target.value as DocType)} style={{ width: 'auto' }}>
@@ -751,22 +800,46 @@ export default function MRCaseWorkspaceClient() {
                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
                  {c.bills.length > 0 && (
-                   <div>
-                     <h4 className={styles.modernLabel} style={{ marginBottom: '12px' }}>Bills</h4>
-                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                   <div className="mb-6">
+                     <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-400 uppercase tracking-wider mb-4 border-b border-indigo-100 dark:border-slate-700 pb-2">Medical Bills</h4>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        {c.bills.map((b) => (
-                         <div key={b.id} className={styles.modernStatCard} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div>
-                                <div className={styles.modernValue}>{b.invoiceNo}</div>
-                                <div className={styles.modernLabel}>File: {b.fileName}</div>
-                              </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                <div className={styles.modernStatValue} style={{ fontSize: '1.25rem' }}>₹{b.totalAmount}</div>
-                                <button className={styles.modernBtnSecondary} onClick={() => startBillEdit(b)}>Edit</button>
-                                <button className={styles.modernBtnDanger} onClick={() => updateCase({ ...c, bills: c.bills.filter(x => x.id !== b.id) }, 'Bill deleted')}>Delete</button>
-                              </div>
-                            </div>
+                         <div key={b.id} className="bg-white dark:bg-slate-800 rounded-xl border border-indigo-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all overflow-hidden group">
+                           <div className="bg-gradient-to-r from-slate-50 to-indigo-50/50 dark:from-slate-900 dark:to-indigo-900/20 px-4 py-3 border-b border-indigo-50 dark:border-slate-700 flex justify-between items-center">
+                             <div className="font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-2">
+                               <FileText size={16} className="text-indigo-400" />
+                               {b.invoiceNo || 'Untitled Bill'}
+                             </div>
+                             <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${b.status === 'Extracted' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300'}`}>{b.status}</span>
+                           </div>
+
+                           <div className="p-4 space-y-3">
+                             <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm">
+                               <div>
+                                 <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-0.5">Hospital / Vendor</div>
+                                 <div className="font-medium text-slate-900 dark:text-slate-200 truncate" title={b.hospitalName || '-'}>{b.hospitalName || '-'}</div>
+                               </div>
+                               <div>
+                                 <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-0.5">Bill Date</div>
+                                 <div className="font-medium text-slate-900 dark:text-slate-200">{formatDMY(b.billDate) || '-'}</div>
+                               </div>
+                               <div>
+                                 <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-0.5">GST No</div>
+                                 <div className="font-medium text-slate-900 dark:text-slate-200">{b.gstNo || '-'}</div>
+                               </div>
+                               <div>
+                                 <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-0.5">Amount</div>
+                                 <div className="font-bold text-lg text-emerald-600 dark:text-emerald-400">₹{b.totalAmount?.toLocaleString() || '0'}</div>
+                               </div>
+                             </div>
+                             <div className="text-xs text-slate-400 truncate pt-2 border-t border-slate-50 dark:border-slate-700/50">File: {b.fileName}</div>
+                           </div>
+
+                           <div className="flex bg-slate-50 dark:bg-slate-900/50 border-t border-indigo-50 dark:border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <button className="flex-1 py-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 dark:text-indigo-400 dark:hover:bg-indigo-900/50 transition-colors" onClick={() => startBillEdit(b)}>Edit Bill</button>
+                             <div className="w-px bg-indigo-100 dark:bg-slate-700"></div>
+                             <button className="flex-1 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-100 dark:text-rose-400 dark:hover:bg-rose-900/50 transition-colors" onClick={() => updateCase({ ...c, bills: c.bills.filter(x => x.id !== b.id) }, 'Bill deleted')}>Delete</button>
+                           </div>
                          </div>
                        ))}
                      </div>
@@ -796,11 +869,11 @@ export default function MRCaseWorkspaceClient() {
         )}
 
         {active === 'ADVANCE NOTES' && (
-           <div className={`${styles.modernCard} ${styles.animateFadeIn}`}>
-             <div className={styles.modernCardHeader} style={{ justifyContent: 'space-between' }}>
+           <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-indigo-100 dark:border-slate-700 overflow-hidden ${styles.animateFadeIn}`}>
+             <div className="bg-gradient-to-r from-slate-50 to-indigo-50/50 dark:from-slate-900 dark:to-indigo-900/20 px-6 py-4 border-b border-indigo-100 dark:border-slate-700 flex items-center gap-3" style={{ justifyContent: 'space-between' }}>
                <div style={{ display: 'flex', alignItems: 'center' }}>
-                 <IndianRupee className="text-blue-500" size={24} />
-                 <h3 className={styles.modernCardTitle}>Advances</h3>
+                 <IndianRupee className="text-indigo-600 dark:text-indigo-400" size={24} />
+                 <h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-300">Advances</h3>
                </div>
                <button className={styles.modernBtnSecondary} onClick={() => setAdvanceFormOpen(!advanceFormOpen)}>
                  {advanceFormOpen ? 'Cancel Request' : 'Request Advance'}
@@ -857,11 +930,11 @@ export default function MRCaseWorkspaceClient() {
         )}
 
         {active === 'CERTIFICATE' && (
-          <div className={`${styles.modernCard} ${styles.animateFadeIn}`}>
-             <div className={styles.modernCardHeader} style={{ justifyContent: 'space-between' }}>
+          <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-indigo-100 dark:border-slate-700 overflow-hidden ${styles.animateFadeIn}`}>
+             <div className="bg-gradient-to-r from-slate-50 to-indigo-50/50 dark:from-slate-900 dark:to-indigo-900/20 px-6 py-4 border-b border-indigo-100 dark:border-slate-700 flex items-center gap-3" style={{ justifyContent: 'space-between' }}>
                <div style={{ display: 'flex', alignItems: 'center' }}>
-                 <FileCheck className="text-blue-500" size={24} />
-                 <h3 className={styles.modernCardTitle}>Essentiality Certificate</h3>
+                 <FileCheck className="text-indigo-600 dark:text-indigo-400" size={24} />
+                 <h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-300">Essentiality Certificate</h3>
                </div>
              </div>
 
@@ -897,67 +970,109 @@ export default function MRCaseWorkspaceClient() {
 
             <div className="p-8 md:p-12 bg-slate-50 dark:bg-slate-900 flex justify-center">
               {/* PDF Document Container */}
-              <div className="bg-white dark:bg-slate-800 w-full max-w-[210mm] min-h-[297mm] shadow-2xl border border-gray-200 dark:border-slate-600 rounded-sm" style={{ padding: '2cm' }}>
+              <div className="bg-white dark:bg-slate-800 w-full max-w-[210mm] min-h-[297mm] shadow-2xl border border-gray-200 dark:border-slate-600 rounded-sm relative overflow-hidden" style={{ padding: '2cm' }}>
+
+                {/* PDF Top Border Gradient */}
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-900 via-indigo-500 to-indigo-900"></div>
 
                 {/* Header */}
-                <div className="text-center mb-10 border-b-2 border-indigo-900 pb-6">
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 uppercase tracking-wide mb-2">Government of Kerala</h1>
+                <div className="text-center mb-10 border-b-2 border-indigo-900 dark:border-indigo-500 pb-6">
+                  <h1 className="text-2xl font-bold text-indigo-900 dark:text-indigo-400 uppercase tracking-wide mb-2">Government of Kerala</h1>
                   <h2 className="text-lg font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-widest">Medical Reimbursement Claim</h2>
                 </div>
 
                 {/* Meta */}
                 <div className="flex justify-between items-start mb-8 text-sm font-medium text-gray-700 dark:text-slate-300">
-                  <div className="bg-gray-50 dark:bg-slate-900 px-4 py-2 rounded-lg border border-gray-100 dark:border-slate-700">
-                    <span className="text-gray-500 block text-xs uppercase mb-1">MR Number</span>
-                    <strong className="text-lg text-indigo-900 dark:text-indigo-400">{c.mrNo}</strong>
+                  <div className="bg-indigo-50 dark:bg-indigo-900/20 px-5 py-3 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                    <span className="text-indigo-600 dark:text-indigo-400 block text-xs uppercase font-bold tracking-wider mb-1">MR Number</span>
+                    <strong className="text-xl text-indigo-900 dark:text-indigo-300">{c.mrNo}</strong>
                   </div>
                   <div className="text-right">
-                    <div className="mb-1"><span className="text-gray-500">Date:</span> {new Date().toLocaleDateString('en-GB')}</div>
-                    <div><span className="text-gray-500">Status:</span> {c.status}</div>
+                    <div className="mb-1"><span className="text-gray-500 font-semibold uppercase text-xs tracking-wider">Date:</span> {new Date().toLocaleDateString('en-GB')}</div>
+                    <div><span className="text-gray-500 font-semibold uppercase text-xs tracking-wider">Status:</span> {c.status}</div>
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="space-y-6 text-gray-800 dark:text-slate-200 leading-relaxed text-[15px]">
+                <div className="space-y-8 text-gray-800 dark:text-slate-200 leading-relaxed text-[15px]">
 
-                  <div className="flex gap-4">
-                    <div className="font-bold w-48 text-indigo-900 dark:text-indigo-400">1. Applicant Details</div>
-                    <div className="flex-1 border-b border-gray-100 dark:border-slate-700 pb-2">
-                      <span className="font-semibold">{c.officer.fullName}</span>, {c.officer.designation}
+                  {/* Officer Details */}
+                  <div className="border border-indigo-100 dark:border-slate-700 rounded-xl overflow-hidden">
+                    <div className="bg-gradient-to-r from-slate-50 to-indigo-50/50 dark:from-slate-800 dark:to-indigo-900/30 px-5 py-3 border-b border-indigo-100 dark:border-slate-700">
+                      <div className="font-bold text-indigo-900 dark:text-indigo-400 tracking-wide uppercase">1. Applicant Details</div>
+                    </div>
+                    <div className="p-5 grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
+                      <div>
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Name & Designation</span>
+                        <div className="font-bold text-slate-900 dark:text-slate-100">{c.officer.fullName}</div>
+                        <div className="text-indigo-700 dark:text-indigo-400 font-medium">{c.officer.designation}</div>
+                      </div>
+                      <div>
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Service Profile</span>
+                        <div className="font-medium text-slate-800 dark:text-slate-200">{c.officer.serviceType} | PEN: {c.officer.penNumber}</div>
+                        <div className="text-slate-600 dark:text-slate-400">{c.officer.cadre} (Basic Pay: ₹{c.officer.basicPay?.toLocaleString() || 'N/A'})</div>
+                      </div>
+                      <div className="col-span-2 border-t border-slate-100 dark:border-slate-700 pt-3">
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Claim For</span>
+                        <div className="font-bold text-slate-900 dark:text-slate-100">{c.patient.name} <span className="font-medium text-indigo-600 dark:text-indigo-400">({c.patient.claimFor === 'SELF' ? 'Self' : c.patient.relation})</span></div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
-                    <div className="font-bold w-48 text-indigo-900 dark:text-indigo-400">2. Treatment Details</div>
-                    <div className="flex-1 border-b border-gray-100 dark:border-slate-700 pb-2">
-                      Patient was <strong>{treatmentDraft.hospitalised ? 'hospitalised' : 'treated as outpatient'}</strong> for <strong>{treatmentDraft.diagnosis.split(' | ')[0] || 'Medical treatment'}</strong> at <strong>{treatmentDraft.hospitalName || 'the facility'}</strong>.
+                  {/* Treatment Details */}
+                  <div className="border border-indigo-100 dark:border-slate-700 rounded-xl overflow-hidden">
+                    <div className="bg-gradient-to-r from-slate-50 to-indigo-50/50 dark:from-slate-800 dark:to-indigo-900/30 px-5 py-3 border-b border-indigo-100 dark:border-slate-700">
+                      <div className="font-bold text-indigo-900 dark:text-indigo-400 tracking-wide uppercase">2. Treatment Details</div>
+                    </div>
+                    <div className="p-5 grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
+                      <div className="col-span-2">
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Diagnosis & System</span>
+                        <div className="font-bold text-slate-900 dark:text-slate-100">{treatmentDraft.diagnosis.split(' | ')[0] || 'Medical treatment'}</div>
+                        <div className="text-indigo-700 dark:text-indigo-400 font-medium">{treatmentDraft.medicalType || 'Allopathy'} System</div>
+                      </div>
+                      <div className="col-span-2 border-t border-slate-100 dark:border-slate-700 pt-3">
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Institution</span>
+                        <div className="font-medium text-slate-900 dark:text-slate-200">
+                          {treatmentDraft.hospitalised ? 'Hospitalised Treatment' : 'Outpatient Treatment'} at <strong>{treatmentDraft.hospitalName || 'Unspecified Facility'}</strong>
+                        </div>
+                        <div className="text-slate-500 dark:text-slate-400 mt-0.5">{treatmentDraft.hospitalType} Facility | {treatmentDraft.hospitalAddress || 'Address not provided'}</div>
+                      </div>
+                      <div className="border-t border-slate-100 dark:border-slate-700 pt-3">
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Start Date</span>
+                        <div className="font-medium text-slate-900 dark:text-slate-200">{formatDMY(treatmentDraft.fromDate) || 'Not recorded'}</div>
+                      </div>
+                      <div className="border-t border-slate-100 dark:border-slate-700 pt-3">
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">End Date</span>
+                        <div className="font-medium text-slate-900 dark:text-slate-200">{formatDMY(treatmentDraft.toDate) || 'Not recorded'}</div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-12 mb-6 font-bold text-lg text-indigo-900 dark:text-indigo-400 uppercase tracking-wide border-b border-gray-200 dark:border-slate-700 pb-2">Financial Summary</div>
+                  {/* Financials */}
+                  <div className="bg-gradient-to-b from-indigo-50/50 to-slate-50 dark:from-indigo-900/10 dark:to-slate-800/50 p-6 rounded-xl border-2 border-indigo-100 dark:border-indigo-900/50 space-y-4">
+                    <div className="font-bold text-lg text-indigo-900 dark:text-indigo-400 uppercase tracking-wide mb-4">3. Financial Summary</div>
 
-                  <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-xl border border-gray-100 dark:border-slate-700 space-y-4">
                     <div className="flex justify-between items-center text-gray-700 dark:text-slate-300">
-                      <span>3. Total Claim Amount Evaluated</span>
+                      <span className="font-medium">Total Claim Amount Evaluated</span>
                       <strong className="text-lg">₹{(c.bills.reduce((acc, b) => acc + (Number(b.totalAmount) || 0), 0) || 0).toLocaleString()}</strong>
                     </div>
 
                     <div className="flex justify-between items-center text-gray-700 dark:text-slate-300">
-                      <span>4. Advance Paid / Deducted</span>
+                      <span className="font-medium">Advance Paid / Deducted</span>
                       <strong className="text-lg text-rose-600 dark:text-rose-400">- ₹{(c.advances.reduce((acc, a) => acc + (Number(a.amount) || 0), 0) || 0).toLocaleString()}</strong>
                     </div>
 
-                    <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-slate-600 text-indigo-900 dark:text-indigo-400">
-                      <span className="font-bold text-lg">5. Net Amount Payable</span>
-                      <strong className="text-2xl font-bold">₹{((c.bills.reduce((acc, b) => acc + (Number(b.totalAmount) || 0), 0) || 0) - (c.advances.reduce((acc, a) => acc + (Number(a.amount) || 0), 0) || 0)).toLocaleString()}</strong>
+                    <div className="flex justify-between items-center pt-5 mt-2 border-t-2 border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-400">
+                      <span className="font-bold text-lg uppercase tracking-wider">Net Amount Payable</span>
+                      <strong className="text-2xl font-extrabold">₹{((c.bills.reduce((acc, b) => acc + (Number(b.totalAmount) || 0), 0) || 0) - (c.advances.reduce((acc, a) => acc + (Number(a.amount) || 0), 0) || 0)).toLocaleString()}</strong>
                     </div>
                   </div>
 
-                  <div className="mt-20 pt-8 border-t border-gray-200 dark:border-slate-700 flex justify-between items-end">
-                    <div className="text-sm text-gray-500">Generated by KARMASRI</div>
+                  <div className="mt-24 pt-8 border-t border-gray-200 dark:border-slate-700 flex justify-between items-end">
+                    <div className="text-sm text-gray-500 font-medium">Generated by KARMASRI System</div>
                     <div className="text-center">
-                      <div className="w-48 border-b border-gray-400 dark:border-slate-500 mb-2"></div>
-                      <div className="text-sm font-semibold text-gray-700 dark:text-slate-300">Signature of Authorized Officer</div>
+                      <div className="w-64 border-b-2 border-indigo-900 dark:border-indigo-500 mb-2"></div>
+                      <div className="text-sm font-bold text-indigo-900 dark:text-indigo-400 uppercase tracking-widest">Signature of Authorized Officer</div>
                     </div>
                   </div>
 
@@ -968,10 +1083,10 @@ export default function MRCaseWorkspaceClient() {
         )}
 
         {active === 'MOVEMENT REGISTER' && (
-          <div className={`${styles.modernCard} ${styles.animateFadeIn}`}>
-             <div className={styles.modernCardHeader}>
-               <History className="text-blue-500" size={24} />
-               <h3 className={styles.modernCardTitle}>Movement Register</h3>
+          <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-indigo-100 dark:border-slate-700 overflow-hidden ${styles.animateFadeIn}`}>
+             <div className="bg-gradient-to-r from-slate-50 to-indigo-50/50 dark:from-slate-900 dark:to-indigo-900/20 px-6 py-4 border-b border-indigo-100 dark:border-slate-700 flex items-center gap-3">
+               <History className="text-indigo-600 dark:text-indigo-400" size={24} />
+               <h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-300">Movement Register</h3>
              </div>
 
              {c.movement.length === 0 ? (
