@@ -2,7 +2,7 @@
 
 import React, { type ChangeEvent, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Activity, AlertCircle, AlertTriangle, BarChart3, Briefcase, CalendarDays, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Download, FileCheck, FileText, History, IndianRupee, LayoutList, Pill, Save, Stethoscope, Upload, UserCircle2 } from 'lucide-react';
+import { Activity, AlertCircle, AlertTriangle, BarChart3, Briefcase, Building2, CalendarDays, CheckCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, ClipboardList, Download, FileCheck, FileCheck2, FileText, History, IndianRupee, LayoutList, Pill, Save, Stethoscope, Upload, UserCircle2 } from 'lucide-react';
 import styles from '@/modules/medical-reimbursement/mr.module.css';
 import { loadCases, saveCases } from '@/modules/medical-reimbursement/mockStore';
 import type { Bill, Doc, DocType } from '@/modules/medical-reimbursement/types';
@@ -1986,6 +1986,130 @@ export default function MRCaseWorkspaceClient() {
                   </div>
                 </div>
 
+                <div className="mt-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-none print:m-0 break-before-page">
+                  <div className="border-b border-indigo-200 p-6 text-center bg-gradient-to-r from-indigo-900 via-indigo-700 to-indigo-900 text-white print:bg-white print:text-slate-900 print:border-b-2 print:border-slate-800">
+                    <h2 className="text-2xl font-bold uppercase tracking-widest mb-0.5 text-indigo-50 print:text-slate-900">Medical Reimbursement Claim</h2>
+                    <p className="text-indigo-200 font-bold tracking-widest uppercase text-xs print:text-slate-600">Government of Kerala</p>
+                    <div className="mt-3 inline-flex items-center gap-2 bg-indigo-950/50 backdrop-blur-sm px-4 py-1.5 rounded-full border border-indigo-500/30 text-[11px] font-bold text-indigo-100 tracking-widest print:border-slate-300 print:text-slate-800 print:bg-white">
+                      REFERENCE NO: {c.mrNo}
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-6">
+                    {/* 1. Officer Details */}
+                    <section>
+                      <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-5 pb-2 border-b-2 border-indigo-100 tracking-wide uppercase print:border-slate-300 print:text-slate-900">
+                        <UserCircle2 className="w-5 h-5 text-indigo-600 print:text-slate-600" /> 1. Officer Details
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                        <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Name of Officer</span><span className="font-medium text-slate-900">{c.officer.fullName}</span></div>
+                        <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Designation</span><span className="font-medium text-slate-900">{c.officer.designation}</span></div>
+                        <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Service / Cadre</span><span className="font-medium text-slate-900">{c.officer.serviceType} / {c.officer.cadre}</span></div>
+                        <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">PEN Number</span><span className="font-medium text-slate-900">{c.officer.penNumber}</span></div>
+                        <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Basic Pay</span><span className="font-medium text-slate-900">{rupee(c.officer.basicPay)}</span></div>
+                        <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Department</span><span className="font-medium text-slate-900">{c.officer.administrativeDepartment}</span></div>
+                      </div>
+                    </section>
+
+                    {/* 2. Patient & Treatment Details */}
+                    <section>
+                      <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-5 pb-2 border-b-2 border-indigo-100 tracking-wide uppercase print:border-slate-300 print:text-slate-900">
+                        <Building2 className="w-5 h-5 text-indigo-600 print:text-slate-600" /> 2. Patient & Treatment Details
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm mb-6 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Claimed For</span><span className="font-medium text-slate-900">{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</span></div>
+                        <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Patient Name</span><span className="font-medium text-slate-900">{selectedDependent?.fullName || c.patient.name} {c.patient.claimFor !== 'SELF' ? `(${dependentMeta.join(', ')})` : ''}</span></div>
+                        <div className="md:col-span-2"><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Diagnosis & System</span><span className="font-medium text-slate-900">{diagnosisText || 'Not specified'}</span></div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm pl-4 border-l-2 border-slate-200">
+                        <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Hospital Name</span><span className="font-medium text-slate-900">{treatmentDraft.hospitalName || '-'}</span></div>
+                        <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Hospital Type</span><span className="font-medium text-slate-900">{treatmentDraft.hospitalType} ({treatmentDraft.withinState ? 'Within State' : 'Outside State'})</span></div>
+                        <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Treatment Period</span><span className="font-medium text-slate-900">{treatmentPeriodLabel}</span></div>
+                        <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Hospitalisation</span><span className="font-medium text-slate-900">{treatmentDraft.hospitalised ? 'Required Hospitalisation' : 'Outpatient / Not Hospitalised'}</span></div>
+                      </div>
+                    </section>
+
+                    {/* 3. Expenditure & Bills */}
+                    <section>
+                      <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-5 pb-2 border-b-2 border-indigo-100 tracking-wide uppercase print:border-slate-300 print:text-slate-900">
+                        <ClipboardList className="w-5 h-5 text-indigo-600 print:text-slate-600" /> 3. Expenditure & Bills
+                      </h3>
+
+                      <div className="overflow-x-auto rounded-lg border border-slate-200 mb-6">
+                        <table className="min-w-full divide-y divide-slate-200 text-sm">
+                          <thead className="bg-slate-50">
+                            <tr>
+                              <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">Sl.No</th>
+                              <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">Bill Ref & Date</th>
+                              <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">Hospital/Vendor</th>
+                              <th className="px-4 py-3 text-right font-medium text-slate-500 uppercase tracking-wider">Amount (₹)</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-slate-200">
+                            {c.bills.length > 0 ? (
+                              c.bills.map((b, i) => (
+                                <tr key={b.id}>
+                                  <td className="px-4 py-3 text-slate-500">{i + 1}</td>
+                                  <td className="px-4 py-3 text-slate-900 font-medium">{b.invoiceNo} <span className="text-slate-500 text-xs ml-1 block">{formatDMY(b.billDate)}</span></td>
+                                  <td className="px-4 py-3 text-slate-700">{b.hospitalName}</td>
+                                  <td className="px-4 py-3 text-slate-900 font-medium text-right">{b.totalAmount}</td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr><td colSpan={4} className="px-4 py-6 text-center text-slate-500">No bills recorded.</td></tr>
+                            )}
+                          </tbody>
+                          <tfoot className="bg-slate-50 border-t border-slate-200">
+                            <tr>
+                              <td colSpan={3} className="px-4 py-3 text-right font-semibold text-slate-700">Gross Total Claim:</td>
+                              <td className="px-4 py-3 text-right font-bold text-slate-900">{rupee(billsTotal(c))}</td>
+                            </tr>
+                            <tr>
+                              <td colSpan={3} className="px-4 py-3 text-right font-medium text-slate-500">Less: Advance Received:</td>
+                              <td className="px-4 py-3 text-right font-medium text-slate-700">- {rupee(advancePaid(c))}</td>
+                            </tr>
+                            <tr className="bg-indigo-50/50">
+                              <td colSpan={3} className="px-4 py-4 text-right font-bold text-indigo-900 text-base border-t border-indigo-100">Net Payable Claim Amount:</td>
+                              <td className="px-4 py-4 text-right font-bold text-indigo-700 text-lg border-t border-indigo-100">{rupee(billsTotal(c) - advancePaid(c))}</td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </section>
+
+                    {/* 4. Document Check & Declarations */}
+                    <section>
+                      <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-5 pb-2 border-b-2 border-indigo-100 tracking-wide uppercase print:border-slate-300 print:text-slate-900">
+                        <FileCheck2 className="w-5 h-5 text-indigo-600 print:text-slate-600" /> 4. Annexures & Declarations
+                      </h3>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                          <h4 className="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wide">Attached Documents</h4>
+                          <ul className="space-y-2 text-sm text-slate-600">
+                            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600"/> Original Bills / Receipts ({c.bills.length} items)</li>
+                            <li className="flex items-center gap-2">
+                              {visibleDocs.some((d) => d.type === 'EC_SIGNED') ? <CheckCircle2 className="w-4 h-4 text-green-600"/> : <div className="w-4 h-4 rounded-full border-2 border-slate-300"/>}
+                              Essentiality Certificate (Signed)
+                            </li>
+                            <li className="flex items-center gap-2">
+                              {visibleDocs.some((d) => d.type === 'DISCHARGE') ? <CheckCircle2 className="w-4 h-4 text-green-600"/> : <div className="w-4 h-4 rounded-full border-2 border-slate-300"/>}
+                              Discharge Summary
+                            </li>
+                            <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600"/> Additional Documents ({visibleDocs.filter((d) => !['EC_SIGNED','DISCHARGE'].includes(d.type)).length})</li>
+                          </ul>
+                        </div>
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-900">
+                          <h4 className="font-semibold mb-2 uppercase tracking-wide">Declaration</h4>
+                          <p className="mb-2">I hereby declare that the statements made in the application are true to the best of my knowledge and belief.</p>
+                          <p>I further declare that the amount claimed herein has not been claimed elsewhere or from any other insurance scheme.</p>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+
                 <div className={styles.dossierSectionStack}>
                   <div className={styles.summaryShowcase}>
                     <div className={styles.summarySpotlight}>
@@ -2116,6 +2240,151 @@ export default function MRCaseWorkspaceClient() {
                   </div>
                 </div>
 
+                <div className="hidden">
+
+                {/* Meta */}
+                <div className="mb-8 flex items-start justify-between text-sm font-medium text-gray-700">
+                  <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-5 py-3">
+                    <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-indigo-600">MR Number</span>
+                    <strong className="text-xl text-slate-900">{c.mrNo}</strong>
+                  </div>
+                  <div className="text-right">
+                    <div className="mb-1"><span className="text-gray-500 font-semibold uppercase text-xs tracking-wider">Date:</span> {new Date().toLocaleDateString('en-GB')}</div>
+                    <div><span className="text-gray-500 font-semibold uppercase text-xs tracking-wider">Status:</span> {c.status}</div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="space-y-8 text-[15px] leading-relaxed text-gray-800">
+
+                  {/* Officer Details */}
+                  <div className="border border-indigo-100 dark:border-slate-700 rounded-xl overflow-hidden">
+                    <div className="bg-gradient-to-r from-white via-indigo-50 to-sky-50 px-5 py-3 border-b border-indigo-200 text-slate-900 dark:border-slate-700">
+                      <div className="font-bold text-slate-900 dark:text-slate-100 tracking-wide uppercase">1. Applicant Details</div>
+                    </div>
+                    <div className="p-5 grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
+                      <div>
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Name & Designation</span>
+                        <div className="font-bold text-slate-900 dark:text-slate-100">{c.officer.fullName}</div>
+                        <div className="text-indigo-700 dark:text-indigo-400 font-medium">{c.officer.designation}</div>
+                      </div>
+                      <div>
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Service Profile</span>
+                        <div className="font-medium text-slate-800 dark:text-slate-200">{c.officer.serviceType} | PEN: {c.officer.penNumber}</div>
+                        <div className="text-slate-600 dark:text-slate-400">{c.officer.cadre} (Basic Pay: ₹{c.officer.basicPay?.toLocaleString() || 'N/A'})</div>
+                      </div>
+                      <div className="col-span-2 border-t border-slate-100 dark:border-slate-700 pt-3">
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Claim For</span>
+                        <div className="font-bold text-slate-900 dark:text-slate-100">{c.patient.name} <span className="font-medium text-indigo-600 dark:text-indigo-400">({c.patient.claimFor === 'SELF' ? 'Self' : c.patient.relation})</span></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Treatment Details */}
+                  <div className="border border-indigo-100 dark:border-slate-700 rounded-xl overflow-hidden">
+                    <div className="bg-gradient-to-r from-white via-indigo-50 to-sky-50 px-5 py-3 border-b border-indigo-200 text-slate-900 dark:border-slate-700">
+                      <div className="font-bold text-slate-900 dark:text-slate-100 tracking-wide uppercase">2. Treatment Details</div>
+                    </div>
+                    <div className="p-5 grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
+                      <div className="col-span-2">
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Diagnosis & System</span>
+                        <div className="font-bold text-slate-900 dark:text-slate-100">{treatmentDraft.diagnosis.split(' | ')[0] || 'Medical treatment'}</div>
+                        <div className="text-indigo-700 dark:text-indigo-400 font-medium">{treatmentDraft.medicalType || 'Allopathy'} System</div>
+                      </div>
+                      <div className="col-span-2 border-t border-slate-100 dark:border-slate-700 pt-3">
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Institution</span>
+                        <div className="font-medium text-slate-900 dark:text-slate-200">
+                          {treatmentDraft.hospitalised ? 'Hospitalised Treatment' : 'Outpatient Treatment'} at <strong>{treatmentDraft.hospitalName || 'Unspecified Facility'}</strong>
+                        </div>
+                        <div className="text-slate-500 dark:text-slate-400 mt-0.5">{treatmentDraft.hospitalType} Facility | {treatmentDraft.hospitalAddress || 'Address not provided'}</div>
+                      </div>
+                      <div className="border-t border-slate-100 dark:border-slate-700 pt-3">
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Start Date</span>
+                        <div className="font-medium text-slate-900 dark:text-slate-200">{formatDMY(treatmentDraft.fromDate) || 'Not recorded'}</div>
+                      </div>
+                      <div className="border-t border-slate-100 dark:border-slate-700 pt-3">
+                        <span className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">End Date</span>
+                        <div className="font-medium text-slate-900 dark:text-slate-200">{formatDMY(treatmentDraft.toDate) || 'Not recorded'}</div>
+                      </div>
+                    </div>
+                  </div>
+
+
+                  <div className="border border-indigo-100 dark:border-slate-700 rounded-xl overflow-hidden">
+                    <div className="bg-gradient-to-r from-white via-indigo-50 to-sky-50 px-5 py-3 border-b border-indigo-200 text-slate-900 dark:border-slate-700">
+                      <div className="font-bold text-slate-900 dark:text-slate-100 tracking-wide uppercase">3. Supporting Documents</div>
+                    </div>
+                    <div className="p-5 space-y-4 text-sm">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+                          <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Bills</div>
+                          <div className="mt-2 text-lg font-bold text-slate-900 dark:text-slate-100">{c.bills.length}</div>
+                        </div>
+                        <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+                          <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Documents</div>
+                          <div className="mt-2 text-lg font-bold text-slate-900 dark:text-slate-100">{visibleDocs.length}</div>
+                        </div>
+                        <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+                          <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Signed EC</div>
+                          <div className="mt-2 text-lg font-bold text-slate-900 dark:text-slate-100">{signedEcDocs.length > 0 ? 'Available' : 'Pending'}</div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        {visibleDocs.length === 0 ? (
+                          <div className="rounded-lg border border-dashed border-indigo-200 px-4 py-4 text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            No supporting documents have been attached.
+                          </div>
+                        ) : (
+                          visibleDocs.map((d) => (
+                            <div key={d.id} className="rounded-lg border border-indigo-100 px-4 py-3 dark:border-slate-700">
+                              <div className="flex items-start justify-between gap-4">
+                                <div>
+                                  <div className="font-semibold text-slate-900 dark:text-slate-100">{d.title || docTypes.find((item) => item.value === d.type)?.label || d.type}</div>
+                                  <div className="mt-1 text-slate-500 dark:text-slate-400">{d.fileName}</div>
+                                </div>
+                                <div className="text-right text-xs text-slate-500 dark:text-slate-400">
+                                  <div>{d.referenceNo || 'No reference'}</div>
+                                  <div className="mt-1">{formatDMY(d.issueDate)}</div>
+                                </div>
+                              </div>
+                              {d.remarks && <div className="mt-2 border-t border-slate-100 pt-2 text-slate-600 dark:border-slate-700 dark:text-slate-300">{d.remarks}</div>}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Financials */}
+                  <div className="space-y-4 rounded-xl border border-indigo-100 bg-slate-50 p-6">
+                    <div className="mb-4 text-lg font-bold uppercase tracking-wide text-slate-900">4. Financial Summary</div>
+
+                    <div className="flex items-center justify-between text-gray-700">
+                      <span className="font-medium">Total Claim Amount Evaluated</span>
+                      <strong className="text-lg">₹{(c.bills.reduce((acc, b) => acc + (Number(b.totalAmount) || 0), 0) || 0).toLocaleString()}</strong>
+                    </div>
+
+                    <div className="flex items-center justify-between text-gray-700">
+                      <span className="font-medium">Advance Paid / Deducted</span>
+                      <strong className="text-lg text-rose-600">- ₹{(c.advances.reduce((acc, a) => acc + (Number(a.amount) || 0), 0) || 0).toLocaleString()}</strong>
+                    </div>
+
+                    <div className="mt-2 flex items-center justify-between border-t border-indigo-200 pt-5 text-indigo-900">
+                      <span className="font-bold text-lg uppercase tracking-wider">Net Amount Payable</span>
+                      <strong className="text-2xl font-extrabold">₹{((c.bills.reduce((acc, b) => acc + (Number(b.totalAmount) || 0), 0) || 0) - (c.advances.reduce((acc, a) => acc + (Number(a.amount) || 0), 0) || 0)).toLocaleString()}</strong>
+                    </div>
+                  </div>
+
+                  <div className="mt-24 flex items-end justify-between border-t border-gray-200 pt-8">
+                    <div className="text-sm text-gray-500 font-medium">Generated by KARMASRI System</div>
+                    <div className="text-center">
+                      <div className="mb-2 w-64 border-b-2 border-slate-300"></div>
+                      <div className="text-sm font-bold uppercase tracking-widest text-slate-700">Signature of Authorized Officer</div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
               </div>
             </div>
 
