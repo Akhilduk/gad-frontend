@@ -84,44 +84,131 @@ export default function FinalPreviewClient() {
           </div>
         </div>
 
-        {/* Formal Document Container */}
-        <div className={`${styles.govFormSheet} print:shadow-none print:border-none print:m-0`}>
+        </div>
 
-          <div className={styles.govFormHead}>
-            <h2>Form of Application for Claiming Reimbursement of Cost of Treatment or Medical Attendance</h2>
-            <p>(See Rule 7)</p>
-          </div>
-
-          <div className={styles.govFormTable}>
-            <div className={styles.govFormRow}><div className={styles.govFormNo}>1.</div><div className={styles.govFormLabel}>Name and office held (in block letters)</div><div className={styles.govFormValue}><div>{c.officer.fullName}</div><div>{c.officer.designation}</div><div>{c.officer.serviceType}</div></div></div>
-            <div className={styles.govFormRow}><div className={styles.govFormNo}>2.</div><div className={styles.govFormLabel}>Residential address</div><div className={styles.govFormValue}><div>{c.officer.residentialAddress || c.officer.officeAddress || '-'}</div>{c.officer.officePostingAddress ? <div>Present posting: {c.officer.officePostingAddress}</div> : null}</div></div>
-            <div className={styles.govFormRow}><div className={styles.govFormNo}>3.</div><div className={styles.govFormLabel}>Name of Patient and relationship with the Member</div><div className={styles.govFormValue}>{c.patient.claimFor === 'SELF' ? <><div>SELF</div><div>Member treated directly</div></> : <><div>{c.patient.name}</div><div>{c.patient.relation}</div></>}</div></div>
-            <div className={styles.govFormRow}><div className={styles.govFormNo}>4.</div><div className={styles.govFormLabel}>Place at which the the Member / Spouse / family member fell ill</div><div className={styles.govFormValue}>{c.treatment.placeOfIllness || 'N.A.'}</div></div>
-            <div className={styles.govFormRow}><div className={styles.govFormNo}>5.</div><div className={styles.govFormLabel}>Whether hospitalised or not</div><div className={styles.govFormValue}><div>{c.treatment.hospitalised ? 'Hospitalised' : 'Not hospitalised'}</div><div>Period: {formatDMY(c.treatment.fromDate)} to {formatDMY(c.treatment.toDate)}</div></div></div>
-            <div className={styles.govFormRow}><div className={styles.govFormNo}>6.</div><div className={styles.govFormLabel}>If hospitalised within the state, whether in Govt. hospital or Empanelled Private hospital with name of hospital and address</div><div className={styles.govFormValue}><div>{c.treatment.withinState ? 'Within state' : 'Outside state'}</div><div>{c.treatment.hospitalName || 'N.A.'}</div><div>{c.treatment.hospitalAddress || 'Address not recorded'}</div></div></div>
-            <div className={styles.govFormRow}><div className={styles.govFormNo}>7.</div><div className={styles.govFormLabel}>Empanelled Authority</div><div className={styles.govFormValue}><div>{c.treatment.hospitalType || 'N.A.'}</div><div>{c.treatment.hospitalised ? 'Hospital admission details recorded' : 'Out-patient / non-admission treatment'}</div></div></div>
-            <div className={styles.govFormRow}><div className={styles.govFormNo}>8.</div><div className={styles.govFormLabel}>In the case of treatment abroad, whether certificate of the authority mentioned in rule 6 of the scheme is attached</div><div className={styles.govFormValue}>{c.treatment.withinState ? 'Not applicable. Treatment recorded within India.' : 'No treatment-abroad certificate attached.'}</div></div>
-            <div className={styles.govFormRow}><div className={styles.govFormNo}>9.</div><div className={styles.govFormLabel}>Cost of treatment (List of medicines, cash memos and essentiality certificate should be attached)</div><div className={styles.govFormValue}><div>{c.bills.length} bill(s), {c.docs.length} supporting document(s)</div><div>Net claim: {rupee(billsTotal(c) - advancePaid(c))}</div></div></div>
-          </div>
-
-          <div className={styles.govFormDeclaration}>
-            <div className={styles.govFormDeclarationTitle}>Declaration</div>
-            <div className={styles.govFormDeclarationText}>
-              I hereby declare that the statements given above are true to the best of my knowledge and belief and the person for whom medical expenditure has been incurred is wholly dependent on me.
+        <div className="mt-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-none print:m-0 break-before-page">
+          <div className="border-b border-indigo-200 p-6 text-center bg-gradient-to-r from-indigo-900 via-indigo-700 to-indigo-900 text-white print:bg-white print:text-slate-900 print:border-b-2 print:border-slate-800">
+            <h2 className="text-2xl font-bold uppercase tracking-widest mb-0.5 text-indigo-50 print:text-slate-900">Medical Reimbursement Claim</h2>
+            <p className="text-indigo-200 font-bold tracking-widest uppercase text-xs print:text-slate-600">Government of Kerala</p>
+            <div className="mt-3 inline-flex items-center gap-2 bg-indigo-950/50 backdrop-blur-sm px-4 py-1.5 rounded-full border border-indigo-500/30 text-[11px] font-bold text-indigo-100 tracking-widest print:border-slate-300 print:text-slate-800 print:bg-white">
+              REFERENCE NO: {c.mrNo}
             </div>
           </div>
 
-          <div className={styles.govFormFooter}>
-            <div className={styles.govFormFooterBlock}>
-              <div className={styles.govFormFooterLine}><span>Place :</span><span>{c.treatment.placeOfIllness || 'N.A.'}</span></div>
-              <div className={styles.govFormFooterLine}><span>Date :</span><span>{new Date().toLocaleDateString('en-GB')}</span></div>
-            </div>
-            <div className={`${styles.govFormFooterBlock} ${styles.govFormSignature}`}>
-              <div className={styles.govFormSignatureLine}></div>
-              <div className={styles.govFormSignatureLabel}>Name of the Officer</div>
-              <div className={styles.govFormValue}>{c.officer.fullName}</div>
-            </div>
-          </div>
+          <div className="p-6 space-y-6">
+            {/* 1. Officer Details */}
+            <section>
+              <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-5 pb-2 border-b-2 border-indigo-100 tracking-wide uppercase print:border-slate-300 print:text-slate-900">
+                <UserCircle2 className="w-5 h-5 text-indigo-600 print:text-slate-600" /> 1. Officer Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Name of Officer</span><span className="font-medium text-slate-900">{c.officer.fullName}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Designation</span><span className="font-medium text-slate-900">{c.officer.designation}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Service / Cadre</span><span className="font-medium text-slate-900">{c.officer.serviceType} / {c.officer.cadre}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">PEN Number</span><span className="font-medium text-slate-900">{c.officer.penNumber}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Basic Pay</span><span className="font-medium text-slate-900">{rupee(c.officer.basicPay)}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Department</span><span className="font-medium text-slate-900">{c.officer.administrativeDepartment}</span></div>
+              </div>
+            </section>
+
+            {/* 2. Patient & Treatment Details */}
+            <section>
+              <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-5 pb-2 border-b-2 border-indigo-100 tracking-wide uppercase print:border-slate-300 print:text-slate-900">
+                <Building2 className="w-5 h-5 text-indigo-600 print:text-slate-600" /> 2. Patient & Treatment Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm mb-6 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Claimed For</span><span className="font-medium text-slate-900">{c.patient.claimFor === 'SELF' ? 'Self' : 'Dependent'}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Patient Name</span><span className="font-medium text-slate-900">{c.patient.name} {c.patient.claimFor !== 'SELF' ? `(${c.patient.relation})` : ''}</span></div>
+                <div className="md:col-span-2"><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Diagnosis & System</span><span className="font-medium text-slate-900">{c.treatment.diagnosis || 'Not specified'}</span></div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm pl-4 border-l-2 border-slate-200">
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Hospital Name</span><span className="font-medium text-slate-900">{c.treatment.hospitalName || '-'}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Hospital Type</span><span className="font-medium text-slate-900">{c.treatment.hospitalType} ({c.treatment.withinState ? 'Within State' : 'Outside State'})</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Treatment Period</span><span className="font-medium text-slate-900">{formatDMY(c.treatment.fromDate)} to {formatDMY(c.treatment.toDate)}</span></div>
+                <div><span className="text-indigo-900/60 block text-[10px] font-bold uppercase tracking-widest mb-1 print:text-slate-500">Hospitalisation</span><span className="font-medium text-slate-900">{c.treatment.hospitalised ? 'Required Hospitalisation' : 'Outpatient / Not Hospitalised'}</span></div>
+              </div>
+            </section>
+
+            {/* 3. Expenditure & Bills */}
+            <section>
+              <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-5 pb-2 border-b-2 border-indigo-100 tracking-wide uppercase print:border-slate-300 print:text-slate-900">
+                <ClipboardList className="w-5 h-5 text-indigo-600 print:text-slate-600" /> 3. Expenditure & Bills
+              </h3>
+
+              <div className="overflow-x-auto rounded-lg border border-slate-200 mb-6">
+                <table className="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">Sl.No</th>
+                      <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">Bill Ref & Date</th>
+                      <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">Hospital/Vendor</th>
+                      <th className="px-4 py-3 text-right font-medium text-slate-500 uppercase tracking-wider">Amount (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-slate-200">
+                    {c.bills.length > 0 ? (
+                      c.bills.map((b, i) => (
+                        <tr key={b.id}>
+                          <td className="px-4 py-3 text-slate-500">{i + 1}</td>
+                          <td className="px-4 py-3 text-slate-900 font-medium">{b.invoiceNo} <span className="text-slate-500 text-xs ml-1 block">{formatDMY(b.billDate)}</span></td>
+                          <td className="px-4 py-3 text-slate-700">{b.hospitalName}</td>
+                          <td className="px-4 py-3 text-slate-900 font-medium text-right">{b.totalAmount}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan={4} className="px-4 py-6 text-center text-slate-500">No bills recorded.</td></tr>
+                    )}
+                  </tbody>
+                  <tfoot className="bg-slate-50 border-t border-slate-200">
+                    <tr>
+                      <td colSpan={3} className="px-4 py-3 text-right font-semibold text-slate-700">Gross Total Claim:</td>
+                      <td className="px-4 py-3 text-right font-bold text-slate-900">{rupee(billsTotal(c))}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan={3} className="px-4 py-3 text-right font-medium text-slate-500">Less: Advance Received:</td>
+                      <td className="px-4 py-3 text-right font-medium text-slate-700">- {rupee(advancePaid(c))}</td>
+                    </tr>
+                    <tr className="bg-indigo-50/50">
+                      <td colSpan={3} className="px-4 py-4 text-right font-bold text-indigo-900 text-base border-t border-indigo-100">Net Payable Claim Amount:</td>
+                      <td className="px-4 py-4 text-right font-bold text-indigo-700 text-lg border-t border-indigo-100">{rupee(netClaim)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </section>
+
+            {/* 4. Document Check & Declarations */}
+            <section>
+              <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-5 pb-2 border-b-2 border-indigo-100 tracking-wide uppercase print:border-slate-300 print:text-slate-900">
+                <FileCheck2 className="w-5 h-5 text-indigo-600 print:text-slate-600" /> 4. Annexures & Declarations
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wide">Attached Documents</h4>
+                  <ul className="space-y-2 text-sm text-slate-600">
+                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600"/> Original Bills / Receipts ({c.bills.length} items)</li>
+                    <li className="flex items-center gap-2">
+                      {c.docs.some((d) => d.type === 'EC_SIGNED') ? <CheckCircle2 className="w-4 h-4 text-green-600"/> : <div className="w-4 h-4 rounded-full border-2 border-slate-300"/>}
+                      Essentiality Certificate (Signed)
+                    </li>
+                    <li className="flex items-center gap-2">
+                      {c.docs.some((d) => d.type === 'DISCHARGE') ? <CheckCircle2 className="w-4 h-4 text-green-600"/> : <div className="w-4 h-4 rounded-full border-2 border-slate-300"/>}
+                      Discharge Summary
+                    </li>
+                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600"/> Additional Documents ({c.docs.filter((d) => !['EC_SIGNED','DISCHARGE'].includes(d.type)).length})</li>
+                  </ul>
+                </div>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-900">
+                  <h4 className="font-semibold mb-2 uppercase tracking-wide">Declaration</h4>
+                  <p className="mb-2">I hereby declare that the statements made in the application are true to the best of my knowledge and belief.</p>
+                  <p>I further declare that the amount claimed herein has not been claimed elsewhere or from any other insurance scheme.</p>
+                </div>
+              </div>
+            </section>
+
+
 
           {/* Submission Action Bar */}
           {!receipt && (
@@ -142,16 +229,17 @@ export default function FinalPreviewClient() {
         {/* --- Appended Document Previews (Simulating a Merged PDF) --- */}
         <div className="mt-8 space-y-12 print:mt-0 print:space-y-0">
           {c.bills.map((b, index) => (
-            <div key={`bill-${b.id}`} className={`${styles.govFormSheet} print:shadow-none print:border-none print:m-0 break-before-page relative`} style={{ marginTop: '2rem' }}>
-              <div className={styles.govFormHead} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FileText className="w-5 h-5" /> Bill Annexure {index + 1}
+            <div key={`bill-${b.id}`} className="bg-white rounded-xl shadow-lg border border-indigo-100 overflow-hidden print:shadow-none print:border-none print:m-0 break-before-page relative">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-600 print:hidden"></div>
+              <div className="border-b border-indigo-100 p-5 bg-indigo-50/50 flex justify-between items-center print:bg-white print:border-b-2 print:border-slate-800 pl-8">
+                <h3 className="font-bold text-indigo-900 flex items-center gap-2 uppercase tracking-wide">
+                  <FileText className="w-5 h-5 text-indigo-600" /> Bill Annexure {index + 1}
                 </h3>
-                <span style={{ fontSize: '12px', fontWeight: 'bold' }}>
+                <span className="text-xs font-bold text-indigo-700 bg-white px-4 py-1.5 rounded-full border border-indigo-200 shadow-sm print:border-none uppercase tracking-wider">
                   {b.fileName}
                 </span>
               </div>
-              <div className="p-8 min-h-[380px] flex flex-col items-center justify-center print:bg-white print:[background-image:none] border-2 border-dashed border-indigo-200 m-6 rounded-xl bg-white">
+              <div className="p-8 min-h-[380px] flex flex-col items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] print:bg-white print:[background-image:none] border-2 border-dashed border-indigo-200 m-6 rounded-xl bg-white">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 mb-6">
                   <FileCheck2 className="w-16 h-16 text-indigo-300" />
                 </div>
@@ -180,16 +268,17 @@ export default function FinalPreviewClient() {
           ))}
 
           {c.docs.map((d, index) => (
-            <div key={`doc-${d.id}`} className={`${styles.govFormSheet} print:shadow-none print:border-none print:m-0 break-before-page relative`} style={{ marginTop: '2rem' }}>
-              <div className={styles.govFormHead} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FileText className="w-5 h-5" /> Document Annexure: {d.type.replace('_', ' ')}
+            <div key={`doc-${d.id}`} className="bg-white rounded-xl shadow-lg border border-indigo-100 overflow-hidden print:shadow-none print:border-none print:m-0 break-before-page relative">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-600 print:hidden"></div>
+              <div className="border-b border-indigo-100 p-5 bg-indigo-50/50 flex justify-between items-center print:bg-white print:border-b-2 print:border-slate-800 pl-8">
+                <h3 className="font-bold text-indigo-900 flex items-center gap-2 uppercase tracking-wide">
+                  <FileText className="w-5 h-5 text-indigo-600" /> Document Annexure: {d.type.replace('_', ' ')}
                 </h3>
-                <span style={{ fontSize: '12px', fontWeight: 'bold' }}>
+                <span className="text-xs font-bold text-indigo-700 bg-white px-4 py-1.5 rounded-full border border-indigo-200 shadow-sm print:border-none uppercase tracking-wider">
                   {d.fileName}
                 </span>
               </div>
-              <div className="p-8 min-h-[380px] flex flex-col items-center justify-center print:bg-white print:[background-image:none] border-2 border-dashed border-indigo-200 m-6 rounded-xl bg-white">
+              <div className="p-8 min-h-[380px] flex flex-col items-center justify-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] print:bg-white print:[background-image:none] border-2 border-dashed border-indigo-200 m-6 rounded-xl bg-white">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 mb-6">
                   <FileCheck2 className="w-16 h-16 text-indigo-300" />
                 </div>
