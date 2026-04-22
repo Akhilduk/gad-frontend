@@ -55,6 +55,10 @@ export type Doc = {
   type: DocType;
   fileName: string;
   uploadedAt: string;
+  title?: string;
+  referenceNo?: string;
+  issueDate?: string;
+  remarks?: string;
 };
 
 export type AdvanceStatus = 'Draft' | 'Submitted' | 'Approved' | 'Paid' | 'Rejected';
